@@ -1,0 +1,146 @@
+{
+  "years": [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032],
+  "months": [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ],
+  "singleRooms": [
+    {
+      "id": "001",
+      "number": "001",
+      "statusColor": "bg-green-500",
+      "bookings": [
+        null, null, null, null, null, null, null, null, null,
+        { "guest": "Frank Gray", "status": "new" },
+        null, null, null, null
+      ]
+    },
+    {
+      "id": "002",
+      "number": "002",
+      "statusColor": "bg-green-500",
+      "bookings": [
+        null, null, null, null,
+        { "guest": "Joy Iorina", "status": "confirmed" },
+        { "guest": "Joy Iorina", "status": "confirmed" },
+        { "guest": "Joy Iorina", "status": "confirmed" },
+        { "guest": "David Smith", "status": "book" },
+        { "guest": "David Smith", "status": "book" },
+        null, null, null, null,
+        { "guest": "William", "status": "due-out" }
+      ]
+    },
+    {
+      "id": "003",
+      "number": "003",
+      "statusColor": "bg-green-500",
+      "bookings": [
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null
+      ]
+    }
+  ],
+  "doubleRooms": [
+    {
+      "id": "101",
+      "number": "101",
+      "statusColor": "bg-green-500",
+      "bookings": [
+        null, null, null, null, null, null, null, null,
+        { "guest": "Warner", "status": "due-out" },
+        null, null, null, null,
+        { "guest": "Pritar", "status": "due-out" }
+      ]
+    },
+    {
+      "id": "102",
+      "number": "102",
+      "statusColor": "bg-green-500",
+      "bookings": [
+        null, null, null, null, null, null, null, null,
+        { "guest": "Polash", "status": "new" },
+        { "guest": "Polash", "status": "new" },
+        { "guest": "Polash", "status": "new" },
+        null, null,
+        { "guest": "Henry Kevil", "status": "booking-offer" }
+      ]
+    },
+    {
+      "id": "103",
+      "number": "103",
+      "statusColor": "bg-green-500",
+      "bookings": [
+        null, null, null,
+        { "guest": "John", "status": "confirmed" },
+        { "guest": "John", "status": "confirmed" },
+        { "guest": "John", "status": "confirmed" },
+        null, null, null, null,
+        { "guest": "Gavin Martson", "status": "confirmed" },
+        { "guest": "Gavin Martson", "status": "confirmed" },
+        { "guest": "Gavin Martson", "status": "confirmed" },
+        null
+      ]
+    }
+  ],
+  "familyRooms": [
+    {
+      "id": "201",
+      "number": "201",
+      "statusColor": "bg-green-500",
+      "bookings": [
+        null, null, null, null, null, null, null, null, null, null, null, null,
+        { "guest": "Bootleg", "status": "booking-offer" },
+        null
+      ]
+    },
+    {
+      "id": "202",
+      "number": "202",
+      "statusColor": "bg-green-500",
+      "bookings": [
+        null, null, null, null,
+        { "guest": "Babul", "status": "new" },
+        { "guest": "Babul", "status": "new" },
+        { "guest": "Babul", "status": "new" },
+        { "guest": "Babul", "status": "new" },
+        { "guest": "Babul", "status": "new" },
+        { "guest": "Babul", "status": "new" },
+        null, null, null,
+        { "guest": "Kasher", "status": "due-out" }
+      ]
+    },
+    {
+      "id": "202b",
+      "number": "202",
+      "statusColor": "bg-green-500",
+      "bookings": [
+        null, null, null, null, null, null, null, null, null,
+        { "guest": "Massi", "status": "new" },
+        { "guest": "Massi", "status": "new" },
+        null,
+        { "guest": "Ronaldo", "status": "new" },
+        { "guest": "Ronaldo", "status": "new" }
+      ]
+    },
+    {
+      "id": "203",
+      "number": "203",
+      "statusColor": "bg-green-500",
+      "bookings": [
+        null, null, null, null,
+        { "guest": "Kafi", "status": "due-out" },
+        { "guest": "Kafi", "status": "due-out" },
+        null, null, null, null, null, null, null, null
+      ]
+    }
+  ],
+  "bookingStatusColors": {
+    "new": "bg-yellow-400",
+    "confirmed": "bg-blue-500",
+    "book": "bg-green-600",
+    "checked-in": "bg-green-800",
+    "due-out": "bg-orange-500",
+    "checked-out": "bg-orange-600",
+    "booking-offer": "bg-blue-400",
+    "out-of-order": "bg-red-500"
+  }
+}
