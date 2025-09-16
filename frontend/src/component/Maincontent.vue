@@ -5,7 +5,7 @@
 <script setup>
     import { computed } from 'vue'
     import { useActiveComponent } from '../composables/useActiveComponent.js'
-    import Frontdesk from './Frontdesk.vue'
+    import Frontdesk from './frontdesk/Frontdesk.vue'
     import Reservations from './Reservations.vue'
     import Guests from './Guests.vue'
     import Housekeeping from './Housekeeping.vue'

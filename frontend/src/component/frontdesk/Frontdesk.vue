@@ -42,9 +42,7 @@
         </div>
       </div>
     </div>
-    <!-- Year and Month Navigation -->
     <div class="px-6 py-2">
-      <!-- Year Navigation -->
       <div class="flex items-center justify-center bg-green-50 outline outline-1 outline-gray-200 rounded h-8">
         <div @click="navigateYear(-1)"
           class="w-8 h-8 flex items-center justify-center hover:bg-green-600 cursor-pointer transition-colors outline outline-1 outline-gray-200 rounded-l">
@@ -64,7 +62,6 @@
         </div>
       </div>
 
-      <!-- Month Navigation -->
       <div class="flex items-center justify-center bg-green-50 outline outline-1 outline-gray-200 rounded-b h-8">
         <div @click="navigateMonth(-1)"
           class="w-8 h-8 flex items-center justify-center hover:bg-green-600 cursor-pointer transition-colors outline outline-1 outline-gray-200 rounded-bl">
@@ -85,7 +82,6 @@
       </div>
     </div>
 
-    <!-- Search and Filters -->
     <div class="px-6 py-4 border-b border-gray-200">
       <div class="flex items-center justify-between">
         <div
@@ -96,7 +92,6 @@
             v-model="bookingSearchQuery" />
         </div>
         <div class="flex items-center gap-4">
-          <!-- Reservation Type Dropdown -->
           <div class="relative">
             <div @click="toggleDropdown('reservationType')"
               class="flex items-center bg-gray-50 outline outline-1 outline-gray-200 rounded-full px-3 py-2 pr-8 text-xs text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer">
@@ -113,7 +108,6 @@
             </div>
           </div>
 
-          <!-- Room Types Dropdown -->
           <div class="relative">
             <div @click="toggleDropdown('roomType')"
               class="flex items-center bg-gray-50 outline outline-1 outline-gray-200 rounded-full px-3 py-2 pr-8 text-xs text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer">
@@ -129,8 +123,7 @@
               </div>
             </div>
           </div>
-
-          <!-- Booking Options Dropdown -->
+          
           <div class="relative">
             <div @click="toggleDropdown('bookingOption')"
               class="flex items-center bg-gray-50 outline outline-1 outline-gray-200 rounded-full px-3 py-2 pr-8 text-xs text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer">
@@ -152,7 +145,15 @@
 
     <div class="h-full px-6">
       <div class="w-full h-full">
-        <Frontdesk_table />
+        <Frontdesk_table 
+          :search-query="searchQuery"
+          :booking-search-query="bookingSearchQuery"
+          :selected-year="selectedYear"
+          :selected-month="selectedMonth"
+          :selected-reservation-type="selectedReservationType"
+          :selected-room-type="selectedRoomType"
+          :selected-booking-option="selectedBookingOption"
+        />
       </div>
     </div>
 
@@ -161,7 +162,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import hotelData from '../data/hotelData.json'
+import hotelData from '../../data/hotelData.json'
 import Frontdesk_table from './Frontdesk_table.vue'
 
 const searchQuery = ref('')
@@ -178,13 +179,13 @@ const dropdownOpen = ref({
 })
 
 // Selected values
-const selectedReservationType = ref('Reservation type')
-const selectedRoomType = ref('Room Types')
-const selectedBookingOption = ref('Booking Options')
+const selectedReservationType = ref('All Types')
+const selectedRoomType = ref('All Rooms')
+const selectedBookingOption = ref('All Options')
 
 // Dropdown options
-const reservationTypes = ['All Types', 'Standard', 'Premium', 'VIP', 'Group Booking']
-const roomTypes = ['All Rooms', 'Single', 'Double', 'Family', 'Suite']
+const reservationTypes = ['All Types', 'Standard', 'Premium', 'VIP', 'Group Booking', 'Family']
+const roomTypes = ['All Rooms', 'Single', 'Double', 'Family']
 const bookingOptions = ['All Options', 'Confirmed', 'Pending', 'Cancelled', 'Checked In']
 
 // Show 9 years at a time, centered around selected year

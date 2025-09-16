@@ -4,143 +4,232 @@
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ],
-  "singleRooms": [
+  "roomCategories": [
     {
-      "id": "001",
-      "number": "001",
-      "statusColor": "bg-green-500",
-      "bookings": [
-        null, null, null, null, null, null, null, null, null,
-        { "guest": "Frank Gray", "status": "new" },
-        null, null, null, null
+      "name": "Single Rooms",
+      "expanded": true,
+      "rooms": [
+        {
+          "id": "001",
+          "number": "001",
+          "type": "Standard Single",
+          "status": "available",
+          "statusColor": "bg-green-500"
+        },
+        {
+          "id": "002",
+          "number": "002",
+          "type": "Standard Single",
+          "status": "occupied",
+          "statusColor": "bg-red-500"
+        },
+        {
+          "id": "003",
+          "number": "003",
+          "type": "Standard Single",
+          "status": "maintenance",
+          "statusColor": "bg-yellow-500"
+        }
       ]
     },
     {
-      "id": "002",
-      "number": "002",
-      "statusColor": "bg-green-500",
-      "bookings": [
-        null, null, null, null,
-        { "guest": "Joy Iorina", "status": "confirmed" },
-        { "guest": "Joy Iorina", "status": "confirmed" },
-        { "guest": "Joy Iorina", "status": "confirmed" },
-        { "guest": "David Smith", "status": "book" },
-        { "guest": "David Smith", "status": "book" },
-        null, null, null, null,
-        { "guest": "William", "status": "due-out" }
+      "name": "Twin Double Rooms",
+      "expanded": true,
+      "rooms": [
+        {
+          "id": "101",
+          "number": "101",
+          "type": "Twin Double",
+          "status": "available",
+          "statusColor": "bg-green-500"
+        },
+        {
+          "id": "102",
+          "number": "102",
+          "type": "Twin Double",
+          "status": "occupied",
+          "statusColor": "bg-red-500"
+        },
+        {
+          "id": "103",
+          "number": "103",
+          "type": "Twin Double",
+          "status": "available",
+          "statusColor": "bg-green-500"
+        }
       ]
     },
     {
-      "id": "003",
-      "number": "003",
-      "statusColor": "bg-green-500",
-      "bookings": [
-        null, null, null, null, null, null, null, null, null, null, null, null, null, null
+      "name": "Family Rooms",
+      "expanded": true,
+      "rooms": [
+        {
+          "id": "201",
+          "number": "201",
+          "type": "Family Suite",
+          "status": "available",
+          "statusColor": "bg-green-500"
+        },
+        {
+          "id": "202",
+          "number": "202",
+          "type": "Family Suite",
+          "status": "occupied",
+          "statusColor": "bg-red-500"
+        },
+        {
+          "id": "203",
+          "number": "203",
+          "type": "Family Suite",
+          "status": "available",
+          "statusColor": "bg-green-500"
+        }
       ]
     }
   ],
-  "doubleRooms": [
+  "reservations": [
     {
-      "id": "101",
-      "number": "101",
-      "statusColor": "bg-green-500",
-      "bookings": [
-        null, null, null, null, null, null, null, null,
-        { "guest": "Warner", "status": "due-out" },
-        null, null, null, null,
-        { "guest": "Pritar", "status": "due-out" }
-      ]
+      "id": "res001",
+      "room": "002",
+      "guest": "Joy Banma",
+      "checkIn": "2025-09-15",
+      "checkOut": "2025-09-18",
+      "status": "confirmed",
+      "type": "standard"
     },
     {
-      "id": "102",
-      "number": "102",
-      "statusColor": "bg-green-500",
-      "bookings": [
-        null, null, null, null, null, null, null, null,
-        { "guest": "Polash", "status": "new" },
-        { "guest": "Polash", "status": "new" },
-        { "guest": "Polash", "status": "new" },
-        null, null,
-        { "guest": "Henry Kevil", "status": "booking-offer" }
-      ]
+      "id": "res002",
+      "room": "002",
+      "guest": "David Smith",
+      "checkIn": "2025-09-20",
+      "checkOut": "2025-09-23",
+      "status": "confirmed",
+      "type": "standard"
     },
     {
-      "id": "103",
-      "number": "103",
-      "statusColor": "bg-green-500",
-      "bookings": [
-        null, null, null,
-        { "guest": "John", "status": "confirmed" },
-        { "guest": "John", "status": "confirmed" },
-        { "guest": "John", "status": "confirmed" },
-        null, null, null, null,
-        { "guest": "Gavin Martson", "status": "confirmed" },
-        { "guest": "Gavin Martson", "status": "confirmed" },
-        { "guest": "Gavin Martson", "status": "confirmed" },
-        null
-      ]
+      "id": "res003",
+      "room": "003",
+      "guest": "Frank Gray",
+      "checkIn": "2025-09-16",
+      "checkOut": "2025-09-16",
+      "status": "checkedIn",
+      "type": "vip"
+    },
+    {
+      "id": "res004",
+      "room": "101",
+      "guest": "Warner",
+      "checkIn": "2025-09-15",
+      "checkOut": "2025-09-16",
+      "status": "pending",
+      "type": "group"
+    },
+    {
+      "id": "res005",
+      "room": "101",
+      "guest": "Pitter",
+      "checkIn": "2025-09-20",
+      "checkOut": "2025-09-25",
+      "status": "confirmed",
+      "type": "group"
+    },
+    {
+      "id": "res006",
+      "room": "102",
+      "guest": "Palash",
+      "checkIn": "2025-09-18",
+      "checkOut": "2025-09-19",
+      "status": "confirmed",
+      "type": "vip"
+    },
+    {
+      "id": "res007",
+      "room": "102",
+      "guest": "Henry Kevil",
+      "checkIn": "2025-09-25",
+      "checkOut": "2025-09-28",
+      "status": "confirmed",
+      "type": "standard"
+    },
+    {
+      "id": "res008",
+      "room": "103",
+      "guest": "John",
+      "checkIn": "2025-09-15",
+      "checkOut": "2025-09-17",
+      "status": "confirmed",
+      "type": "standard"
+    },
+    {
+      "id": "res009",
+      "room": "103",
+      "guest": "Cavin Macron",
+      "checkIn": "2025-09-20",
+      "checkOut": "2025-09-22",
+      "status": "confirmed",
+      "type": "standard"
+    },
+    {
+      "id": "res010",
+      "room": "201",
+      "guest": "Bratlee",
+      "checkIn": "2025-09-20",
+      "checkOut": "2025-09-23",
+      "status": "confirmed",
+      "type": "family"
+    },
+    {
+      "id": "res011",
+      "room": "202",
+      "guest": "Rohit",
+      "checkIn": "2025-09-15",
+      "checkOut": "2025-09-19",
+      "status": "confirmed",
+      "type": "family"
+    },
+    {
+      "id": "res012",
+      "room": "202",
+      "guest": "Katter",
+      "checkIn": "2025-09-25",
+      "checkOut": "2025-09-27",
+      "status": "pending",
+      "type": "family"
+    },
+    {
+      "id": "res013",
+      "room": "203",
+      "guest": "Mesai",
+      "checkIn": "2025-09-18",
+      "checkOut": "2025-09-19",
+      "status": "confirmed",
+      "type": "family"
+    },
+    {
+      "id": "res014",
+      "room": "203",
+      "guest": "Ronaldo",
+      "checkIn": "2025-09-21",
+      "checkOut": "2025-09-28",
+      "status": "confirmed",
+      "type": "family"
     }
   ],
-  "familyRooms": [
-    {
-      "id": "201",
-      "number": "201",
-      "statusColor": "bg-green-500",
-      "bookings": [
-        null, null, null, null, null, null, null, null, null, null, null, null,
-        { "guest": "Bootleg", "status": "booking-offer" },
-        null
-      ]
-    },
-    {
-      "id": "202",
-      "number": "202",
-      "statusColor": "bg-green-500",
-      "bookings": [
-        null, null, null, null,
-        { "guest": "Babul", "status": "new" },
-        { "guest": "Babul", "status": "new" },
-        { "guest": "Babul", "status": "new" },
-        { "guest": "Babul", "status": "new" },
-        { "guest": "Babul", "status": "new" },
-        { "guest": "Babul", "status": "new" },
-        null, null, null,
-        { "guest": "Kasher", "status": "due-out" }
-      ]
-    },
-    {
-      "id": "202b",
-      "number": "202",
-      "statusColor": "bg-green-500",
-      "bookings": [
-        null, null, null, null, null, null, null, null, null,
-        { "guest": "Massi", "status": "new" },
-        { "guest": "Massi", "status": "new" },
-        null,
-        { "guest": "Ronaldo", "status": "new" },
-        { "guest": "Ronaldo", "status": "new" }
-      ]
-    },
-    {
-      "id": "203",
-      "number": "203",
-      "statusColor": "bg-green-500",
-      "bookings": [
-        null, null, null, null,
-        { "guest": "Kafi", "status": "due-out" },
-        { "guest": "Kafi", "status": "due-out" },
-        null, null, null, null, null, null, null, null
-      ]
-    }
-  ],
-  "bookingStatusColors": {
-    "new": "bg-yellow-400",
-    "confirmed": "bg-blue-500",
-    "book": "bg-green-600",
-    "checked-in": "bg-green-800",
-    "due-out": "bg-orange-500",
-    "checked-out": "bg-orange-600",
-    "booking-offer": "bg-blue-400",
-    "out-of-order": "bg-red-500"
+  "roomStatusColors": {
+    "available": "bg-green-500",
+    "occupied": "bg-red-500",
+    "maintenance": "bg-yellow-500"
+  },
+  "reservationTypeColors": {
+    "standard": "bg-blue-100 text-blue-800 border-l-4 border-blue-400",
+    "vip": "bg-yellow-100 text-yellow-800 border-l-4 border-yellow-400",
+    "group": "bg-orange-100 text-orange-800 border-l-4 border-orange-400",
+    "family": "bg-green-100 text-green-800 border-l-4 border-green-400"
+  },
+  "reservationStatusColors": {
+    "confirmed": "bg-green-100 text-green-800",
+    "pending": "bg-yellow-100 text-yellow-800",
+    "checkedIn": "bg-blue-100 text-blue-800",
+    "cancelled": "bg-red-100 text-red-800"
   }
 }

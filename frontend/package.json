@@ -21,7 +21,7 @@
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "^1.2.67",
+    "@iconify-json/lucide": "^1.2.68",
     "@tsconfig/node22": "^22.0.2",
     "@types/node": "^22.16.5",
     "@unocss/preset-icons": "^66.5.1",
