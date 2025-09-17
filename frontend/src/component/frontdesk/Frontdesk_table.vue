@@ -43,8 +43,8 @@
     <div class="min-w-full overflow-auto">
       <div class="bg-white">
         <div class="grid" :style="`grid-template-columns: 12rem repeat(${hotelStore.dateRange.length}, 6rem)`">
-          <div class="px-4 py-3 pt-4 bg-gray-50">
-            <span class="text-md font-bold text-gray-700">Rooms</span>
+          <div class="px-4 py-3 pt-4 bg-gray-50 outline outline-1 outline-gray-200">
+            <span class="text-sm font-bold text-gray-700">Rooms</span>
           </div>
 
           <div v-for="date in hotelStore.dateRange" :key="date.full"

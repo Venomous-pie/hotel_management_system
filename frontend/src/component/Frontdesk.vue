@@ -1,39 +1,5 @@
 <template>
   <div class="h-full bg-white">
-    <div class="flex items-center justify-between px-6 pt-2 pb-1 bg-white border-b border-gray-200">
-      <div class="flex items-center bg-gray-50 rounded-full px-4 py-2 w-80">
-        <i class="i-lucide-search text-gray-400 text-xs mr-3"></i>
-        <input type="text" placeholder="Search"
-          class="bg-transparent border-none outline-none focus:outline-none text-xs text-gray-700 placeholder-gray-400 flex-1 caret-blue-500"
-          v-model="searchQuery" />
-      </div>
-
-      <div class="flex items-center gap-4">
-        <div class="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer">
-          <i class="i-lucide-refresh-cw text-gray-600 w-5 h-5 inline-block"></i>
-        </div>
-
-        <div class="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer">
-          <i class="i-lucide-bell text-gray-600 w-5 h-5 inline-block"></i>
-        </div>
-
-        <div class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded-lg px-3 py-2 transition-colors"
-          @click="toggleUserDropdown">
-          <img src="/receptionist.png" alt="Profile" class="w-8 h-8 rounded-full object-cover" />
-          <span class="text-xs font-medium text-gray-700">Grace Hoppers</span>
-          <i class="i-lucide-chevron-down text-gray-400 w-4 h-4 inline-block"></i>
-        </div>
-
-        <div v-if="showUserDropdown"
-          class="absolute top-16 right-6 bg-white border border-gray-200 rounded-lg shadow-lg py-2 w-48 z-50">
-          <a href="#" class="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 no-underline">Profile</a>
-          <a href="#" class="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 no-underline">Settings</a>
-          <hr class="my-1 border-gray-50" />
-          <a href="#" class="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 no-underline">Sign out</a>
-        </div>
-      </div>
-    </div>
-    <hr class="my-1 border-gray-50" />
     <div class="flex items-center justify-between px-6">
       <h2 class="font-medium text-gray-700">Front Desk</h2>
       <div class="flex items-center gap-2">
@@ -162,8 +128,8 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import hotelData from '../../data/hotelData.json'
-import Frontdesk_table from './Frontdesk_table.vue'
+import hotelData from '../data/hotelData.json'
+import Frontdesk_table from './frontdesk/Frontdesk_table.vue'
 
 const searchQuery = ref('')
 const bookingSearchQuery = ref('')
