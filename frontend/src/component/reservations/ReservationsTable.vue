@@ -5,7 +5,6 @@
         <div class="table-header-group bg-gray-50 text-xs font-medium text-gray-700 border-b border-gray-200">
           <div class="table-row">
             <div class="table-cell px-4 py-3 border-r border-gray-200">
-              <input type="checkbox" class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500" />
               <span class="ml-2 font-bold">Booking ID</span>
             </div>
             <div class="table-cell px-3 py-3 text-center font-bold">Room</div>
@@ -65,9 +64,7 @@
           <div v-for="reservation in paginatedReservations" :key="reservation.id" class="table-row h-12 cursor-pointer">
 
             <div
-              class="table-cell px-4 py-3 outline outline-1 outline-gray-50 hover:bg-gray-50 transition-colors items-center align-middle">
-              <input type="checkbox" class="w-4 h-4 text-green-600 border-gray-300 rounded mr-3 focus:ring-green-500"
-                @change="handleReservationSelect(reservation.id, ($event.target as HTMLInputElement).checked)" />
+              class="table-cell px-4 py-3 outline outline-1 outline-gray-50 hover:bg-gray-50 transition-colors items-center align-middle text-center">
               <span class="text-gray-800 font-medium cursor-pointer hover:text-green-600 transition-colors truncate"
                 @click="viewReservationDetails(reservation)">
                 {{ reservation.id }}
@@ -199,11 +196,11 @@ const props = defineProps<Props>()
 
 const hotelStore = useHotelStore()
 const { formatDate } = useDateUtils()
-const { 
-  loading, 
-  error, 
-  filterReservations, 
-  loadReservations 
+const {
+  loading,
+  error,
+  filterReservations,
+  loadReservations
 } = useReservations()
 const { getStatusBadgeClasses, getStatusText } = useStatusColors()
 const currentPage = ref(1)

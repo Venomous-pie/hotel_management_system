@@ -28,8 +28,10 @@ export default defineConfig({
   safelist: [
     'grid-cols-15',
     'bg-yellow-400',
+    'bg-yellow-500',
     'bg-blue-500',
     'bg-green-600',
+    'bg-green-200',
     'bg-green-800',
     'bg-orange-500',
     'bg-orange-600',
