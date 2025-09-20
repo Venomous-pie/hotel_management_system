@@ -1,12 +1,17 @@
-import type { Reservation, RoomCategory } from '../types/hotel'
+import { ref } from 'vue'
+import type { Reservation, RoomCategory, ReservationFilters } from '../types/hotel'
 import { useDateUtils } from './useDateUtils'
-import { useHotelStore } from '../stores/hotelStore'
+import { useStatusColors } from './useStatusColors'
+import hotelData from '../data/hotelData.json'
 
 export const useReservations = () => {
   const { formatDate } = useDateUtils()
-  const hotelStore = useHotelStore()
+  const { getReservationTypeColor } = useStatusColors()
+  
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+  const reservations = ref<Reservation[]>(hotelData.reservations as Reservation[] || [])
 
-  // Get reservation for a specific room and date
   const getReservation = (roomNumber: string, date: string, reservations: Reservation[]): Reservation | undefined => {
     return reservations.find(res => {
       const checkIn = new Date(res.checkIn)
@@ -19,33 +24,10 @@ export const useReservations = () => {
     })
   }
 
-  // Get reservation colors based on type from hotel data
   const getReservationColor = (reservation: Reservation): string => {
-    const colors = hotelStore.data.reservationTypeColors
-    
-    // Ensure we always return a valid color class
-    if (colors && colors[reservation.type]) {
-      return colors[reservation.type]
-    }
-    
-    // Fallback colors if data is not available
-    const fallbackColors = {
-      standard: 'bg-blue-100 text-blue-800 border-l-4 border-blue-400',
-      vip: 'bg-yellow-100 text-yellow-800 border-l-4 border-yellow-400',
-      group: 'bg-orange-100 text-orange-800 border-l-4 border-orange-400',
-      family: 'bg-green-100 text-green-800 border-l-4 border-green-400'
-    }
-    
-    return fallbackColors[reservation.type as keyof typeof fallbackColors] || fallbackColors.standard
+    return getReservationTypeColor(reservation.type as any)
   }
 
-  // Get room status colors from hotel data
-  const getRoomStatusColor = (status: string): string => {
-    const colors = hotelStore.data.roomStatusColors
-    return colors[status] || 'bg-gray-400'
-  }
-
-  // Get available rooms count for a category on a specific date
   const getAvailableRooms = (categoryName: string, date: string, categories: RoomCategory[], reservations: Reservation[]): string => {
     const category = categories.find(cat => cat.name === categoryName)
     if (!category) return '0'
@@ -58,24 +40,14 @@ export const useReservations = () => {
     return available.toString()
   }
 
-  // Get availability color based on room count
   const getAvailabilityColor = (categoryName: string, date: string, categories: RoomCategory[], reservations: Reservation[]): string => {
     const available = parseInt(getAvailableRooms(categoryName, date, categories, reservations))
-    const category = categories.find(cat => cat.name === categoryName)
-    const total = category ? category.rooms.length : 0
     
-    if (available === 0) return 'bg-red-500 text-white'
-    if (available <= total / 3) return 'bg-orange-500 text-white'
-    return 'bg-green-500 text-white'
+    if (available === 0) return 'bg-gray-100 text-gray-700'
+    return 'bg-green-200 text-gray-700'
   }
 
-  // Get status badge color from hotel data
-  const getStatusBadgeColor = (status: string): string => {
-    const colors = hotelStore.data.reservationStatusColors
-    return colors[status] || 'bg-gray-100 text-gray-800'
-  }
 
-  // Create new reservation
   const createReservation = (roomNumber: string, date: string, categories: RoomCategory[]) => {
     const room = categories
       .flatMap(cat => cat.rooms)
@@ -85,13 +57,59 @@ export const useReservations = () => {
     alert(`Add new reservation:\nRoom: ${room ? room.number : roomNumber}\nDate: ${formatDate(date)}\n\nThis would open a reservation form.`)
   }
 
+  // Reservation filtering and management
+  const filterReservations = (filters: ReservationFilters) => {
+    let filtered = reservations.value
+
+    if (filters.searchQuery) {
+      filtered = filtered.filter(res => 
+        res.guest.toLowerCase().includes(filters.searchQuery!.toLowerCase()) ||
+        res.room.toLowerCase().includes(filters.searchQuery!.toLowerCase()) ||
+        res.id.toLowerCase().includes(filters.searchQuery!.toLowerCase())
+      )
+    }
+
+    if (filters.status && filters.status !== 'All') {
+      const statusMap: Record<string, string> = {
+        'confirmed': 'confirmed',
+        'pending': 'pending',
+        'checkedIn': 'checkedIn',
+        'cancelled': 'cancelled'
+      }
+      const filterStatus = statusMap[filters.status]
+      if (filterStatus) {
+        filtered = filtered.filter(res => res.status === filterStatus)
+      }
+    }
+
+    return filtered
+  }
+
+
+  const loadReservations = async () => {
+    loading.value = true
+    error.value = null
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      reservations.value = hotelData.reservations as Reservation[] || []
+    } catch (err) {
+      error.value = 'Failed to load reservations'
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
+    loading,
+    error,
+    reservations,
+    filterReservations,
+    loadReservations,
     getReservation,
     getReservationColor,
-    getRoomStatusColor,
     getAvailableRooms,
     getAvailabilityColor,
-    getStatusBadgeColor,
     createReservation
   }
 }

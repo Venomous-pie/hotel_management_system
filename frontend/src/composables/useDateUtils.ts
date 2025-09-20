@@ -1,5 +1,4 @@
 export const useDateUtils = () => {
-  // Utility functions
   const isToday = (dateString: string): boolean => {
     const today = new Date().toISOString().split('T')[0]
     return dateString === today

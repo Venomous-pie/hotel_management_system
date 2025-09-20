@@ -112,7 +112,7 @@
     <div class="h-full px-6">
       <div class="w-full h-full">
         <Frontdesk_table 
-          :search-query="searchQuery"
+          :search-query="''"
           :booking-search-query="bookingSearchQuery"
           :selected-year="selectedYear"
           :selected-month="selectedMonth"
@@ -126,35 +126,29 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue'
 import hotelData from '../data/hotelData.json'
 import Frontdesk_table from './frontdesk/Frontdesk_table.vue'
 
-const searchQuery = ref('')
-const bookingSearchQuery = ref('')
-const showUserDropdown = ref(false)
-const selectedYear = ref(2025)
-const selectedMonth = ref('September')
+const bookingSearchQuery = ref<string>('')
+const selectedYear = ref<number>(2025)
+const selectedMonth = ref<string>('September')
 
-// Dropdown states
-const dropdownOpen = ref({
+type DropdownKeys = 'reservationType' | 'roomType' | 'bookingOption'
+const dropdownOpen = ref<Record<DropdownKeys, boolean>>({
   reservationType: false,
   roomType: false,
   bookingOption: false
 })
 
-// Selected values
-const selectedReservationType = ref('All Types')
-const selectedRoomType = ref('All Rooms')
-const selectedBookingOption = ref('All Options')
+const selectedReservationType = ref<string>('All Types')
+const selectedRoomType = ref<string>('All Rooms')
+const selectedBookingOption = ref<string>('All Options')
 
-// Dropdown options
-const reservationTypes = ['All Types', 'Standard', 'Premium', 'VIP', 'Group Booking', 'Family']
-const roomTypes = ['All Rooms', 'Single', 'Double', 'Family']
-const bookingOptions = ['All Options', 'Confirmed', 'Pending', 'Cancelled', 'Checked In']
-
-// Show 9 years at a time, centered around selected year
+const reservationTypes = ['All Types', 'Standard', 'Premium', 'VIP', 'Group Booking', 'Family'] as const
+const roomTypes = ['All Rooms', 'Single', 'Double', 'Family'] as const
+const bookingOptions = ['All Options', 'Confirmed', 'Pending', 'Cancelled', 'Checked In'] as const
 const visibleYears = computed(() => {
   if (!hotelData.years) return []
   const currentIndex = hotelData.years.indexOf(selectedYear.value)
@@ -163,8 +157,7 @@ const visibleYears = computed(() => {
   return hotelData.years.slice(start, end)
 })
 
-// Enhanced navigation functions with safety checks
-const navigateYear = (direction) => {
+const navigateYear = (direction: number) => {
   if (!hotelData.years) return
   const currentIndex = hotelData.years.indexOf(selectedYear.value)
   const newIndex = currentIndex + direction
@@ -173,7 +166,7 @@ const navigateYear = (direction) => {
   }
 }
 
-const navigateMonth = (direction) => {
+const navigateMonth = (direction: number) => {
   if (!hotelData.months) return
   const currentIndex = hotelData.months.indexOf(selectedMonth.value)
   const newIndex = currentIndex + direction
@@ -182,33 +175,27 @@ const navigateMonth = (direction) => {
   }
 }
 
-const toggleUserDropdown = () => {
-  showUserDropdown.value = !showUserDropdown.value
-}
-
-// Dropdown functions
-const toggleDropdown = (dropdownName) => {
-  // Close all other dropdowns
+const toggleDropdown = (dropdownName: DropdownKeys) => {
   Object.keys(dropdownOpen.value).forEach(key => {
-    if (key !== dropdownName) {
-      dropdownOpen.value[key] = false
+    const typedKey = key as DropdownKeys
+    if (typedKey !== dropdownName) {
+      dropdownOpen.value[typedKey] = false
     }
   })
-  // Toggle the selected dropdown
   dropdownOpen.value[dropdownName] = !dropdownOpen.value[dropdownName]
 }
 
-const selectReservationType = (type) => {
+const selectReservationType = (type: string) => {
   selectedReservationType.value = type
   dropdownOpen.value.reservationType = false
 }
 
-const selectRoomType = (type) => {
+const selectRoomType = (type: string) => {
   selectedRoomType.value = type
   dropdownOpen.value.roomType = false
 }
 
-const selectBookingOption = (option) => {
+const selectBookingOption = (option: string) => {
   selectedBookingOption.value = option
   dropdownOpen.value.bookingOption = false
 }

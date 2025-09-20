@@ -49,6 +49,11 @@ export default defineConfig({
     'bg-green-100',
     'text-green-800',
     'border-green-400',
+    // Status colors for cancelled and checkedOut
+    'bg-red-100',
+    'text-red-800',
+    'bg-orange-100',
+    'text-orange-800',
     // Icons
     'i-lucide-x',
     'i-lucide-chevron-down',

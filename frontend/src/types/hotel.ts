@@ -1,9 +1,11 @@
+export type ReservationStatus = 'confirmed' | 'pending' | 'checkedIn' | 'checkedOut' | 'cancelled'
+
 export interface Room {
   id: string
   number: string
   type: string
   status: 'available' | 'occupied' | 'maintenance'
-  statusColor?: string
+  statusColor: string
 }
 
 export interface RoomCategory {
@@ -18,8 +20,14 @@ export interface Reservation {
   guest: string
   checkIn: string
   checkOut: string
-  status: 'confirmed' | 'pending' | 'checkedIn' | 'cancelled'
+  status: ReservationStatus
   type: 'standard' | 'vip' | 'group' | 'family'
+  amount: number
+  balance: number
+  source: string
+  orders?: number
+  bookingDate?: string
+  notes?: string
 }
 
 export interface DateRange {
@@ -44,18 +52,29 @@ export interface WeeklyStats {
   reservations: number
 }
 
-export interface ColorSchemes {
-  roomStatusColors: Record<string, string>
-  reservationTypeColors: Record<string, string>
-  reservationStatusColors: Record<string, string>
-}
-
 export interface HotelData {
   years: number[]
   months: string[]
   roomCategories: RoomCategory[]
   reservations: Reservation[]
-  roomStatusColors: Record<string, string>
-  reservationTypeColors: Record<string, string>
-  reservationStatusColors: Record<string, string>
+}
+
+export interface Props {
+  searchQuery: string
+  selectedFilters: {
+    checkIn: string
+    cancelled: string
+    booking: string
+    guest: string
+    status: string
+  }
+}
+
+export interface ReservationFilters {
+  searchQuery?: string
+  checkIn?: string
+  cancelled?: string
+  booking?: string
+  guest?: string
+  status?: string
 }

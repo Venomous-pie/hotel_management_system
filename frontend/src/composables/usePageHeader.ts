@@ -1,20 +1,27 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 
-export function usePageHeader(options = {}) {
-  const searchQuery = ref('')
-  const showUserDropdown = ref(false)
+interface PageHeaderOptions {
+  onSearch?: (query: string) => void
+  onNotification?: () => void
+  onRefresh?: () => void
+  onProfile?: () => void
+  onSettings?: () => void
+  onLogout?: () => void
+}
+
+export function usePageHeader(options: PageHeaderOptions = {}) {
+  const searchQuery = ref<string>('')
+  const showUserDropdown = ref<boolean>(false)
   
   const toggleUserDropdown = () => {
     showUserDropdown.value = !showUserDropdown.value
   }
   
-  // Close dropdown when clicking outside
   const closeUserDropdown = () => {
     showUserDropdown.value = false
   }
   
-  // Handle search functionality
-  const handleSearch = (query) => {
+  const handleSearch = (query: string) => {
     searchQuery.value = query
     if (options.onSearch) {
       options.onSearch(query)
@@ -32,7 +39,6 @@ export function usePageHeader(options = {}) {
     }
   }
   
-  // Handle refresh click
   const handleRefreshClick = () => {
     if (options.onRefresh) {
       options.onRefresh()
@@ -42,7 +48,6 @@ export function usePageHeader(options = {}) {
     }
   }
   
-  // Handle profile actions
   const handleProfileClick = () => {
     closeUserDropdown()
     if (options.onProfile) {
@@ -69,10 +74,11 @@ export function usePageHeader(options = {}) {
       console.log('Logout clicked')
     }
   }
+
   
-  // Close dropdown when clicking outside
-  const handleClickOutside = (event) => {
-    if (showUserDropdown.value && !event.target.closest('.user-dropdown-container')) {
+  const handleClickOutside = (event: Event) => {
+    const target = event.target as Element
+    if (showUserDropdown.value && !target.closest('.user-dropdown-container')) {
       closeUserDropdown()
     }
   }

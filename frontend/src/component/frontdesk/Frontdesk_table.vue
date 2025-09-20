@@ -40,25 +40,7 @@
       </div>
     </div>
 
-    <div class="min-w-full overflow-auto">
-      <div class="bg-white">
-        <div class="grid" :style="`grid-template-columns: 12rem repeat(${hotelStore.dateRange.length}, 6rem)`">
-          <div class="px-4 py-3 pt-4 bg-gray-50 outline outline-1 outline-gray-200">
-            <span class="text-sm font-bold text-gray-700">Rooms</span>
-          </div>
-
-          <div v-for="date in hotelStore.dateRange" :key="date.full"
-            class="px-2 py-3 bg-gray-50 text-center hover:bg-gray-100 transition-colors cursor-pointer outline outline-1 outline-gray-200"
-            :class="{
-              'bg-blue-100 text-blue-700': isToday(date.full),
-              'bg-orange-100 text-orange-700': isWeekend(date.full) && !isToday(date.full)
-            }">
-            <div class="text-xs font-bold text-gray-700">{{ date.day }}</div>
-            <div class="text-xs text-gray-500">{{ date.date }}</div>
-          </div>
-        </div>
-      </div>
-
+    <div class="min-w-full bg-white outline outline-1 outline-gray-200 outline-offset-[-1px] rounded-lg">
       <div v-if="filteredRoomCategories.length === 0"
         class="flex flex-col items-center justify-center py-12 text-gray-500">
         <i class="i-lucide-search-x w-12 h-12 mb-4 text-gray-400"></i>
@@ -68,17 +50,33 @@
         </p>
       </div>
 
-      <div v-for="category in filteredRoomCategories" :key="category.name">
-        <RoomCategoryHeader :category="category" :dateRange="hotelStore.dateRange"
-          :filteredCategories="filteredRoomCategories" :filteredReservations="filteredReservations"
-          @toggle-category="hotelStore.toggleCategory" />
+      <table v-else class="min-w-full bg-white border-collapse">
+        <thead class="sticky top-0 z-10">
+          <tr>
+            <th class="outline outline-1 outline-gray-200 outline-offset-[-1px] bg-gray-50 px-4 py-3 text-left text-sm font-bold text-gray-700 w-40 rounded-tl-lg">
+              Rooms
+            </th>
+            <th v-for="date in hotelStore.dateRange" :key="date.full"
+              class="outline outline-1 outline-gray-50 px-2 py-3 text-center text-xs font-bold w-24 hover:bg-gray-100 transition-colors cursor-pointer">
+              <div class="text-xs font-bold text-gray-700">{{ date.day }}</div>
+              <div class="text-xs text-gray-500">{{ date.date }}</div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <template v-for="category in filteredRoomCategories" :key="category.name">
+            <RoomCategoryHeader :category="category" :dateRange="hotelStore.dateRange"
+              :filteredCategories="filteredRoomCategories" :filteredReservations="filteredReservations"
+              @toggle-category="hotelStore.toggleCategory" />
 
-        <div v-if="category.expanded">
-          <RoomRow v-for="room in category.rooms" :key="room.number || room.id" :room="room"
-            :dateRange="hotelStore.dateRange" :reservations="filteredReservations"
-            @open-reservation="hotelStore.openReservationModal" @create-reservation="handleCreateReservation" />
-        </div>
-      </div>
+            <template v-if="category.expanded">
+              <RoomRow v-for="room in category.rooms" :key="room.number || room.id" :room="room"
+                :dateRange="hotelStore.dateRange" :reservations="filteredReservations"
+                @open-reservation="hotelStore.openReservationModal" @create-reservation="handleCreateReservation" />
+            </template>
+          </template>
+        </tbody>
+      </table>
     </div>
 
     <ReservationModal :showModal="hotelStore.showReservationModal" :reservation="hotelStore.selectedReservation"
@@ -95,15 +93,12 @@ import RoomCategoryHeader from './RoomCategoryHeader.vue'
 import RoomRow from './RoomRow.vue'
 import ReservationModal from './ReservationModal.vue'
 
-// Props from parent component
 const props = defineProps<FrontdeskFilters>()
 
-// Store and composables
 const hotelStore = useHotelStore()
 const { isToday, isWeekend, formatDate, formatDateRange } = useDateUtils()
 const { createReservation } = useReservations()
 
-// Computed filters object
 const filters = computed((): FrontdeskFilters => ({
   searchQuery: props.searchQuery,
   bookingSearchQuery: props.bookingSearchQuery,
@@ -114,14 +109,11 @@ const filters = computed((): FrontdeskFilters => ({
   selectedBookingOption: props.selectedBookingOption
 }))
 
-// Filtered data from store - now reactive
 const filteredRoomCategories = computed(() => hotelStore.getFilteredRoomCategories(filters.value).value)
 const filteredReservations = computed(() => hotelStore.getFilteredReservations(filters.value).value)
 
-// Weekly statistics - now reactive
 const weeklyStats = computed(() => hotelStore.getWeeklyStats(filteredRoomCategories.value, filteredReservations.value).value)
 
-// Initialize store
 onMounted(() => {
   hotelStore.initialize()
   hotelStore.setWeekFromMonthYear(
@@ -131,7 +123,6 @@ onMounted(() => {
   )
 })
 
-// Watch for changes in selected month/year from parent
 watch([() => props.selectedYear, () => props.selectedMonth], () => {
   hotelStore.setWeekFromMonthYear(
     props.selectedYear,
@@ -140,16 +131,12 @@ watch([() => props.selectedYear, () => props.selectedMonth], () => {
   )
 })
 
-// Watch for all filter changes to ensure reactivity
 watch(
   () => filters.value,
-  () => {
-    // Force reactivity update when filters change
-  },
+  () => { },
   { deep: true }
 )
 
-// Handle create reservation
 const handleCreateReservation = (roomNumber: string, date: string) => {
   createReservation(roomNumber, date, filteredRoomCategories.value)
 }

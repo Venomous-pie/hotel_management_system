@@ -29,7 +29,7 @@ export const useHotelStore = defineStore('hotel', () => {
     const dates: DateRange[] = []
     const startDate = new Date(currentWeekStart.value)
     
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 18; i++) {
       const date = new Date(startDate)
       date.setDate(startDate.getDate() + i)
       
@@ -101,7 +101,8 @@ export const useHotelStore = defineStore('hotel', () => {
           'Confirmed': 'confirmed',
           'Pending': 'pending',
           'Cancelled': 'cancelled',
-          'Checked In': 'checkedIn'
+          'Checked In': 'checkedIn',
+          'Checked Out': 'checkedOut'
         }
         const filterStatus = statusMap[filters.selectedBookingOption]
         if (filterStatus) {

@@ -98,12 +98,12 @@
     </div>
 </template>
 
-<script setup>
-import { useActiveComponent } from '../composables/useActiveComponent.js'
+<script setup lang="ts">
+import { useActiveComponent } from '../composables/useActiveComponent'
 
 const { activeComponent, setActiveComponent } = useActiveComponent()
 
-const switchComponent = (componentName) => {
+const switchComponent = (componentName: string) => {
     setActiveComponent(componentName)
 }
 </script>

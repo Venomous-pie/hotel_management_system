@@ -6,7 +6,7 @@
         <i class="i-lucide-search text-gray-400 text-xs mr-3"></i>
         <input type="text" placeholder="Search"
           class="bg-transparent border-none outline-none focus:outline-none text-xs text-gray-700 placeholder-gray-400 flex-1 caret-blue-500"
-          v-model="searchQuery" @input="handleSearch($event.target.value)" />
+          v-model="searchQuery" @input="handleSearch(($event.target as HTMLInputElement).value)" />
       </div>
 
       <div class="flex items-center gap-4">
@@ -49,10 +49,10 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
-import { useActiveComponent } from '../composables/useActiveComponent.js'
-import { usePageHeader } from '../composables/usePageHeader.js'
+import { useActiveComponent } from '../composables/useActiveComponent'
+import { usePageHeader } from '../composables/usePageHeader'
 import Frontdesk from './Frontdesk.vue'
 import Reservations from './Reservations.vue'
 import Guests from './Guests.vue'
@@ -71,13 +71,15 @@ const {
   searchQuery, 
   showUserDropdown, 
   toggleUserDropdown, 
-  closeUserDropdown,
   handleSearch,
   handleNotificationClick,
-  handleRefreshClick 
+  handleRefreshClick,
+  handleProfileClick,
+  handleSettingsClick,
+  handleLogoutClick
 } = usePageHeader()
 
-const componentMap = {
+const componentMap: Record<string, any> = {
   frontdesk: Frontdesk,
   reservations: Reservations,
   guests: Guests,

@@ -31,7 +31,7 @@
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Status</label>
           <span class="inline-block px-3 py-1 text-xs font-medium rounded-full capitalize"
-            :class="getStatusBadgeColor(reservation.status)">
+            :class="getStatusBadgeClasses(reservation.status)">
             {{ reservation.status }}
           </span>
         </div>
@@ -60,6 +60,7 @@
 <script setup lang="ts">
 import type { Reservation } from '../../types/hotel'
 import { useReservations } from '../../composables/useReservations'
+import { useStatusColors } from '../../composables/useStatusColors'
 import { useDateUtils } from '../../composables/useDateUtils'
 
 interface Props {
@@ -72,6 +73,7 @@ defineEmits<{
   'close-modal': []
 }>()
 
-const { getReservationColor, getStatusBadgeColor } = useReservations()
+const { getReservationColor } = useReservations()
+const { getStatusBadgeClasses } = useStatusColors()
 const { formatDate } = useDateUtils()
 </script>
