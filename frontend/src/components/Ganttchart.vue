@@ -743,8 +743,9 @@ const getReservationSpans = (roomNumber: string) => {
             const top = rowTops.value[roomNumber] ?? 0
 
             const cellW = 'calc((100% - 16rem) / 16)'
-            const left = `calc(16rem + ${startIndex} * ${cellW})`
-            const width = `calc(${widthCells} * ${cellW})`
+            const halfCellW = 'calc(((100% - 16rem) / 16) / 2)'
+            const left = `calc(16rem + ${startIndex} * ${cellW} + ${halfCellW})`
+            const width = `calc(${widthCells} * ${cellW} - ${cellW})`
 
             spans.push({
                 key: reservation.id || reservation.bookingNumber || `${roomNumber}-${startIndex}`,
