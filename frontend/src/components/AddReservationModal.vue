@@ -561,6 +561,15 @@ const submitReservation = async () => {
   modalState.value.error = null
   
   try {
+    // Debug logging to check date formats
+    console.log('📅 Submitting reservation with dates:', {
+      checkIn: formData.value.checkIn,
+      checkOut: formData.value.checkOut,
+      checkInParsed: new Date(formData.value.checkIn).toISOString(),
+      checkOutParsed: new Date(formData.value.checkOut).toISOString(),
+      formData: formData.value
+    })
+    
     const response = await fetch('http://localhost:3000/api/reserve-room', {
       method: 'POST',
       headers: {

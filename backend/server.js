@@ -13,6 +13,12 @@ app.use(cors());
 
 // ---- Date helpers ----
 const normalizeToStartOfDay = (dateInput) => {
+  // Handle date strings in YYYY-MM-DD format to avoid timezone issues
+  if (typeof dateInput === 'string' && dateInput.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [year, month, day] = dateInput.split('-').map(Number);
+    return new Date(year, month - 1, day, 0, 0, 0, 0); // month is 0-indexed
+  }
+  
   const d = new Date(dateInput);
   d.setHours(0, 0, 0, 0);
   return d;
@@ -36,6 +42,32 @@ const buildOverlapWhere = ({ roomId, startDate, endDate, excludeId }) => ({
 
 app.get('/', (req, res) => {
     res.send('DB is correct lol.')
+})
+
+// Manual seeding endpoint for debugging
+app.post('/api/seed', async (req, res) => {
+    try {
+        console.log("\x1b[33m%s\x1b[0m", "Manual seeding requested via API...");
+        await seedData();
+        
+        const roomCount = await Room.count();
+        const roomTypeCount = await RoomType.count();
+        
+        res.json({ 
+            success: true, 
+            message: "Database seeded successfully",
+            data: {
+                roomTypes: roomTypeCount,
+                rooms: roomCount
+            }
+        });
+    } catch (error) {
+        console.error('Manual seeding failed:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: `Seeding failed: ${error.message}` 
+        });
+    }
 })
 
 // Reservation routes
@@ -64,6 +96,16 @@ app.post('/api/reserve-room', async (req, res) => {
         const checkOutDate = normalizeToStartOfDay(checkOut);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+
+        // Debug logging to verify date handling
+        console.log('🔧 Backend date processing:', {
+            checkInInput: checkIn,
+            checkOutInput: checkOut,
+            checkInProcessed: checkInDate.toISOString(),
+            checkOutProcessed: checkOutDate.toISOString(),
+            checkInLocal: checkInDate.toLocaleDateString(),
+            checkOutLocal: checkOutDate.toLocaleDateString()
+        });
 
         if (checkInDate < today) {
             return res.status(400).json({ error: "Check-in date cannot be in the past." });
@@ -479,9 +521,15 @@ const SEED_ON_START = (process.env.SEED_ON_START === 'true') || FORCE_SYNC;
 sequelize.sync({ force: FORCE_SYNC }).then(async () => {
     console.log("\x1b[35m%s\x1b[0m", `Database synced. force=${FORCE_SYNC}`);
     
-    if (SEED_ON_START) {
-        // Seed the database with initial data (optional)
+    // Check if database is empty and seed if needed
+    const roomCount = await Room.count();
+    const roomTypeCount = await RoomType.count();
+    
+    if (SEED_ON_START || roomCount === 0 || roomTypeCount === 0) {
+        console.log("\x1b[33m%s\x1b[0m", "Database appears empty or seeding requested. Seeding with initial data...");
         await seedData();
+    } else {
+        console.log("\x1b[32m%s\x1b[0m", `Database already contains ${roomCount} rooms and ${roomTypeCount} room types. Skipping seeding.`);
     }
     
     app.listen(PORT, () => {
