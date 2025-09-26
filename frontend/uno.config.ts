@@ -20,9 +20,6 @@ export default defineConfig({
     presetIcons({
       scale: 1.2,   
       warn: true,
-      collections: {
-        lucide: () => import('@iconify-json/lucide/icons.json').then(i => i.default),
-      }
     }),
   ],
   safelist: [
@@ -33,6 +30,7 @@ export default defineConfig({
     'bg-green-600',
     'bg-green-200',
     'bg-green-800',
+    'hover:bg-green-800',
     'bg-orange-500',
     'bg-orange-600',
     'bg-blue-400',
@@ -56,13 +54,6 @@ export default defineConfig({
     'text-red-800',
     'bg-orange-100',
     'text-orange-800',
-    // Icons
-    'i-lucide-x',
-    'i-lucide-chevron-down',
-    'i-lucide-chevron-right',
-    'i-lucide-more-horizontal'
-  ],
-  rules: [
-    ['grid-cols-15', { 'grid-template-columns': 'repeat(15, minmax(0, 1fr))' }],
+    // PrimeIcons are loaded via CSS, no need to safelist
   ],
 })

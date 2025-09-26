@@ -9,6 +9,6 @@
 </template>
 
 <script setup>
-import SideBar from '../component/Sidebar.vue'
-import Content from '../component/Maincontent.vue'
+import SideBar from '../components/Sidebar.vue'
+import Content from '../components/Maincontent.vue'
 </script>

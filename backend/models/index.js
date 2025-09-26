@@ -1,8 +1,8 @@
-const { Sequelize } = require('sequelize');
-const GuestsModel = require('./Guest');
-const ReservationsModel = require('./Reservation');
-const RoomModel = require('./Room');
-const RoomTypeModel = require('./RoomType');
+import { Sequelize } from 'sequelize';
+import GuestsModel from './Guest.js';
+import ReservationsModel from './Reservation.js';
+import RoomModel from './Room.js';
+import RoomTypeModel from './RoomType.js';
 
 const sequelize = new Sequelize({
     dialect: "sqlite",
@@ -24,4 +24,4 @@ Room.belongsTo(RoomType);
 
 RoomType.hasMany(Room);
 
-module.exports = { sequelize, Guest, Reservation, Room, RoomType };
+export { sequelize, Guest, Reservation, Room, RoomType };
