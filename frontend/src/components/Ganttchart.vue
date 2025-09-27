@@ -17,6 +17,15 @@
                     class="flex items-center justify-center w-8 h-8 cursor-pointer hover:bg-gray-100 rounded">
                     <i class="pi pi-chevron-right text-gray-600 w-3 h-3"></i>
                 </span>
+                
+                <!-- Today Button -->
+                <button 
+                    @click="jumpToToday" 
+                    title="Jump to today"
+                    class="ml-3 px-3 py-1 text-xs bg-gray-50 text-gray-600 border border-gray-200 rounded-full hover:bg-gray-100 hover:border-gray-300 transition-colors cursor-pointer"
+                >
+                    Today
+                </button>
             </div>
 
             <!-- Status Legend -->
@@ -112,7 +121,7 @@
                         <!-- Category Header Row -->
                         <tr class="cursor-pointer" @click="toggleCategory(category.type)">
                             <td
-                                class="sticky left-0 z-10 px-4 py-2 border-r border-gray-200 outline outline-1 outline-gray-100 w-270px min-w-270px max-w-270px overflow-hidden text-ellipsis whitespace-nowrap h-48px">
+                                class="sticky left-0 z-10 px-4 py-2 bg-white border-r border-gray-200 outline outline-1 outline-gray-100 w-270px min-w-270px max-w-270px overflow-hidden text-ellipsis whitespace-nowrap h-48px">
                                 <div class="flex items-center">
                                     <!-- Expand/Collapse Icon -->
                                     <div class="mr-2 text-gray-500">
@@ -149,18 +158,27 @@
                             class="border-t border-gray-100" :ref="el => setRowRef(room.number, el)">
                             <!-- Room Number -->
                             <td
-                                class="sticky left-0 z-10 bg-white px-6 py-2 border-r border-gray-200 outline outline-1 outline-gray-100 w-270px min-w-270px max-w-270px overflow-hidden text-ellipsis whitespace-nowrap h-48px">
+                                class="sticky left-0 z-100 bg-white px-6 py-2 border-r border-gray-200 outline outline-1 outline-gray-100 w-270px min-w-270px max-w-270px overflow-hidden text-ellipsis whitespace-nowrap h-48px">
                                 <div class="flex items-center py-2">
                                     <div class="text-sm font-medium text-gray-900">{{ room.number }}</div>
                                     <div class="ml-2 text-xs text-gray-500">{{ room.floor }}</div>
                                 </div>
                             </td>
 
-                            <!-- Day cells (empty for grid structure only) -->
+                            <!-- Day cells (clickable for creating reservations) -->
                             <td v-for="day in dateRange" :key="`${room.number}-${day.date}`"
-                                class="px-0.5 py-2 outline outline-1 outline-gray-100 transition-colors hover:bg-green-100 w-61.5px min-w-61.5px max-w-61.5px overflow-hidden h-48px"
-                                :class="{ 'bg-green-50': hoveredColumn === day.date }"
-                                @mouseenter="hoveredColumn = day.date" @mouseleave="hoveredColumn = null">
+                                class="px-0.5 py-2 outline outline-1 outline-gray-100 transition-colors hover:bg-green-100 w-61.5px min-w-61.5px max-w-61.5px overflow-hidden h-48px cursor-pointer"
+                                :class="{ 
+                                    'bg-green-50': hoveredColumn === day.date,
+                                    'hover:bg-blue-50': isRoomAvailable(room.number, day.date),
+                                    'hover:bg-red-50 cursor-not-allowed': !isRoomAvailable(room.number, day.date)
+                                }"
+                                :title="isRoomAvailable(room.number, day.date) ? 
+                                    `Click to create reservation for Room ${room.number} on ${day.date}` : 
+                                    `Room ${room.number} is not available on ${day.date}`"
+                                @mouseenter="hoveredColumn = day.date" 
+                                @mouseleave="hoveredColumn = null"
+                                @click="handleCellClick(room.number, day.date)">
                                 <!-- Empty cell to preserve grid; reservation spans are rendered in overlay layer -->
                             </td>
                         </tr>
@@ -222,11 +240,13 @@ const props = defineProps<{
     reservations: any[]
     loading: boolean
     error: string | null
+    targetDate?: Date | null
 }>()
 
 // Emit events to parent
 const emit = defineEmits<{
     updateDate: [{ year: number; month: number }]
+    openReservationModal: [{ roomNumber: string; checkInDate: string; isAvailable: boolean }]
 }>()
 
 // ============================================================================
@@ -258,13 +278,26 @@ const viewStartDate = ref<Date>(new Date())
 const isInternalNavigation = ref(false)
 
 // ============================================================================
-// DATE & VIEW MANAGEMENT
+// WATCHERS & LIFECYCLE
 // ============================================================================
 
-/**
- * Initialize view start date based on current date
- * Sets the Gantt chart to display dates starting from today
- */
+// Watch for targetDate changes from parent navigation
+watch(() => props.targetDate, (newTargetDate) => {
+    if (newTargetDate && !isInternalNavigation.value) {
+        console.log(`🎯 Gantt chart received target date: ${newTargetDate.toLocaleDateString()}`)
+        
+        // Set view to start from the target date (1st of month)
+        const targetStart = new Date(newTargetDate)
+        targetStart.setHours(0, 0, 0, 0)
+        
+        viewStartDate.value = targetStart
+        
+        console.log(`📅 Gantt chart view updated to start from: ${targetStart.toLocaleDateString()}`)
+    } else if (newTargetDate && isInternalNavigation.value) {
+        console.log(`🔄 Ignoring targetDate during internal navigation: ${newTargetDate.toLocaleDateString()}`)
+    }
+})
+
 const initializeViewDate = () => {
     const today = new Date()
     today.setHours(0, 0, 0, 0) // Reset time to midnight for consistent date comparison
@@ -285,7 +318,7 @@ const dateRange = computed(() => {
         date.setDate(startDate.getDate() + i)
 
         days.push({
-            date: date.toISOString().split('T')[0],
+            date: `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`,
             dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
             dayNumber: date.getDate().toString().padStart(2, '0')
         })
@@ -309,22 +342,48 @@ const navigateDates = (direction: number) => {
     newStartDate.setDate(newStartDate.getDate() + (direction * 5))
 
     viewStartDate.value = newStartDate
-
     // Check if we need to update parent's year/month context
     const newYear = newStartDate.getFullYear()
     const newMonth = newStartDate.getMonth()
 
+    // Only emit if year or month changed to avoid unnecessary updates
     if (newYear !== props.selectedYear || newMonth !== props.selectedMonth) {
         console.log(`🔄 Gantt navigation: ${props.selectedYear}-${props.selectedMonth + 1} → ${newYear}-${newMonth + 1}`)
-
         isInternalNavigation.value = true
         emit('updateDate', { year: newYear, month: newMonth })
-
-        // Reset flag after update
         setTimeout(() => {
             isInternalNavigation.value = false
         }, 100)
     }
+}
+
+/**
+ * Jump to today's date
+ * Sets the view to show today and updates parent component's year/month
+ */
+const jumpToToday = () => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    console.log(`📅 Jumping to today: ${today.toLocaleDateString()}`)
+    
+    // Set internal navigation flag to prevent parent from overriding with 1st of month
+    isInternalNavigation.value = true
+    
+    // Set view to start from today (not 1st of month)
+    viewStartDate.value = today
+    
+    // Update parent's year/month context
+    const currentYear = today.getFullYear()
+    const currentMonth = today.getMonth()
+    
+    // Emit to ensure parent year/month selectors are synced
+    emit('updateDate', { year: currentYear, month: currentMonth })
+    
+    // Keep internal navigation flag active longer to prevent targetDate override
+    setTimeout(() => {
+        isInternalNavigation.value = false
+    }, 500) // Longer delay to ensure parent's targetDate doesn't override
 }
 
 /**
@@ -352,6 +411,38 @@ const navigateToDate = (targetDate: string) => {
         setTimeout(() => {
             isInternalNavigation.value = false
         }, 100)
+    }
+}
+
+/**
+ * Handle cell click to open reservation modal with pre-filled data
+ * @param roomNumber - The room number that was clicked
+ * @param date - The date that was clicked (ISO string format)
+ */
+const handleCellClick = (roomNumber: string, date: string) => {
+    // Check if the room is available on this date
+    const isAvailable = isRoomAvailable(roomNumber, date)
+    
+    // Only proceed if the room is available
+    if (isAvailable) {
+        console.log(`🏨 Opening reservation modal for Room ${roomNumber} on ${date}`)
+        
+        // Emit event to parent component to open the modal
+        emit('openReservationModal', {
+            roomNumber: roomNumber,
+            checkInDate: date,
+            isAvailable: true
+        })
+    } else {
+        // Optional: Show a message or visual feedback for unavailable rooms
+        console.log(`❌ Room ${roomNumber} is not available on ${date}`)
+        
+        // You could emit an event for unavailable rooms too if you want to show a message
+        // emit('openReservationModal', {
+        //     roomNumber: roomNumber,
+        //     checkInDate: date,
+        //     isAvailable: false
+        // })
     }
 }
 

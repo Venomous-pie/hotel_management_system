@@ -6,8 +6,8 @@
         </div>
 
         <div class="flex w-full items-center p-2 rounded-lg pl-5 mr-5 mt-4">
-            <img src="/receptionist.png" alt="Profile"
-                class="h-10 w-10 object-cover object-top rounded-full object-cover" />
+            <img src="/receptionist.jpg" alt="Profile"
+                class="h-10 w-10 object-cover object-top rounded-full" />
 
             <div class="ml-3 leading-tight">
                 <p class="text-sm font-semibold text-black">Grace Hoppers</p>

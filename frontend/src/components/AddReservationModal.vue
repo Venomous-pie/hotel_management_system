@@ -3,7 +3,15 @@
     <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-200" @click.stop>
       <!-- Modal Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-200">
-        <h2 class="text-lg font-medium text-gray-900">Add New Reservation</h2>
+        <div class="flex items-center gap-3">
+          <h2 class="text-lg font-medium text-gray-900">Add New Reservation</h2>
+          <!-- Draft saved indicator -->
+          <div v-if="draftSaveState.isVisible" 
+               class="flex items-center gap-1 px-2 py-1 bg-green-50 text-green-600 rounded-md text-xs transition-opacity">
+            <i class="pi pi-check w-3 h-3"></i>
+            <span>{{ draftSaveState.message }}</span>
+          </div>
+        </div>
         <button 
           @click="closeModal"
           class="text-gray-400 hover:text-gray-600 transition-colors"
@@ -90,6 +98,7 @@
                   placeholder="Enter email address"
                   @input="handleEmailInput"
                   @blur="validateEmail"
+                  @keydown="handleEmailKeydown"
                 />
                 <p v-if="errors.email" class="mt-1 text-xs text-red-600">{{ errors.email }}</p>
               </div>
@@ -375,6 +384,10 @@ import type {
 
 interface Props {
   isOpen: boolean
+  prefilledData?: {
+    roomNumber?: string
+    checkInDate?: string
+  } | null
 }
 
 interface Emits {
@@ -409,6 +422,12 @@ const modalState = ref<ModalState>({
   isLoading: false,
   error: null,
   success: false
+})
+
+// Draft save state
+const draftSaveState = ref({
+  isVisible: false,
+  message: ''
 })
 
 // Validation errors
@@ -653,6 +672,13 @@ const validateEmail = () => {
     return false
   }
   
+  // Auto-complete with @gmail.com if user typed just a username
+  const email = formData.value.email.trim()
+  if (email && !email.includes('@') && !email.includes('.')) {
+    formData.value.email = email + '@gmail.com'
+    console.log(`📧 Auto-completed email: ${formData.value.email}`)
+  }
+  
   // Basic email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(formData.value.email.trim())) {
@@ -759,6 +785,7 @@ const handleFirstNameInput = () => {
   if (errors.value.firstName) {
     validateFirstName()
   }
+  autoSaveDraft()
 }
 
 const handleLastNameInput = () => {
@@ -766,11 +793,13 @@ const handleLastNameInput = () => {
   if (errors.value.lastName) {
     validateLastName()
   }
+  autoSaveDraft()
 }
 
 const handleMiddleNameInput = () => {
   capitalizeInput('middleName')
   validateMiddleName()
+  autoSaveDraft()
 }
 
 const handleEmailInput = () => {
@@ -778,11 +807,24 @@ const handleEmailInput = () => {
   if (errors.value.email && formData.value.email.trim()) {
     delete errors.value.email
   }
+  autoSaveDraft()
+}
+
+const handleEmailKeydown = (event: KeyboardEvent) => {
+  const email = formData.value.email.trim()
   
-  // Auto-complete common email domains
-  if (formData.value.email && !formData.value.email.includes('@') && formData.value.email.includes('.')) {
-    // Don't auto-complete if user is typing a domain
-    return
+  // Auto-complete on Tab, Space, or Enter if user typed just a username
+  if ((event.key === 'Tab' || event.key === ' ' || event.key === 'Enter') && 
+      email && !email.includes('@') && !email.includes('.')) {
+    
+    event.preventDefault() // Prevent default behavior
+    formData.value.email = email + '@gmail.com'
+    console.log(`📧 Auto-completed email with ${event.key}: ${formData.value.email}`)
+    
+    // If it was Enter, also validate the email
+    if (event.key === 'Enter') {
+      validateEmail()
+    }
   }
 }
 
@@ -791,6 +833,7 @@ const handleIdDocumentInput = () => {
   if (errors.value.idDocument) {
     validateIdDocument()
   }
+  autoSaveDraft()
 }
 
 const handleAddressInput = () => {
@@ -798,10 +841,22 @@ const handleAddressInput = () => {
   if (errors.value.address) {
     validateAddress()
   }
+  autoSaveDraft()
 }
 
 const handleNumGuestChange = () => {
   validateNumGuest()
+  
+  // Check if currently selected room can still accommodate the new guest count
+  if (formData.value.roomNumber) {
+    const currentRoom = rooms.value.find(room => room.number === formData.value.roomNumber)
+    if (currentRoom && !isRoomAvailable(currentRoom)) {
+      // Clear room selection if it can no longer accommodate the guests
+      formData.value.roomNumber = ''
+      console.log(`🔄 Cleared room selection - cannot accommodate ${formData.value.numGuest} guests`)
+    }
+  }
+  
   filterAvailableRooms()
 }
 
@@ -825,6 +880,8 @@ const formatPhoneInput = () => {
   if (errors.value.phone && phone.length > 0) {
     delete errors.value.phone
   }
+  
+  autoSaveDraft()
 }
 
 const getMaxPhoneLength = (countryCode: string): number => {
@@ -1089,6 +1146,9 @@ const submitReservation = async () => {
     
     modalState.value.success = true
     
+    // Clear draft on successful submission
+    clearFormDraft()
+    
     // Emit success event immediately to trigger data refresh
     emit('success', data.reservation)
     
@@ -1125,9 +1185,111 @@ const resetForm = () => {
   errors.value = {}
   modalState.value.error = null
   modalState.value.success = false
+  
+  // Clear saved draft when form is intentionally reset
+  clearFormDraft()
+}
+
+// ============================================================================
+// FORM DRAFT PERSISTENCE
+// ============================================================================
+
+const DRAFT_KEY = 'hotel_reservation_draft'
+
+const saveFormDraft = () => {
+  try {
+    const draft = {
+      ...formData.value,
+      timestamp: Date.now()
+    }
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
+    console.log('💾 Form draft saved')
+    
+    // Show draft saved indicator
+    showDraftSavedIndicator('Draft saved')
+  } catch (error) {
+    console.warn('Failed to save form draft:', error)
+  }
+}
+
+const showDraftSavedIndicator = (message: string) => {
+  draftSaveState.value.message = message
+  draftSaveState.value.isVisible = true
+  
+  // Hide after 2 seconds
+  setTimeout(() => {
+    draftSaveState.value.isVisible = false
+  }, 2000)
+}
+
+const loadFormDraft = () => {
+  try {
+    const saved = localStorage.getItem(DRAFT_KEY)
+    if (saved) {
+      const draft = JSON.parse(saved)
+      
+      // Check if draft is not too old (24 hours)
+      const isRecentDraft = draft.timestamp && (Date.now() - draft.timestamp) < 24 * 60 * 60 * 1000
+      
+      if (isRecentDraft) {
+        // Remove timestamp before applying to form
+        delete draft.timestamp
+        
+        // Only restore if there's meaningful data (not just defaults)
+        const hasData = draft.firstName || draft.lastName || draft.email || draft.phone || 
+                       draft.address || draft.idDocument || draft.specialRequest
+        
+        if (hasData) {
+          formData.value = { ...formData.value, ...draft }
+          console.log('📋 Form draft restored')
+          showDraftSavedIndicator('Draft restored')
+          return true
+        }
+      } else {
+        // Clear old draft
+        clearFormDraft()
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to load form draft:', error)
+  }
+  return false
+}
+
+const clearFormDraft = () => {
+  try {
+    localStorage.removeItem(DRAFT_KEY)
+    console.log('🗑️ Form draft cleared')
+  } catch (error) {
+    console.warn('Failed to clear form draft:', error)
+  }
+}
+
+// Auto-save draft with debouncing
+let autoSaveTimeout: number | null = null
+
+const autoSaveDraft = () => {
+  // Clear existing timeout
+  if (autoSaveTimeout) {
+    clearTimeout(autoSaveTimeout)
+  }
+  
+  // Set new timeout to save after 2 seconds of inactivity
+  autoSaveTimeout = setTimeout(() => {
+    // Only auto-save if there's meaningful data
+    const hasData = formData.value.firstName || formData.value.lastName || formData.value.email || 
+                   formData.value.phone || formData.value.address || formData.value.idDocument || 
+                   formData.value.specialRequest
+    
+    if (hasData) {
+      saveFormDraft()
+    }
+  }, 2000)
 }
 
 const closeModal = () => {
+  // Save draft before closing (in case it was accidental)
+  saveFormDraft()
   resetForm()
   emit('close')
 }
@@ -1138,11 +1300,65 @@ const handleBackdropClick = (event: MouseEvent) => {
   }
 }
 
+const applyPrefilledData = () => {
+  if (!props.prefilledData) return
+  
+  console.log('🎯 Applying prefilled data:', props.prefilledData)
+  
+  // Set default number of guests to 1 FIRST (required for room filtering)
+  formData.value.numGuest = 1
+  
+  // Set check-in date if provided
+  if (props.prefilledData.checkInDate) {
+    formData.value.checkIn = props.prefilledData.checkInDate
+    
+    // Validate dates after setting them
+    validateDates()
+  }
+  
+  // Trigger room availability filtering first to ensure room list is updated
+  filterAvailableRooms()
+  
+  // Set room number if provided (after numGuest and dates are set and rooms are filtered)
+  if (props.prefilledData?.roomNumber) {
+    // Find the room to verify it's available and can accommodate guests
+    const selectedRoom = rooms.value.find(room => room.number === props.prefilledData?.roomNumber)
+    
+    if (selectedRoom && isRoomAvailable(selectedRoom)) {
+      formData.value.roomNumber = props.prefilledData.roomNumber
+      console.log(`✅ Pre-filled room ${props.prefilledData.roomNumber} is available`)
+      
+      // Validate room selection
+      validateRoomSelection()
+    } else {
+      console.log(`❌ Pre-filled room ${props.prefilledData?.roomNumber} is not available or cannot accommodate ${formData.value.numGuest} guest(s)`)
+      // Clear the room selection if it's not valid
+      formData.value.roomNumber = ''
+    }
+  }
+}
+
 // Watchers
-watch(() => props.isOpen, (newValue) => {
+watch(() => props.isOpen, async (newValue) => {
   if (newValue) {
-    loadRooms()
-    loadReservations()
+    await loadRooms()
+    await loadReservations()
+    
+    // Try to load saved draft first
+    const draftLoaded = loadFormDraft()
+    
+    // Apply prefilled data if available and no draft was loaded
+    if (props.prefilledData && !draftLoaded) {
+      setTimeout(() => {
+        applyPrefilledData()
+      }, 100)
+    } else if (draftLoaded) {
+      console.log('📋 Draft data takes precedence over prefilled data')
+      // Still trigger room filtering for the restored data
+      setTimeout(() => {
+        filterAvailableRooms()
+      }, 100)
+    }
   }
 })
 
