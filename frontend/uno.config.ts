@@ -22,8 +22,34 @@ export default defineConfig({
       warn: true,
     }),
   ],
+  theme: {
+    extend: {
+      width: {
+        '61.5px': '61.5px',
+        '270px': '270px',
+        '1254px': '1254px',
+      },
+      minWidth: {
+        '61.5px': '61.5px',
+        '270px': '270px',
+        '1254px': '1254px',
+      },
+      maxWidth: {
+        '61.5px': '61.5px',
+        '270px': '270px',
+      },
+      height: {
+        '48px': '48px',
+      },
+    },
+  },
   safelist: [
     'grid-cols-15',
+    // Gantt chart custom dimensions
+    'w-61.5px', 'min-w-61.5px', 'max-w-61.5px',
+    'w-270px', 'min-w-270px', 'max-w-270px', 
+    'min-w-1254px', 'h-48px',
+    // Colors
     'bg-yellow-400',
     'bg-yellow-500',
     'bg-blue-500',

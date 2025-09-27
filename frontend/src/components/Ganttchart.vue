@@ -53,24 +53,23 @@
         </div>
 
         <!-- Gantt Chart Table -->
-        <div class="overflow-hidden rounded-lg outline outline-1 outline-gray-200 bg-white shadow-sm relative"
+        <div class="relative overflow-x-auto overflow-hidden rounded-lg outline outline-1 outline-gray-200 bg-white shadow-sm"
             ref="containerEl">
-            <table class="w-full table-fixed border-collapse">
+            <table class="w-full table-fixed border-collapse min-w-1254px">
                 <!-- Table Header -->
                 <thead>
                     <tr>
                         <!-- Rooms Header -->
                         <th
-                            class="sticky left-0 z-10 bg-gray-50 px-4 py-3 text-left w-64 outline outline-1 outline-gray-100">
+                            class="sticky left-0 z-10 bg-gray-50 px-4 py-3 text-left outline outline-1 outline-gray-100 w-270px min-w-270px max-w-270px overflow-hidden text-ellipsis whitespace-nowrap">
                             <div class="text-sm font-bold text-gray-700">Rooms</div>
                         </th>
 
                         <!-- Day Headers (16 days) -->
                         <th v-for="day in dateRange" :key="day.date"
-                            class="px-1 py-2 text-center outline outline-1 outline-gray-100 transition-colors"
+                            class="px-1 py-2 text-center outline outline-1 outline-gray-100 transition-colors w-61.5px min-w-61.5px max-w-61.5px overflow-hidden h-48px"
                             :class="{ 'bg-green-50': hoveredColumn === day.date }"
-                            :style="{ width: `calc((100% - 8rem) / 16)` }" @mouseenter="hoveredColumn = day.date"
-                            @mouseleave="hoveredColumn = null">
+                            @mouseenter="hoveredColumn = day.date" @mouseleave="hoveredColumn = null">
                             <div class="flex flex-col">
                                 <!-- Day Name -->
                                 <div class="text-xs font-bold text-gray-600 mb-1">
@@ -113,7 +112,7 @@
                         <!-- Category Header Row -->
                         <tr class="cursor-pointer" @click="toggleCategory(category.type)">
                             <td
-                                class="sticky left-0 z-10 px-4 py-2 border-r border-gray-200 w-64 outline outline-1 outline-gray-100">
+                                class="sticky left-0 z-10 px-4 py-2 border-r border-gray-200 outline outline-1 outline-gray-100 w-270px min-w-270px max-w-270px overflow-hidden text-ellipsis whitespace-nowrap h-48px">
                                 <div class="flex items-center">
                                     <!-- Expand/Collapse Icon -->
                                     <div class="mr-2 text-gray-500">
@@ -133,7 +132,7 @@
                                 </div>
                             </td>
                             <td v-for="day in dateRange" :key="`${category.name}-${day.date}`"
-                                class="px-0.5 py-2 outline outline-1 outline-gray-100 transition-colors text-center"
+                                class="px-0.5 py-2 outline outline-1 outline-gray-100 transition-colors text-center w-61.5px min-w-61.5px max-w-61.5px overflow-hidden h-48px"
                                 :class="{ 'bg-green-50': hoveredColumn === day.date }"
                                 @mouseenter="hoveredColumn = day.date" @mouseleave="hoveredColumn = null">
                                 <!-- Category availability summary -->
@@ -150,7 +149,7 @@
                             class="border-t border-gray-100" :ref="el => setRowRef(room.number, el)">
                             <!-- Room Number -->
                             <td
-                                class="sticky left-0 z-10 bg-white px-6 py-2 border-r border-gray-200 w-64 outline outline-1 outline-gray-100">
+                                class="sticky left-0 z-10 bg-white px-6 py-2 border-r border-gray-200 outline outline-1 outline-gray-100 w-270px min-w-270px max-w-270px overflow-hidden text-ellipsis whitespace-nowrap h-48px">
                                 <div class="flex items-center py-2">
                                     <div class="text-sm font-medium text-gray-900">{{ room.number }}</div>
                                     <div class="ml-2 text-xs text-gray-500">{{ room.floor }}</div>
@@ -159,7 +158,7 @@
 
                             <!-- Day cells (empty for grid structure only) -->
                             <td v-for="day in dateRange" :key="`${room.number}-${day.date}`"
-                                class="px-0.5 py-2 outline outline-1 outline-gray-100 transition-colors hover:bg-green-100 h-10"
+                                class="px-0.5 py-2 outline outline-1 outline-gray-100 transition-colors hover:bg-green-100 w-61.5px min-w-61.5px max-w-61.5px overflow-hidden h-48px"
                                 :class="{ 'bg-green-50': hoveredColumn === day.date }"
                                 @mouseenter="hoveredColumn = day.date" @mouseleave="hoveredColumn = null">
                                 <!-- Empty cell to preserve grid; reservation spans are rendered in overlay layer -->
@@ -175,19 +174,25 @@
                     <template v-if="expandedCategories[category.type]">
                         <template v-for="room in category.rooms" :key="room.number">
                             <div v-for="span in getReservationSpans(room.number)" :key="span.key"
-                                class="absolute pointer-events-auto cursor-pointer rounded border" :class="[
+                                class="absolute pointer-events-auto cursor-pointer rounded-lg shadow-sm" :class="[
                                     getReservationColor(span.reservation),
                                     {
                                         'ring-2 ring-yellow-400 ring-offset-1 animate-pulse':
-                                            highlightedReservation === (span.reservation.id || span.reservation.bookingNumber),
-                                        'rounded-l-none': !span.isStart,
-                                        'rounded-r-none': !span.isEnd
+                                            highlightedReservation === (span.reservation.id || span.reservation.bookingNumber)
                                     }
                                 ]" :style="span.style"
                                 :title="`${span.reservation.guest || span.reservation.guestName || 'Guest'} - ${formatDateRange(span.reservation)}`">
-                                <div class="h-full flex items-center justify-center text-xs font-medium px-2 truncate">
-                                    {{ (span.reservation.guest || span.reservation.guestName || 'Guest').split(' ')[0]
-                                    }}
+                                <div class="h-full flex items-center text-xs font-medium overflow-hidden">
+                                    <div :class="getReservationAccentColor(span.reservation)"
+                                        class="h-full w-3 rounded-l-lg flex-shrink-0 relative overflow-hidden">
+                                        <!-- Half circle cutout -->
+                                        <div :class="getReservationColor(span.reservation)"
+                                            class="absolute right--4 top-1/2 transform -translate-y-1/2 w-7 h-7 rounded-lg -mr-1.5">
+                                        </div>
+                                    </div>
+                                    <span class="px-3 truncate">
+                                        {{ (span.reservation.guest || span.reservation.guestName || 'Guest').split(' ')[0] }}
+                                    </span>
                                 </div>
                             </div>
                         </template>
@@ -200,6 +205,10 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onBeforeUnmount, nextTick, watch, type ComponentPublicInstance } from 'vue'
+
+// ============================================================================
+// COMPONENT INTERFACE & PROPS
+// ============================================================================
 
 // Props from parent (Frontdesk.vue)
 const props = defineProps<{
@@ -220,23 +229,56 @@ const emit = defineEmits<{
     updateDate: [{ year: number; month: number }]
 }>()
 
-// Hover state for column highlighting
+// ============================================================================
+// STATE MANAGEMENT
+// ============================================================================
+
+/**
+ * Hover state for column highlighting
+ * Tracks which date column is currently being hovered for visual feedback
+ */
 const hoveredColumn = ref<string | null>(null)
 
-// Highlighted reservation for search results
+/**
+ * Highlighted reservation for search results
+ * Stores the ID of a reservation that should be visually highlighted
+ */
 const highlightedReservation = ref<string | null>(null)
 
-// Date navigation offset (in days from selected month start)
-const dateOffset = ref(0)
+/**
+ * Direct view start date management (cleaner than offset calculations)
+ * Controls the first date shown in the Gantt chart view
+ */
+const viewStartDate = ref<Date>(new Date())
 
-// Track if navigation was triggered by Gantt chart (to prevent offset reset)
-const isNavigatingFromGantt = ref(false)
+/**
+ * Track if navigation was triggered internally (to prevent reset)
+ * Prevents infinite loops when updating parent component's date state
+ */
+const isInternalNavigation = ref(false)
 
-// Generate 16 days starting from selected year/month + offset
+// ============================================================================
+// DATE & VIEW MANAGEMENT
+// ============================================================================
+
+/**
+ * Initialize view start date based on current date
+ * Sets the Gantt chart to display dates starting from today
+ */
+const initializeViewDate = () => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // Reset time to midnight for consistent date comparison
+    viewStartDate.value = today
+}
+
+/**
+ * Generate 16 days starting from viewStartDate
+ * Creates the date range displayed in the Gantt chart header
+ * Returns array of date objects with formatted display information
+ */
 const dateRange = computed(() => {
     const days = []
-    const startDate = new Date(props.selectedYear, props.selectedMonth, 1)
-    startDate.setDate(startDate.getDate() + dateOffset.value)
+    const startDate = new Date(viewStartDate.value)
 
     for (let i = 0; i < 16; i++) {
         const date = new Date(startDate)
@@ -252,95 +294,127 @@ const dateRange = computed(() => {
     return days
 })
 
-// Navigation functions
-const navigateDates = (direction: number) => {
-    const currentStartDate = new Date(props.selectedYear, props.selectedMonth, 1)
-    currentStartDate.setDate(currentStartDate.getDate() + dateOffset.value)
+// ============================================================================
+// NAVIGATION FUNCTIONS
+// ============================================================================
 
-    // Calculate new date by adding/subtracting 5 days
-    const newStartDate = new Date(currentStartDate)
+/**
+ * Simplified navigation - move the view start date by specified direction
+ * @param direction - Positive for forward, negative for backward navigation
+ * Moves view by 5 days and updates parent component if month/year changes
+ */
+const navigateDates = (direction: number) => {
+    // Move view by 5 days
+    const newStartDate = new Date(viewStartDate.value)
     newStartDate.setDate(newStartDate.getDate() + (direction * 5))
 
+    viewStartDate.value = newStartDate
+
+    // Check if we need to update parent's year/month context
     const newYear = newStartDate.getFullYear()
     const newMonth = newStartDate.getMonth()
 
-    // Calculate the new offset from the beginning of the new month
-    const newMonthStart = new Date(newYear, newMonth, 1)
-    const diffTime = newStartDate.getTime() - newMonthStart.getTime()
-    const newOffset = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-
-    // Update the offset
-    dateOffset.value = newOffset
-
-    // If we've crossed into a different month/year, notify parent
     if (newYear !== props.selectedYear || newMonth !== props.selectedMonth) {
         console.log(`🔄 Gantt navigation: ${props.selectedYear}-${props.selectedMonth + 1} → ${newYear}-${newMonth + 1}`)
 
-        // Set flag to indicate this is Gantt-triggered navigation
-        isNavigatingFromGantt.value = true
-
+        isInternalNavigation.value = true
         emit('updateDate', { year: newYear, month: newMonth })
 
-        // Reset flag after a short delay to allow parent update
+        // Reset flag after update
         setTimeout(() => {
-            isNavigatingFromGantt.value = false
+            isInternalNavigation.value = false
         }, 100)
     }
 }
 
-// Reset date offset when month/year changes
-const resetDateOffset = () => {
-    dateOffset.value = 0
-}
-
-// Navigate to a specific date (for search functionality)
+/**
+ * Navigate to a specific date (for search functionality)
+ * @param targetDate - ISO date string to navigate to
+ * Centers the view around the target date and updates parent if needed
+ */
 const navigateToDate = (targetDate: string) => {
     const target = new Date(targetDate)
-    const currentStart = new Date(props.selectedYear, props.selectedMonth, 1)
 
-    // Calculate the difference in days
-    const diffTime = target.getTime() - currentStart.getTime()
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+    // Set view to start a few days before the target date for context
+    const newViewStart = new Date(target)
+    newViewStart.setDate(target.getDate() - 2) // Show 2 days before target
 
-    // Calculate the offset needed (5-day chunks)
-    const targetOffset = Math.floor(diffDays / 5) * 5
+    viewStartDate.value = newViewStart
 
-    // Update the offset
-    dateOffset.value = targetOffset
+    // Update parent's year/month if needed
+    const newYear = target.getFullYear()
+    const newMonth = target.getMonth()
 
-    // Check if we need to update the parent's year/month
-    const newStartDate = new Date(currentStart)
-    newStartDate.setDate(newStartDate.getDate() + targetOffset)
-
-    const newYear = newStartDate.getFullYear()
-    const newMonth = newStartDate.getMonth()
-
-    // If we've crossed into a different month/year, notify parent
     if (newYear !== props.selectedYear || newMonth !== props.selectedMonth) {
+        isInternalNavigation.value = true
         emit('updateDate', { year: newYear, month: newMonth })
+
+        setTimeout(() => {
+            isInternalNavigation.value = false
+        }, 100)
     }
 }
 
-// Watch for month/year changes and handle offset smoothly
+// ============================================================================
+// DEVELOPMENT & DEBUGGING UTILITIES
+// ============================================================================
+
+/**
+ * Validate layout calculations (development helper)
+ * Ensures the Gantt chart dimensions are calculated correctly
+ * Logs warnings if there are mismatches in expected vs actual values
+ */
+const validateLayout = () => {
+    const ROOM_COLUMN_WIDTH = 270
+    const CELL_WIDTH = 61.5
+    const TOTAL_DATE_COLUMNS = 16
+    const EXPECTED_MIN_WIDTH = ROOM_COLUMN_WIDTH + (TOTAL_DATE_COLUMNS * CELL_WIDTH)
+
+    console.log('📐 Layout validation:', {
+        roomColumnWidth: ROOM_COLUMN_WIDTH,
+        cellWidth: CELL_WIDTH,
+        totalDateColumns: TOTAL_DATE_COLUMNS,
+        expectedMinWidth: EXPECTED_MIN_WIDTH,
+        actualDateRange: dateRange.value.length
+    })
+
+    if (dateRange.value.length !== TOTAL_DATE_COLUMNS) {
+        console.warn('⚠️ Date range length mismatch:', {
+            expected: TOTAL_DATE_COLUMNS,
+            actual: dateRange.value.length
+        })
+    }
+}
+
+// ============================================================================
+// WATCHERS & REACTIVE UPDATES
+// ============================================================================
+
+/**
+ * Watch for month/year changes and update view accordingly
+ * Handles both manual navigation from parent and internal navigation
+ */
 watch([() => props.selectedYear, () => props.selectedMonth], (newValues, oldValues) => {
     const [newYear, newMonth] = newValues
     const [oldYear, oldMonth] = oldValues || [newYear, newMonth]
 
-    // Only reset offset if this is a manual month/year change from parent
-    // (not from our own navigation)
+    // Only reset view if this is a manual month/year change from parent
     if (oldYear !== undefined && oldMonth !== undefined) {
-        if (!isNavigatingFromGantt.value) {
-            // This was a manual month/year selection, reset offset
-            console.log(`📅 Manual date change detected: ${oldYear}-${oldMonth + 1} → ${newYear}-${newMonth + 1}, resetting offset`)
-            resetDateOffset()
+        if (!isInternalNavigation.value) {
+            // Manual date change - reset to beginning of month
+            console.log(`📅 Manual date change: ${oldYear}-${oldMonth + 1} → ${newYear}-${newMonth + 1}`)
+            initializeViewDate()
         } else {
-            // This was triggered by our navigation, keep the offset
-            console.log(`🔄 Navigation-triggered date change: ${oldYear}-${oldMonth + 1} → ${newYear}-${newMonth + 1}, keeping offset ${dateOffset.value}`)
+            // Internal navigation - keep current view position
+            console.log(`🔄 Internal navigation: ${oldYear}-${oldMonth + 1} → ${newYear}-${newMonth + 1}`)
         }
     }
 })
 
-// Watch for search query changes and auto-navigate to guest location
+/**
+ * Watch for search query changes and auto-navigate to guest location
+ * Automatically finds and highlights matching reservations
+ */
 watch(() => props.searchQuery, (newQuery, oldQuery) => {
     if (newQuery && newQuery.trim()) {
         const query = newQuery.toLowerCase().trim()
@@ -406,12 +480,19 @@ watch(() => props.searchQuery, (newQuery, oldQuery) => {
             }
         }
     } else {
-        // Clear highlight when search is cleared
+        // Clear highlight immediately when search is cleared
         highlightedReservation.value = null
     }
 })
 
-// Filtered rooms based on parent filters
+// ============================================================================
+// DATA FILTERING & PROCESSING
+// ============================================================================
+
+/**
+ * Filtered rooms based on parent filters
+ * Applies search query and room type filters to the rooms list
+ */
 const filteredRooms = computed(() => {
     let filtered = props.rooms
 
@@ -464,7 +545,10 @@ const filteredRooms = computed(() => {
     return filtered
 })
 
-// Filtered reservations based on parent filters
+/**
+ * Filtered reservations based on parent filters
+ * Applies status, booking source, and search query filters to reservations
+ */
 const filteredReservations = computed(() => {
     let filtered = props.reservations
 
@@ -509,22 +593,33 @@ const filteredReservations = computed(() => {
     return filtered
 })
 
-// Expanded categories state (all expanded by default)
+// ============================================================================
+// ROOM CATEGORIZATION & UI STATE
+// ============================================================================
+
+/**
+ * Expanded categories state (all expanded by default)
+ * Tracks which room type categories are expanded/collapsed in the UI
+ */
 const expandedCategories = ref<Record<string, boolean>>({})
 
-// Toggle category expansion
+/**
+ * Toggle category expansion
+ * @param categoryType - The room type to expand/collapse
+ */
 const toggleCategory = (categoryType: string) => {
     expandedCategories.value[categoryType] = !expandedCategories.value[categoryType]
 }
 
-// Group rooms by category from filtered data
+/**
+ * Group rooms by category from filtered data
+ * Creates hierarchical structure of room types with their associated rooms
+ * Automatically sorts rooms within categories and initializes expansion state
+ */
 const roomCategories = computed(() => {
     if (!filteredRooms.value.length) {
-        console.log('No rooms to display')
         return []
     }
-
-    console.log('Processing filtered rooms:', filteredRooms.value.length)
 
     // Group rooms by their room type
     const grouped = filteredRooms.value.reduce((acc, room) => {
@@ -567,7 +662,16 @@ const roomCategories = computed(() => {
     return categories
 })
 
-// Get reservation for specific room and date (using filtered reservations)
+// ============================================================================
+// RESERVATION & AVAILABILITY FUNCTIONS
+// ============================================================================
+
+/**
+ * Get reservation for specific room and date (using filtered reservations)
+ * @param roomNumber - Room number to check
+ * @param date - Date to check (ISO string format)
+ * @returns Reservation object if found, undefined otherwise
+ */
 const getReservation = (roomNumber: string, date: string) => {
     return filteredReservations.value.find(reservation => {
         // Use string-based date comparison to avoid timezone issues
@@ -580,44 +684,64 @@ const getReservation = (roomNumber: string, date: string) => {
             targetDateStr >= checkInStr &&
             targetDateStr <= checkOutStr  // Inclusive checkout (guest shown until checkout date)
 
-        // Debug logging for new reservations
-        if (isMatch) {
-            console.log('🔍 Reservation match found (string comparison):', {
-                roomNumber,
-                targetDate: targetDateStr,
-                checkIn: checkInStr,
-                checkOut: checkOutStr,
-                guest: reservation.guest || reservation.guestName,
-                reservationData: reservation,
-                occupancyRange: `${checkInStr} to ${checkOutStr} (inclusive)`,
-                isCheckoutDay: targetDateStr === checkOutStr
-            })
-        }
+        // Debug logging removed for performance
 
         return isMatch
     })
 }
 
-// Get reservation display color
+/**
+ * Get reservation display color based on status
+ * @param reservation - Reservation object
+ * @returns CSS classes for styling the reservation display
+ */
 const getReservationColor = (reservation: any) => {
     if (!reservation) return ''
 
     switch (reservation.status) {
-        case 'new': return 'bg-yellow-300 border-yellow-400 text-yellow-800'
-        case 'confirmed': return 'bg-blue-100 border-blue-300 text-blue-800'
-        case 'booked': return 'bg-green-100 border-green-300 text-green-800'
-        case 'checkedIn': return 'bg-green-600 border-green-700 text-white'
-        case 'dueOut': return 'bg-red-600 border-red-700 text-white'
-        case 'checkedOut': return 'bg-orange-400 border-orange-500 text-white'
-        case 'outOfOrder': return 'bg-amber-700 border-amber-800 text-white'
-        case 'cancelled': return 'bg-red-100 border-red-300 text-red-800'
+        case 'new': return 'bg-yellow-200 border-yellow-400 text-yellow-800'
+        case 'confirmed': return 'bg-blue-200 border-blue-300 text-blue-800'
+        case 'booked': return 'bg-green-200 border-green-300 text-green-800'
+        case 'checkedIn': return 'bg-green-200 border-green-300 text-green-800'
+        case 'dueOut': return 'bg-red-200 border-red-300 text-red-800'
+        case 'checkedOut': return 'bg-orange-200 border-orange-300 text-orange-800'
+        case 'outOfOrder': return 'bg-amber-200 border-amber-300 text-amber-800'
+        case 'cancelled': return 'bg-red-200 border-red-300 text-red-800'
         // Legacy status mapping
-        case 'pending': return 'bg-yellow-300 border-yellow-400 text-yellow-800'
-        default: return 'bg-gray-100 border-gray-300 text-gray-800'
+        case 'pending': return 'bg-yellow-200 border-yellow-400 text-yellow-800'
+        default: return 'bg-gray-200 border-gray-300 text-gray-800'
     }
 }
 
-// Check if room is available on a specific date
+/**
+ * Get accent bar color based on reservation status
+ * @param reservation - Reservation object
+ * @returns CSS classes for the left accent bar
+ */
+const getReservationAccentColor = (reservation: any) => {
+    if (!reservation) return 'bg-gray-600'
+
+    switch (reservation.status) {
+        case 'new': return 'bg-yellow-500'
+        case 'confirmed': return 'bg-blue-500'
+        case 'booked': return 'bg-green-500'
+        case 'checkedIn': return 'bg-green-500'
+        case 'dueOut': return 'bg-red-500'
+        case 'checkedOut': return 'bg-orange-500'
+        case 'outOfOrder': return 'bg-amber-500'
+        case 'cancelled': return 'bg-red-500'
+        // Legacy status mapping
+        case 'pending': return 'bg-yellow-500'
+        default: return 'bg-gray-500'
+    }
+}
+
+/**
+ * Check if room is available on a specific date
+ * @param roomNumber - Room number to check
+ * @param date - Date to check availability for
+ * @returns True if room is available, false if occupied
+ */
 const isRoomAvailable = (roomNumber: string, date: string) => {
     // Check if room has any active reservations on this date
     const reservation = getReservation(roomNumber, date)
@@ -631,7 +755,12 @@ const isRoomAvailable = (roomNumber: string, date: string) => {
         reservation.status === 'checkedOut'
 }
 
-// Get available room count for a category on a specific date
+/**
+ * Get available room count for a category on a specific date
+ * @param category - Room category object
+ * @param date - Date to check availability for
+ * @returns Number of available rooms in the category
+ */
 const getAvailableRoomCountForDate = (category: any, date: string) => {
     return category.rooms.filter((room: any) => {
         // Check room status first
@@ -644,24 +773,43 @@ const getAvailableRoomCountForDate = (category: any, date: string) => {
     }).length
 }
 
-// ----------------------------------------
-// Overlay anchoring utilities
-// ----------------------------------------
+// ============================================================================
+// DOM MANIPULATION & OVERLAY POSITIONING
+// ============================================================================
 
-// Container element hosting the table and overlay
+/**
+ * Container element hosting the table and overlay
+ * Reference to the main Gantt chart container for positioning calculations
+ */
 const containerEl = ref<HTMLElement | null>(null)
 
-// Track DOM refs for each room row to compute exact vertical positions
+/**
+ * Track DOM refs for each room row to compute exact vertical positions
+ * Maps room numbers to their corresponding DOM elements
+ */
 const rowRefs = ref<Record<string, HTMLElement | null>>({})
+
+/**
+ * Set row reference for positioning calculations
+ * @param roomNumber - Room number identifier
+ * @param el - DOM element or Vue component instance
+ */
 const setRowRef = (roomNumber: string, el: Element | ComponentPublicInstance | null): void => {
     // Vue may pass a component instance; extract its $el
     const domEl = (el && (el as any).$el) ? (el as any).$el as Element : (el as Element | null)
     rowRefs.value[roomNumber] = (domEl as HTMLElement) || null
 }
 
-// Cache of computed top positions (relative to container) per room
+/**
+ * Cache of computed top positions (relative to container) per room
+ * Stores calculated vertical positions for overlay positioning
+ */
 const rowTops = ref<Record<string, number>>({})
 
+/**
+ * Compute vertical positions for all room rows
+ * Calculates exact pixel positions for overlay anchoring
+ */
 const computeRowTops = (): void => {
     if (!containerEl.value) return
     const containerRect = containerEl.value.getBoundingClientRect()
@@ -681,27 +829,71 @@ const computeRowTops = (): void => {
     rowTops.value = tops
 }
 
-// Recompute tops on mount, resize, and when layout-affecting data changes
+// ============================================================================
+// COMPONENT LIFECYCLE & EVENT HANDLERS
+// ============================================================================
+
+/**
+ * Initialize component and recompute tops on mount
+ * Sets up initial state and event listeners
+ */
 onMounted(async () => {
+    // Initialize view date
+    initializeViewDate()
+
+    // Validate layout in development
+    if (import.meta.env.DEV) {
+        validateLayout()
+    }
+
+    // Ensure DOM is fully rendered before computing positions
     await nextTick()
+    await nextTick() // Double nextTick to ensure all refs are set
     computeRowTops()
+
+    // Add additional computation after a short delay to catch any late-rendered elements
+    setTimeout(() => {
+        computeRowTops()
+    }, 100)
+
     window.addEventListener('resize', computeRowTops)
 })
 
+/**
+ * Cleanup event listeners on component unmount
+ */
 onBeforeUnmount(() => {
     window.removeEventListener('resize', computeRowTops)
 })
 
+/**
+ * Watch for changes that affect row positioning
+ * Recomputes positions when room categories, expansion state, or date range changes
+ */
 watch([
     roomCategories,
     () => ({ ...expandedCategories.value }),
     dateRange
 ], async () => {
     await nextTick()
+    await nextTick() // Double nextTick for complex DOM updates
     computeRowTops()
+
+    // Additional computation after a short delay for any async rendering
+    setTimeout(() => {
+        computeRowTops()
+    }, 50)
 })
 
-// Build reservation spans for a given room with precise style anchored to row
+// ============================================================================
+// RESERVATION SPAN RENDERING & UTILITIES
+// ============================================================================
+
+/**
+ * Build reservation spans for a given room with precise style anchored to row
+ * @param roomNumber - Room number to generate spans for
+ * @returns Array of span objects with positioning and styling information
+ */
 const getReservationSpans = (roomNumber: string) => {
     const spans: Array<{
         key: string | number,
@@ -711,9 +903,34 @@ const getReservationSpans = (roomNumber: string) => {
         style: Record<string, string>
     }> = []
 
-    // Do not render until we have a computed top for this row
+    // If rowTops is not computed yet, use fallback positioning
     if (rowTops.value[roomNumber] === undefined) {
-        return spans
+        // Use fallback positioning based on room order in the category
+        // This ensures spans are visible even before precise positioning is computed
+        let fallbackTop = 0
+
+        // Find the room's position in its category
+        for (const category of roomCategories.value) {
+            if (!expandedCategories.value[category.type]) continue
+
+            // Add category header height (48px)
+            fallbackTop += 48
+
+            for (const room of category.rooms) {
+                if (room.number === roomNumber) {
+                    // Found our room, use this position
+                    break
+                }
+                fallbackTop += 48 // Each room row is 48px high
+            }
+
+            // If we found the room, break out of category loop
+            const roomFound = category.rooms.some((room: any) => room.number === roomNumber)
+            if (roomFound) break
+        }
+
+        // Store the fallback top for this room (don't trigger recomputation here to avoid loops)
+        rowTops.value[roomNumber] = fallbackTop + 12 // Center vertically in the 48px row
     }
 
     const roomReservations = filteredReservations.value.filter(res => {
@@ -742,10 +959,17 @@ const getReservationSpans = (roomNumber: string) => {
             const widthCells = endIndex - startIndex + 1
             const top = rowTops.value[roomNumber] ?? 0
 
-            const cellW = 'calc((100% - 16rem) / 16)'
-            const halfCellW = 'calc(((100% - 16rem) / 16) / 2)'
-            const left = `calc(16rem + ${startIndex} * ${cellW} + ${halfCellW})`
-            const width = `calc(${widthCells} * ${cellW} - ${cellW})`
+            // Fixed pixel positioning (61.5px per cell)
+            const ROOM_COLUMN_WIDTH = 270
+            const CELL_WIDTH = 61.5
+            const HALF_CELL = CELL_WIDTH / 3
+            const CELL_PADDING = 2 // Small padding for visual separation
+
+            // Make spans smaller by reducing 1/2 cell from boundaries
+            const left = ROOM_COLUMN_WIDTH + (startIndex * CELL_WIDTH) + HALF_CELL + CELL_PADDING
+            const width = (widthCells * CELL_WIDTH) - (HALF_CELL * 2) - (CELL_PADDING * 2)
+
+            // Debug logging removed for performance
 
             spans.push({
                 key: reservation.id || reservation.bookingNumber || `${roomNumber}-${startIndex}`,
@@ -753,8 +977,8 @@ const getReservationSpans = (roomNumber: string) => {
                 isStart: checkInStr >= firstVisible,
                 isEnd: checkOutStr <= lastVisible,
                 style: {
-                    left,
-                    width,
+                    left: `${left}px`,
+                    width: `${width}px`,
                     top: `${top}px`,
                     height: '24px'
                 }
@@ -765,7 +989,11 @@ const getReservationSpans = (roomNumber: string) => {
     return spans
 }
 
-// Tooltip helper
+/**
+ * Format date range for tooltip display
+ * @param res - Reservation object
+ * @returns Formatted date range string (e.g., "Jan 15 - Jan 18")
+ */
 const formatDateRange = (res: any): string => {
     const cIn = res.checkIn || res.checkInDate
     const cOut = res.checkOut || res.checkOutDate

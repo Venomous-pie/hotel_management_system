@@ -68,7 +68,7 @@
           placeholder="Search by booking number or guest" 
           icon="pi pi-search"
           @search="handleSearch"
-          width="30rem"
+          width="20rem"
         />
         <div class="flex items-center gap-4">
           <!-- Reservation Status Filter -->
@@ -297,44 +297,85 @@ const selectMonth = (monthIndex: number) => {
 
 // Filter options from backend data
 const roomTypeOptions = computed(() => {
-  const types = new Set(rooms.value.map(room => room.RoomType?.typeName || 'Standard'))
-  const allTypes = Array.from(types)
+  // Extract unique room types from the actual backend data
+  const types = new Set(rooms.value.map(room => room.type || room.RoomType?.typeName || 'Standard'))
+  const allTypes = Array.from(types).filter(type => type) // Include all types, including 'Standard'
   
-  // Add broader category filters
+  // Start with "All Room Types"
   const categoryFilters = ['All Room Types']
   
-  // Add broad categories if specific types exist
-  if (allTypes.some(type => type.toLowerCase().includes('standard'))) {
-    categoryFilters.push('Standard')
-  }
-  if (allTypes.some(type => type.toLowerCase().includes('deluxe'))) {
-    categoryFilters.push('Deluxe')
-  }
-  if (allTypes.some(type => type.toLowerCase().includes('suite'))) {
-    categoryFilters.push('Suite')
-  }
-  
-  // Add all specific room types
+  // Add all actual room types from backend, sorted alphabetically
   categoryFilters.push(...allTypes.sort())
   
   return categoryFilters
 })
 
-const reservationStatusOptions = [
-  'All Reservations',
-  'Confirmed',
-  'Pending', 
-  'Checked In',
-  'Cancelled'
-]
+// Dynamic reservation status options from backend data
+const reservationStatusOptions = computed(() => {
+  // Extract unique statuses from actual reservations
+  const statuses = new Set(reservations.value.map(reservation => reservation.status))
+  const allStatuses = Array.from(statuses).filter(status => status)
+  
+  // Standard reservation statuses (fallback if backend data is limited)
+  const standardStatuses = ['confirmed', 'pending', 'checkedIn', 'cancelled']
+  
+  // Combine actual statuses with standard ones to ensure all options are available
+  const combinedStatuses = new Set([...allStatuses, ...standardStatuses])
+  const allStatusesArray = Array.from(combinedStatuses)
+  
+  // Start with "All Reservations"
+  const statusOptions = ['All Reservations']
+  
+  // Add all statuses with proper capitalization
+  const capitalizedStatuses = allStatusesArray.map(status => {
+    // Convert backend status to display format
+    switch(status.toLowerCase()) {
+      case 'confirmed': return 'Confirmed'
+      case 'pending': return 'Pending'
+      case 'checkedin': return 'Checked In'
+      case 'cancelled': return 'Cancelled'
+      default: return status.charAt(0).toUpperCase() + status.slice(1)
+    }
+  }).sort()
+  
+  statusOptions.push(...capitalizedStatuses)
+  
+  return statusOptions
+})
 
-const bookingSourceOptions = [
-  'All Booking',
-  'Direct',
-  'Booking.com',
-  'Expedia',
-  'Airbnb'
-]
+// Dynamic booking source options from backend data
+const bookingSourceOptions = computed(() => {
+  // Extract unique sources from actual reservations
+  const sources = new Set(reservations.value.map(reservation => reservation.source))
+  const allSources = Array.from(sources).filter(source => source)
+  
+  // Standard booking sources (fallback if backend data is limited)
+  const standardSources = ['direct', 'booking.com', 'expedia', 'airbnb', 'kayak']
+  
+  // Combine actual sources with standard ones to ensure all options are available
+  const combinedSources = new Set([...allSources, ...standardSources])
+  const allSourcesArray = Array.from(combinedSources)
+  
+  // Start with "All Booking"
+  const sourceOptions = ['All Booking']
+  
+  // Add all sources with proper capitalization
+  const capitalizedSources = allSourcesArray.map(source => {
+    // Convert backend source to display format
+    switch(source.toLowerCase()) {
+      case 'direct': return 'Direct'
+      case 'booking.com': return 'Booking.com'
+      case 'expedia': return 'Expedia'
+      case 'airbnb': return 'Airbnb'
+      case 'kayak': return 'Kayak'
+      default: return source.charAt(0).toUpperCase() + source.slice(1)
+    }
+  }).sort()
+  
+  sourceOptions.push(...capitalizedSources)
+  
+  return sourceOptions
+})
 
 // Handle search
 const handleSearch = (query: string) => {

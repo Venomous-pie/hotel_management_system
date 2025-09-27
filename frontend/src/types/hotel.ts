@@ -61,6 +61,7 @@ export interface ReservationFormData {
   lastName: string
   email: string
   phone: string
+  countryCode: string
   address: string
   idDocument: string
   
@@ -77,6 +78,7 @@ export interface ReservationFormData {
 
 export interface ValidationErrors {
   firstName?: string
+  middleName?: string
   lastName?: string
   email?: string
   phone?: string

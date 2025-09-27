@@ -2,7 +2,7 @@
   <div>
     <!-- Page Header -->
     <div class="flex items-center justify-between px-6 pt-2 pb-1 bg-white border-b border-gray-200">
-      <Searchbar placeholder="Search..." icon="pi pi-search" :outline="false" width="40rem"/>
+      <Searchbar placeholder="Search..." icon="pi pi-search" :outline="false" width="rem"/>
       <div class="flex items-center gap-4">
         <div class="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-default">
           <i class="pi pi-refresh text-gray-600 w-5 h-5 inline-block"></i>
