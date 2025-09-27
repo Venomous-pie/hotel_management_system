@@ -10,6 +10,9 @@ export interface Room {
   maxCapacity: number
   amenities: string[]
   notes?: string
+  // Optional association returned by backend (e.g., Sequelize include)
+  // Allows access like room.RoomType?.typeName when API includes RoomType
+  RoomType?: RoomType
 }
 
 export interface RoomType {

@@ -158,7 +158,7 @@
                             class="border-t border-gray-100" :ref="el => setRowRef(room.number, el)">
                             <!-- Room Number -->
                             <td
-                                class="sticky left-0 z-100 bg-white px-6 py-2 border-r border-gray-200 outline outline-1 outline-gray-100 w-270px min-w-270px max-w-270px overflow-hidden text-ellipsis whitespace-nowrap h-48px">
+                                class="sticky left-0 z-10 bg-white px-6 py-2 border-r border-gray-200 outline outline-1 outline-gray-100 w-270px min-w-270px max-w-270px overflow-hidden text-ellipsis whitespace-nowrap h-48px">
                                 <div class="flex items-center py-2">
                                     <div class="text-sm font-medium text-gray-900">{{ room.number }}</div>
                                     <div class="ml-2 text-xs text-gray-500">{{ room.floor }}</div>
@@ -214,7 +214,7 @@
                                 </div>
                             </div>
                         </template>
-                    </template>
+                    </template> 
                 </template>
             </div>
         </div>
@@ -223,6 +223,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onBeforeUnmount, nextTick, watch, type ComponentPublicInstance } from 'vue'
+import { getTodayAtMidnight } from '@/utils'
 
 // ============================================================================
 // COMPONENT INTERFACE & PROPS
@@ -299,8 +300,7 @@ watch(() => props.targetDate, (newTargetDate) => {
 })
 
 const initializeViewDate = () => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0) // Reset time to midnight for consistent date comparison
+    const today = getTodayAtMidnight()
     viewStartDate.value = today
 }
 
@@ -362,8 +362,7 @@ const navigateDates = (direction: number) => {
  * Sets the view to show today and updates parent component's year/month
  */
 const jumpToToday = () => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const today = getTodayAtMidnight()
     
     console.log(`📅 Jumping to today: ${today.toLocaleDateString()}`)
     

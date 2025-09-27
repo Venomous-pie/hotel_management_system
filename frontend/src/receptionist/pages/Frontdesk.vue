@@ -160,18 +160,17 @@ import Searchbar from '@/components/Searchbar.vue';
 import Ganttchart from '@/components/Ganttchart.vue';
 import Custombutton from '@/components/Custombutton.vue';
 import AddReservationModal from '@/components/AddReservationModal.vue';
+import { getTodayAtMidnight } from '@/utils/date'
+import { useHotelData } from '@/composables/useHotelData'
 
 // Current date state
-const currentDate = new Date()
+const currentDate = getTodayAtMidnight()
 const selectedYear = ref(currentDate.getFullYear())
 const selectedMonth = ref(currentDate.getMonth())
 const targetDate = ref<Date | null>(null)
 
-// Backend data
-const rooms = ref<any[]>([])
-const reservations = ref<any[]>([])
-const loading = ref(false)
-const error = ref<string | null>(null)
+// Shared hotel data (composable)
+const { rooms, reservations, loading, error, refreshAll } = useHotelData()
 
 // Search and filters
 const searchQuery = ref('')
@@ -197,7 +196,7 @@ const successMessage = ref('')
 
 // Years for navigation (16 years: current year ± 7)
 const years = computed(() => {
-  const current = new Date().getFullYear()
+  const current = getTodayAtMidnight().getFullYear()
   const yearList = []
   for (let i = -7; i <= 8; i++) {
     yearList.push(current + i)
@@ -211,32 +210,7 @@ const months = [
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
 ]
 
-// Load data from backend
-const loadData = async () => {
-  try {
-    loading.value = true
-    error.value = null
-
-    const [roomsResponse, reservationsResponse] = await Promise.all([
-      fetch('http://localhost:3000/api/rooms'),
-      fetch('http://localhost:3000/api/reservations')
-    ])
-
-    if (!roomsResponse.ok || !reservationsResponse.ok) {
-      throw new Error('Failed to load data')
-    }
-
-    rooms.value = await roomsResponse.json()
-    reservations.value = await reservationsResponse.json()
-
-    console.log('Loaded data:', { rooms: rooms.value.length, reservations: reservations.value.length })
-  } catch (err) {
-    error.value = 'Failed to load hotel data'
-    console.error(err)
-  } finally {
-    loading.value = false
-  }
-}
+// Data loading handled by useHotelData.refreshAll
 
 // Navigation functions
 const navigateYear = (direction: number) => {
@@ -328,24 +302,29 @@ const reservationStatusOptions = computed(() => {
   return statusOptions
 })
 
-// Dynamic booking source options from backend data
-const bookingSourceOptions = computed(() => {
-  // Extract unique sources from actual reservations
-  const sources = new Set(reservations.value.map(reservation => reservation.source))
-  const allSources = Array.from(sources).filter(source => source)
+  // Dynamic booking source options from backend data
+  const bookingSourceOptions = computed(() => {
+    // Extract unique sources from actual reservations
+    const rawSources: string[] = reservations.value.reduce<string[]>((acc, r) => {
+      const s = r.source
+      if (typeof s === 'string' && s.trim().length > 0) acc.push(s)
+      return acc
+    }, [])
 
-  // Standard booking sources (fallback if backend data is limited)
-  const standardSources = ['direct', 'booking.com', 'expedia', 'airbnb', 'kayak']
+    const uniqueSources = Array.from(new Set<string>(rawSources))
 
-  // Combine actual sources with standard ones to ensure all options are available
-  const combinedSources = new Set([...allSources, ...standardSources])
-  const allSourcesArray = Array.from(combinedSources)
+    // Standard booking sources (fallback if backend data is limited)
+    const standardSources = ['direct', 'booking.com', 'expedia', 'airbnb', 'kayak']
+
+    // Combine actual sources with standard ones to ensure all options are available
+    const combinedSources = new Set<string>([...uniqueSources, ...standardSources])
+    const allSourcesArray: string[] = Array.from(combinedSources)
 
   // Start with "All Booking"
   const sourceOptions = ['All Booking']
 
   // Add all sources with proper capitalization
-  const capitalizedSources = allSourcesArray.map(source => {
+  const capitalizedSources = allSourcesArray.map((source: string): string => {
     // Convert backend source to display format
     switch (source.toLowerCase()) {
       case 'direct': return 'Direct'
@@ -436,7 +415,7 @@ const handleReservationSuccess = async (reservation: any) => {
 
   try {
     // Refresh data to show the new reservation
-    await loadData()
+    await refreshAll()
     console.log('Frontdesk data refreshed after new reservation')
   } catch (error) {
     console.error('Failed to refresh data after reservation:', error)
@@ -481,7 +460,7 @@ const closeDropdowns = () => {
 
 // Load data on mount
 onMounted(() => {
-  loadData()
+  refreshAll()
 
   // Add click outside listener
   document.addEventListener('click', (e) => {

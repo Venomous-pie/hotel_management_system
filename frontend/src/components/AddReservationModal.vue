@@ -11,6 +11,16 @@
             <i class="pi pi-check w-3 h-3"></i>
             <span>{{ draftSaveState.message }}</span>
           </div>
+          <!-- Clear Draft Button -->
+          <button
+            v-if="hasDraftData"
+            @click="clearDraftAndReset"
+            class="flex items-center gap-1 px-2 py-1 bg-orange-50 text-orange-600 border border-orange-200 rounded-md text-xs hover:bg-orange-100 transition-colors"
+            title="Clear saved draft and start fresh"
+          >
+            <i class="pi pi-trash w-3 h-3"></i>
+            <span>Clear Draft</span>
+          </button>
         </div>
         <button 
           @click="closeModal"
@@ -374,12 +384,15 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import Custombutton from './Custombutton.vue'
+import { getTodayAsString, isDateInPast, daysBetweenDates, addDaysToDateString } from '@/utils'
+import { useHotelData } from '@/composables/useHotelData'
+import { createReservation } from '@/services/reservations'
+import { ApiClientError } from '@/services/apiClient'
 import type { 
   ReservationFormData, 
   ValidationErrors, 
   ModalState, 
-  Room, 
-  ApiError 
+  Room 
 } from '../types/hotel'
 
 interface Props {
@@ -433,30 +446,23 @@ const draftSaveState = ref({
 // Validation errors
 const errors = ref<ValidationErrors>({})
 
-// Room data
-const rooms = ref<Room[]>([])
-const reservations = ref<any[]>([])
+// Room and reservation data (shared via composable)
+const { rooms, reservations, loading: hotelLoading, error: hotelError, refreshAll } = useHotelData()
 const isCheckingAvailability = ref(false)
 
 // Computed properties
 const minDate = computed(() => {
-  const today = new Date()
-  return today.toISOString().split('T')[0]
+  return getTodayAsString()
 })
 
 const minCheckOutDate = computed(() => {
   if (!formData.value.checkIn) return minDate.value
-  const checkIn = new Date(formData.value.checkIn)
-  checkIn.setDate(checkIn.getDate() + 1)
-  return checkIn.toISOString().split('T')[0]
+  return addDaysToDateString(formData.value.checkIn, 1)
 })
 
 const nights = computed(() => {
   if (!formData.value.checkIn || !formData.value.checkOut) return 0
-  const checkIn = new Date(formData.value.checkIn)
-  const checkOut = new Date(formData.value.checkOut)
-  const diffTime = checkOut.getTime() - checkIn.getTime()
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return daysBetweenDates(formData.value.checkIn, formData.value.checkOut)
 })
 
 const roomsByCategory = computed(() => {
@@ -512,27 +518,15 @@ const isFormValid = computed(() => {
   return hasRequiredFields && hasNoErrors
 })
 
-// Methods
-const loadRooms = async () => {
-  try {
-    const response = await fetch('http://localhost:3000/api/rooms')
-    if (!response.ok) throw new Error('Failed to load rooms')
-    rooms.value = await response.json()
-  } catch (error) {
-    console.error('Error loading rooms:', error)
-    modalState.value.error = 'Failed to load room data'
-  }
-}
+const hasDraftData = computed(() => {
+  // Check if there's meaningful data in the form (indicating a draft exists)
+  return formData.value.firstName || formData.value.lastName || formData.value.email || 
+         formData.value.phone || formData.value.address || formData.value.idDocument || 
+         formData.value.specialRequest || formData.value.checkIn || formData.value.checkOut ||
+         formData.value.roomNumber || formData.value.numGuest > 0
+})
 
-const loadReservations = async () => {
-  try {
-    const response = await fetch('http://localhost:3000/api/reservations')
-    if (!response.ok) throw new Error('Failed to load reservations')
-    reservations.value = await response.json()
-  } catch (error) {
-    console.error('Error loading reservations:', error)
-  }
-}
+// Methods
 
 const isRoomAvailable = (room: Room): boolean => {
   if (!formData.value.checkIn || !formData.value.checkOut) return true
@@ -582,8 +576,7 @@ const uppercaseInput = (field: string) => {
 }
 
 const setTodayAsCheckIn = () => {
-  const today = new Date()
-  formData.value.checkIn = today.toISOString().split('T')[0]
+  formData.value.checkIn = getTodayAsString()
   validateDates()
 }
 
@@ -1058,20 +1051,17 @@ const validateDates = () => {
   delete errors.value.checkOut
   
   if (formData.value.checkIn) {
-    const checkIn = new Date(formData.value.checkIn)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    
-    if (checkIn < today) {
+    if (isDateInPast(formData.value.checkIn)) {
       errors.value.checkIn = 'Check-in date cannot be in the past'
     }
   }
   
   if (formData.value.checkIn && formData.value.checkOut) {
-    const checkIn = new Date(formData.value.checkIn)
-    const checkOut = new Date(formData.value.checkOut)
+    // Use string comparison for consistency
+    const checkInDate = formData.value.checkIn
+    const checkOutDate = formData.value.checkOut
     
-    if (checkOut <= checkIn) {
+    if (checkOutDate <= checkInDate) {
       errors.value.checkOut = 'Check-out date must be after check-in date'
     }
   }
@@ -1120,46 +1110,34 @@ const submitReservation = async () => {
       checkOutParsed: new Date(formData.value.checkOut).toISOString(),
       formData: formData.value
     })
-    
-    const response = await fetch('http://localhost:3000/api/reserve-room', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...formData.value
-        // totalPrice will be calculated by the backend
-      })
-    })
-    
-    const data = await response.json()
-    
-    if (!response.ok) {
-      const apiError = data as ApiError
-      if (response.status === 409) {
-        modalState.value.error = `Room conflict: ${apiError.error}`
-      } else {
-        modalState.value.error = apiError.error || 'Failed to create reservation'
-      }
-      return
-    }
-    
+    const data = await createReservation(formData.value)
+
     modalState.value.success = true
-    
+
     // Clear draft on successful submission
     clearFormDraft()
-    
+
     // Emit success event immediately to trigger data refresh
     emit('success', data.reservation)
-    
-    // Show success message briefly, then close
+
+    // Show success message briefly, then reset form and close
     setTimeout(() => {
+      resetForm() // Reset form only on successful submission
       closeModal()
     }, 1500)
     
   } catch (error) {
-    modalState.value.error = 'Network error. Please try again.'
-    console.error('Reservation error:', error)
+    if (error instanceof ApiClientError) {
+      if (error.status === 409) {
+        modalState.value.error = `Room conflict: ${error.data?.error || 'Room is not available for the chosen dates'}`
+      } else {
+        // Prefer backend error message when available
+        modalState.value.error = (error.data?.error as string) || error.message || 'Failed to create reservation'
+      }
+    } else {
+      modalState.value.error = 'Network error. Please try again.'
+      console.error('Reservation error:', error)
+    }
   } finally {
     modalState.value.isLoading = false
   }
@@ -1265,6 +1243,12 @@ const clearFormDraft = () => {
   }
 }
 
+const clearDraftAndReset = () => {
+  clearFormDraft()
+  resetForm()
+  showDraftSavedIndicator('Draft cleared')
+}
+
 // Auto-save draft with debouncing
 let autoSaveTimeout: number | null = null
 
@@ -1284,13 +1268,18 @@ const autoSaveDraft = () => {
     if (hasData) {
       saveFormDraft()
     }
-  }, 2000)
+  }, 1000)
 }
 
 const closeModal = () => {
   // Save draft before closing (in case it was accidental)
   saveFormDraft()
-  resetForm()
+  
+  // Clear only modal state, not form data (for persistence)
+  modalState.value.error = null
+  modalState.value.success = false
+  modalState.value.isLoading = false
+  
   emit('close')
 }
 
@@ -1341,8 +1330,7 @@ const applyPrefilledData = () => {
 // Watchers
 watch(() => props.isOpen, async (newValue) => {
   if (newValue) {
-    await loadRooms()
-    await loadReservations()
+    await refreshAll()
     
     // Try to load saved draft first
     const draftLoaded = loadFormDraft()
@@ -1368,19 +1356,18 @@ watch([() => formData.value.checkIn, () => formData.value.checkOut], () => {
   }
 })
 
-// Watch for country code changes to reformat and revalidate phone number
-watch(() => formData.value.countryCode, () => {
-  if (formData.value.phone) {
-    formatPhoneInput()
-    validatePhone()
-  }
-})
+  // Watch for country code changes to reformat and revalidate phone number
+  watch(() => formData.value.countryCode, () => {
+    if (formData.value.phone) {
+      formatPhoneInput()
+      validatePhone()
+    }
+  })
 
-// Load initial data
-onMounted(() => {
-  if (props.isOpen) {
-    loadRooms()
-    loadReservations()
-  }
-})
+  // Load initial data
+  onMounted(() => {
+    if (props.isOpen) {
+      refreshAll()
+    }
+  })
 </script>

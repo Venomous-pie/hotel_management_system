@@ -519,6 +519,14 @@ const FORCE_SYNC = process.env.FORCE_SYNC === 'true';
 const SEED_ON_START = (process.env.SEED_ON_START === 'true') || FORCE_SYNC;
 
 sequelize.sync({ force: FORCE_SYNC }).then(async () => {
+    // Apply SQLite performance/concurrency PRAGMAs
+    try {
+        await sequelize.query('PRAGMA journal_mode = WAL;')
+        await sequelize.query('PRAGMA busy_timeout = 5000;')
+        console.log('\x1b[35m%s\x1b[0m', 'SQLite PRAGMAs applied: journal_mode=WAL, busy_timeout=5000ms')
+    } catch (e) {
+        console.warn('Failed to apply SQLite PRAGMAs:', e)
+    }
     console.log("\x1b[35m%s\x1b[0m", `Database synced. force=${FORCE_SYNC}`);
     
     // Check if database is empty and seed if needed
