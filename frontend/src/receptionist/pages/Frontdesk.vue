@@ -157,7 +157,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import Searchbar from '@/components/Searchbar.vue';
-import Ganttchart from '@/components/Ganttchart.vue';
+import Ganttchart from '@/components/GanttChart.vue';
 import Custombutton from '@/components/Custombutton.vue';
 import AddReservationModal from '@/components/AddReservationModal.vue';
 import { getTodayAtMidnight } from '@/utils/date'

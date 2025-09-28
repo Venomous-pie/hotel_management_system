@@ -2,7 +2,11 @@
 export interface Room {
   id: string
   number: string
+  // Alternative property name used in some parts of the system
+  roomNumber?: string
   type: string
+  // Alternative property names for room type
+  roomType?: string
   status: 'available' | 'occupied' | 'maintenance' | 'out-of-order'
   statusColor: string
   pricePerNight: number
@@ -40,7 +44,12 @@ export interface Reservation {
   guest: string
   checkIn: string | Date
   checkOut: string | Date
-  status: 'confirmed' | 'pending' | 'checkedIn' | 'cancelled'
+  // Alternative property names used in some parts of the system
+  checkInDate?: string | Date
+  checkOutDate?: string | Date
+  guestName?: string  // Alternative guest name property
+  bookingNumber?: string  // Alternative booking ID property
+  status: 'confirmed' | 'pending' | 'checkedIn' | 'cancelled' | 'checkedOut' | 'new' | 'booked' | 'dueOut' | 'outOfOrder'
   type?: 'standard' | 'vip' | 'family' | 'group'
   amount: number
   balance?: number
@@ -54,6 +63,8 @@ export interface Reservation {
   roomNumber: string
   RoomId?: number
   GuestId?: number
+  // Optional nested Guest object (when populated by backend joins)
+  Guest?: Guest
 }
 
 // Form interfaces for the reservation modal

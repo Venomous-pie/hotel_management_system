@@ -1,5 +1,6 @@
-// for safety shits, while centralizing date logics, katugon nako
+// Centralized utility exports for the hotel management system
 
+// Date utilities
 export {
     getTodayAtMidnight,
     formatDateForInput,
@@ -11,5 +12,31 @@ export {
     isDateInFuture,
     addDaysToDateString,
     daysBetweenDates,
-  } from '@/utils/date'
-  
+} from '@/utils/date'
+
+// Reservation utilities
+export {
+    findReservationForRoomAndDate,
+    isRoomAvailableOnDate,
+    getAvailableRoomCount,
+    formatReservationDateRange,
+} from '@/utils/reservations'
+
+// Color and status utilities
+export {
+    getReservationStatusColor,
+    getReservationAccentColor,
+    getRoomStatusColor,
+} from '@/utils/colors'
+
+// Gantt chart utilities
+export {
+    calculateReservationSpanStyle,
+    findDateRangeIndices,
+    generateDateRange,
+    validateGanttLayout,
+    debugReservationSpanPositioning,
+    normalizeDateString,
+    validateReservationVisibility,
+    GANTT_LAYOUT,
+} from '@/utils/gantt'

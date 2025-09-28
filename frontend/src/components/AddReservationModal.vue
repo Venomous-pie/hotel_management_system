@@ -1,31 +1,27 @@
 <template>
-  <div v-if="isOpen" class="fixed inset-0 backdrop-blur-sm bg-white/10 flex items-center justify-center z-50" @click="handleBackdropClick">
-    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-200" @click.stop>
+  <div v-if="isOpen" class="fixed inset-0 backdrop-blur-sm bg-white/10 flex items-center justify-center z-50"
+    @click="handleBackdropClick">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-200"
+      @click.stop>
       <!-- Modal Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-200">
         <div class="flex items-center gap-3">
           <h2 class="text-lg font-medium text-gray-900">Add New Reservation</h2>
           <!-- Draft saved indicator -->
-          <div v-if="draftSaveState.isVisible" 
-               class="flex items-center gap-1 px-2 py-1 bg-green-50 text-green-600 rounded-md text-xs transition-opacity">
+          <div v-if="draftSaveState.isVisible"
+            class="flex items-center gap-1 px-2 py-1 bg-green-50 text-green-600 rounded-md text-xs transition-opacity">
             <i class="pi pi-check w-3 h-3"></i>
             <span>{{ draftSaveState.message }}</span>
           </div>
           <!-- Clear Draft Button -->
-          <button
-            v-if="hasDraftData"
-            @click="clearDraftAndReset"
+          <button v-if="hasDraftData" @click="clearDraftAndReset"
             class="flex items-center gap-1 px-2 py-1 bg-orange-50 text-orange-600 border border-orange-200 rounded-md text-xs hover:bg-orange-100 transition-colors"
-            title="Clear saved draft and start fresh"
-          >
+            title="Clear saved draft and start fresh">
             <i class="pi pi-trash w-3 h-3"></i>
             <span>Clear Draft</span>
           </button>
         </div>
-        <button 
-          @click="closeModal"
-          class="text-gray-400 hover:text-gray-600 transition-colors"
-        >
+        <button @click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors">
           <i class="pi pi-times w-5 h-5"></i>
         </button>
       </div>
@@ -52,15 +48,10 @@
                 <label class="block text-xs font-medium text-gray-700 mb-1">
                   First Name <span class="text-red-500">*</span>
                 </label>
-                <input
-                  v-model="formData.firstName"
-                  type="text"
+                <input v-model="formData.firstName" type="text"
                   class="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:border-green-500"
-                  :class="{ 'border-red-300 bg-red-50': errors.firstName }"
-                  placeholder="Enter first name"
-                  @input="handleFirstNameInput"
-                  @blur="validateFirstName"
-                />
+                  :class="{ 'border-red-300 bg-red-50': errors.firstName }" placeholder="Enter first name"
+                  @input="handleFirstNameInput" @blur="validateFirstName" />
                 <p v-if="errors.firstName" class="mt-1 text-xs text-red-600">{{ errors.firstName }}</p>
               </div>
 
@@ -69,29 +60,20 @@
                 <label class="block text-xs font-medium text-gray-700 mb-1">
                   Last Name <span class="text-red-500">*</span>
                 </label>
-                <input
-                  v-model="formData.lastName"
-                  type="text"
+                <input v-model="formData.lastName" type="text"
                   class="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:border-green-500"
-                  :class="{ 'border-red-300 bg-red-50': errors.lastName }"
-                  placeholder="Enter last name"
-                  @input="handleLastNameInput"
-                  @blur="validateLastName"
-                />
+                  :class="{ 'border-red-300 bg-red-50': errors.lastName }" placeholder="Enter last name"
+                  @input="handleLastNameInput" @blur="validateLastName" />
                 <p v-if="errors.lastName" class="mt-1 text-xs text-red-600">{{ errors.lastName }}</p>
               </div>
 
               <!-- Middle Name -->
               <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1">Middle Name</label>
-                <input
-                  v-model="formData.middleName"
-                  type="text"
+                <input v-model="formData.middleName" type="text"
                   class="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:border-green-500"
-                  :class="{ 'border-red-300 bg-red-50': errors.middleName }"
-                  placeholder="Enter middle name (optional)"
-                  @input="handleMiddleNameInput"
-                />
+                  :class="{ 'border-red-300 bg-red-50': errors.middleName }" placeholder="Enter middle name (optional)"
+                  @input="handleMiddleNameInput" />
                 <p v-if="errors.middleName" class="mt-1 text-xs text-red-600">{{ errors.middleName }}</p>
               </div>
 
@@ -100,16 +82,10 @@
                 <label class="block text-xs font-medium text-gray-700 mb-1">
                   Email <span class="text-red-500">*</span>
                 </label>
-                <input
-                  v-model="formData.email"
-                  type="email"
+                <input v-model="formData.email" type="email"
                   class="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:border-green-500"
-                  :class="{ 'border-red-300 bg-red-50': errors.email }"
-                  placeholder="Enter email address"
-                  @input="handleEmailInput"
-                  @blur="validateEmail"
-                  @keydown="handleEmailKeydown"
-                />
+                  :class="{ 'border-red-300 bg-red-50': errors.email }" placeholder="Enter email address"
+                  @input="handleEmailInput" @blur="validateEmail" @keydown="handleEmailKeydown" />
                 <p v-if="errors.email" class="mt-1 text-xs text-red-600">{{ errors.email }}</p>
               </div>
 
@@ -119,10 +95,8 @@
                   Phone <span class="text-red-500">*</span>
                 </label>
                 <div class="flex">
-                  <select
-                    v-model="formData.countryCode"
-                    class="px-3 py-2 text-xs border border-gray-50 rounded-l-lg focus:border-green-500 bg-gray-50 border-r-0"
-                  >
+                  <select v-model="formData.countryCode"
+                    class="px-3 py-2 text-xs border border-gray-50 rounded-l-lg focus:border-green-500 bg-gray-50 border-r-0">
                     <option value="+1">🇺🇸 +1</option>
                     <option value="+63">🇵🇭 +63</option>
                     <option value="+44">🇬🇧 +44</option>
@@ -138,15 +112,10 @@
                     <option value="+61">🇦🇺 +61</option>
                     <option value="+64">🇳🇿 +64</option>
                   </select>
-                  <input
-                    v-model="formData.phone"
-                    type="tel"
+                  <input v-model="formData.phone" type="tel"
                     class="flex-1 px-3 py-2 text-xs border border-gray-300 rounded-r-lg focus:border-green-500"
-                    :class="{ 'border-red-300 bg-red-50': errors.phone }"
-                    placeholder="Enter phone number"
-                    @input="formatPhoneInput"
-                    @blur="validatePhone"
-                  />
+                    :class="{ 'border-red-300 bg-red-50': errors.phone }" placeholder="Enter phone number"
+                    @input="formatPhoneInput" @blur="validatePhone" />
                 </div>
                 <p v-if="errors.phone" class="mt-1 text-xs text-red-600">{{ errors.phone }}</p>
               </div>
@@ -156,15 +125,10 @@
                 <label class="block text-xs font-medium text-gray-700 mb-1">
                   ID Document <span class="text-red-500">*</span>
                 </label>
-                <input
-                  v-model="formData.idDocument"
-                  type="text"
+                <input v-model="formData.idDocument" type="text"
                   class="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:border-green-500 uppercase"
-                  :class="{ 'border-red-300 bg-red-50': errors.idDocument }"
-                  placeholder="Enter ID/Passport number"
-                  @input="handleIdDocumentInput"
-                  @blur="validateIdDocument"
-                />
+                  :class="{ 'border-red-300 bg-red-50': errors.idDocument }" placeholder="Enter ID/Passport number"
+                  @input="handleIdDocumentInput" @blur="validateIdDocument" />
                 <p v-if="errors.idDocument" class="mt-1 text-xs text-red-600">{{ errors.idDocument }}</p>
               </div>
             </div>
@@ -174,15 +138,10 @@
               <label class="block text-xs font-medium text-gray-700 mb-1">
                 Address <span class="text-red-500">*</span>
               </label>
-              <textarea
-                v-model="formData.address"
-                rows="2"
+              <textarea v-model="formData.address" rows="2"
                 class="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:border-green-500"
-                :class="{ 'border-red-300 bg-red-50': errors.address }"
-                placeholder="Enter full address"
-                @input="handleAddressInput"
-                @blur="validateAddress"
-              ></textarea>
+                :class="{ 'border-red-300 bg-red-50': errors.address }" placeholder="Enter full address"
+                @input="handleAddressInput" @blur="validateAddress"></textarea>
               <p v-if="errors.address" class="mt-1 text-xs text-red-600">{{ errors.address }}</p>
             </div>
           </div>
@@ -197,20 +156,12 @@
                   Check-in Date <span class="text-red-500">*</span>
                 </label>
                 <div class="flex gap-2">
-                  <input
-                    v-model="formData.checkIn"
-                    type="date"
-                    :min="minDate"
+                  <input v-model="formData.checkIn" type="date" :min="minDate"
                     class="flex-1 px-3 py-2 text-xs border border-gray-300 rounded-lg focus:border-green-500"
-                    :class="{ 'border-red-300 bg-red-50': errors.checkIn }"
-                    @change="validateDates"
-                  />
-                  <button
-                    type="button"
-                    @click="setTodayAsCheckIn"
+                    :class="{ 'border-red-300 bg-red-50': errors.checkIn }" @change="validateDates" />
+                  <button type="button" @click="setTodayAsCheckIn"
                     class="px-3 py-2 text-xs bg-gray-50 text-blue-700 border rounded-lg hover:bg-gray-100 transition-colors"
-                    title="Set today as check-in date"
-                  >
+                    title="Set today as check-in date">
                     Today
                   </button>
                 </div>
@@ -222,14 +173,9 @@
                 <label class="block text-xs font-medium text-gray-700 mb-1">
                   Check-out Date <span class="text-red-500">*</span>
                 </label>
-                <input
-                  v-model="formData.checkOut"
-                  type="date"
-                  :min="minCheckOutDate"
+                <input v-model="formData.checkOut" type="date" :min="minCheckOutDate"
                   class="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:border-green-500"
-                  :class="{ 'border-red-300 bg-red-50': errors.checkOut }"
-                  @change="validateDates"
-                />
+                  :class="{ 'border-red-300 bg-red-50': errors.checkOut }" @change="validateDates" />
                 <p v-if="errors.checkOut" class="mt-1 text-xs text-red-600">{{ errors.checkOut }}</p>
               </div>
 
@@ -238,14 +184,12 @@
                 <label class="block text-xs font-medium text-gray-700 mb-1">
                   Number of Guests <span class="text-red-500">*</span>
                 </label>
-                <select
-                  v-model="formData.numGuest"
+                <select v-model="formData.numGuest"
                   class="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-800 focus:border-blue-800"
-                  :class="{ 'border-red-300 bg-red-50': errors.numGuest }"
-                  @change="handleNumGuestChange"
-                >
+                  :class="{ 'border-red-300 bg-red-50': errors.numGuest }" @change="handleNumGuestChange">
                   <option value="">Select guests</option>
-                  <option v-for="num in 10" :key="num" :value="num">{{ num }} {{ num === 1 ? 'Guest' : 'Guests' }}</option>
+                  <option v-for="num in 10" :key="num" :value="num">{{ num }} {{ num === 1 ? 'Guest' : 'Guests' }}
+                  </option>
                 </select>
                 <p v-if="errors.numGuest" class="mt-1 text-xs text-red-600">{{ errors.numGuest }}</p>
               </div>
@@ -255,23 +199,17 @@
                 <label class="block text-xs font-medium text-gray-700 mb-1">
                   Room <span class="text-red-500">*</span>
                 </label>
-                <select
-                  v-model="formData.roomNumber"
+                <select v-model="formData.roomNumber"
                   class="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-800 focus:border-blue-800"
                   :class="{ 'border-red-300 bg-red-50': errors.roomNumber }"
                   :disabled="!formData.checkIn || !formData.checkOut || !formData.numGuest || isCheckingAvailability"
-                  @change="validateRoomSelection"
-                >
+                  @change="validateRoomSelection">
                   <option value="">
                     {{ isCheckingAvailability ? 'Checking availability...' : 'Select room' }}
                   </option>
                   <optgroup v-for="category in roomsByCategory" :key="category.type" :label="category.type">
-                    <option 
-                      v-for="room in category.rooms" 
-                      :key="room.number" 
-                      :value="room.number"
-                      :disabled="!isRoomAvailable(room)"
-                    >
+                    <option v-for="room in category.rooms" :key="room.number" :value="room.number"
+                      :disabled="!isRoomAvailable(room)">
                       Room {{ room.number }} - ${{ room.pricePerNight }}/night ({{ room.maxCapacity }} guests max)
                       {{ !isRoomAvailable(room) ? ' - Unavailable' : '' }}
                     </option>
@@ -283,10 +221,8 @@
               <!-- Reservation Status -->
               <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1">Status</label>
-                <select
-                  v-model="formData.status"
-                  class="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-800 focus:border-blue-800"
-                >
+                <select v-model="formData.status"
+                  class="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-800 focus:border-blue-800">
                   <option value="confirmed">Confirmed</option>
                   <option value="pending">Pending</option>
                   <option value="checkedIn">Checked In</option>
@@ -301,14 +237,9 @@
                 </label>
                 <div class="relative">
                   <span class="absolute left-3 top-2 text-xs text-gray-500">$</span>
-                  <input
-                    v-model="calculatedPrice"
-                    type="text"
+                  <input v-model="calculatedPrice" type="text"
                     class="w-full pl-6 pr-3 py-2 text-xs border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed text-green-600"
-                    readonly
-                    placeholder="Select room and dates"
-                    disabled
-                  />
+                    readonly placeholder="Select room and dates" disabled />
                 </div>
                 <p v-if="nights > 0 && selectedRoomPrice > 0" class="mt-1 text-xs text-gray-500">
                   {{ nights }} {{ nights === 1 ? 'night' : 'nights' }} × ${{ selectedRoomPrice }}/night (estimate)
@@ -325,12 +256,9 @@
             <!-- Special Requests -->
             <div class="mt-4">
               <label class="block text-xs font-medium text-gray-700 mb-1">Special Requests</label>
-              <textarea
-                v-model="formData.specialRequest"
-                rows="3"
+              <textarea v-model="formData.specialRequest" rows="3"
                 class="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:border-green-500"
-                placeholder="Any special requests or notes..."
-              ></textarea>
+                placeholder="Any special requests or notes..."></textarea>
             </div>
 
             <!-- Selected Room Details -->
@@ -342,7 +270,7 @@
                 <div>Floor: {{ selectedRoom.floorNumber }}</div>
                 <div>Max Capacity: {{ selectedRoom.maxCapacity }} guests</div>
                 <div class="col-span-2">
-                  <span class="font-medium">Amenities:</span> 
+                  <span class="font-medium">Amenities:</span>
                   {{ selectedRoom.amenities?.join(', ') || 'Standard amenities' }}
                 </div>
               </div>
@@ -353,23 +281,10 @@
 
       <!-- Modal Footer -->
       <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
-        <Custombutton
-          label="Cancel"
-          bg-color="bg-gray-100"
-          hover-bg-color="hover:bg-gray-200"
-          text-color="text-gray-700"
-          :hover="true"
-          @click="closeModal"
-        />
-        <Custombutton
-          label="Create Reservation"
-          bg-color="bg-green-600"
-          hover-bg-color="hover:bg-green-700"
-          text-color="white"
-          :disabled="modalState.isLoading || !isFormValid"
-          :hover="true"
-          @click="submitReservation"
-        >
+        <Custombutton label="Cancel" bg-color="bg-gray-100" hover-bg-color="hover:bg-gray-200"
+          text-color="text-gray-700" :hover="true" @click="closeModal" />
+        <Custombutton label="Create Reservation" bg-color="bg-green-600" hover-bg-color="hover:bg-green-700"
+          text-color="white" :disabled="modalState.isLoading || !isFormValid" :hover="true" @click="submitReservation">
           <span v-if="modalState.isLoading" class="flex items-center gap-2">
             <i class="pi pi-spinner pi-spin"></i>
             Creating...
@@ -388,11 +303,11 @@ import { getTodayAsString, isDateInPast, daysBetweenDates, addDaysToDateString }
 import { useHotelData } from '@/composables/useHotelData'
 import { createReservation } from '@/services/reservations'
 import { ApiClientError } from '@/services/apiClient'
-import type { 
-  ReservationFormData, 
-  ValidationErrors, 
-  ModalState, 
-  Room 
+import type {
+  ReservationFormData,
+  ValidationErrors,
+  ModalState,
+  Room
 } from '../types/hotel'
 
 interface Props {
@@ -467,14 +382,14 @@ const nights = computed(() => {
 
 const roomsByCategory = computed(() => {
   const categories: { [key: string]: Room[] } = {}
-  
+
   rooms.value.forEach(room => {
     if (!categories[room.type]) {
       categories[room.type] = []
     }
     categories[room.type].push(room)
   })
-  
+
   return Object.entries(categories).map(([type, rooms]) => ({
     type,
     rooms: rooms.sort((a, b) => a.number.localeCompare(b.number))
@@ -499,31 +414,31 @@ const calculatedPrice = computed(() => {
 const isFormValid = computed(() => {
   // Check if all required fields are filled
   const hasRequiredFields = formData.value.firstName &&
-         formData.value.lastName &&
-         formData.value.email &&
-         formData.value.phone &&
-         formData.value.address &&
-         formData.value.idDocument &&
-         formData.value.numGuest > 0 &&
-         formData.value.checkIn &&
-         formData.value.checkOut &&
-         formData.value.roomNumber
-  
+    formData.value.lastName &&
+    formData.value.email &&
+    formData.value.phone &&
+    formData.value.address &&
+    formData.value.idDocument &&
+    formData.value.numGuest > 0 &&
+    formData.value.checkIn &&
+    formData.value.checkOut &&
+    formData.value.roomNumber
+
   // Check if there are any actual error messages (not empty strings)
   const hasNoErrors = Object.values(errors.value).every(error => !error || error.trim() === '')
-  
+
   // Debug logging for development (can be removed in production)
   // console.log('Form validation:', { hasRequiredFields, hasNoErrors, errors: errors.value })
-  
+
   return hasRequiredFields && hasNoErrors
 })
 
 const hasDraftData = computed(() => {
   // Check if there's meaningful data in the form (indicating a draft exists)
-  return formData.value.firstName || formData.value.lastName || formData.value.email || 
-         formData.value.phone || formData.value.address || formData.value.idDocument || 
-         formData.value.specialRequest || formData.value.checkIn || formData.value.checkOut ||
-         formData.value.roomNumber || formData.value.numGuest > 0
+  return formData.value.firstName || formData.value.lastName || formData.value.email ||
+    formData.value.phone || formData.value.address || formData.value.idDocument ||
+    formData.value.specialRequest || formData.value.checkIn || formData.value.checkOut ||
+    formData.value.roomNumber || formData.value.numGuest > 0
 })
 
 // Methods
@@ -531,22 +446,22 @@ const hasDraftData = computed(() => {
 const isRoomAvailable = (room: Room): boolean => {
   if (!formData.value.checkIn || !formData.value.checkOut) return true
   if (formData.value.numGuest > room.maxCapacity) return false
-  
+
   const checkIn = new Date(formData.value.checkIn)
   const checkOut = new Date(formData.value.checkOut)
-  
+
   // Check for conflicting reservations
   const conflicts = reservations.value.filter(reservation => {
     if (reservation.room !== room.number) return false
     if (reservation.status === 'cancelled') return false
-    
+
     const resCheckIn = new Date(reservation.checkIn)
     const resCheckOut = new Date(reservation.checkOut)
-    
+
     // Check for overlap (exclusive checkout logic)
     return checkIn < resCheckOut && checkOut > resCheckIn
   })
-  
+
   return conflicts.length === 0
 }
 
@@ -564,14 +479,14 @@ const capitalizeInput = (field: string) => {
   const value = (formData.value as any)[field]
   if (typeof value === 'string') {
     // Capitalize first letter of each word
-    ;(formData.value as any)[field] = value.replace(/\b\w/g, (char: string) => char.toUpperCase())
+    ; (formData.value as any)[field] = value.replace(/\b\w/g, (char: string) => char.toUpperCase())
   }
 }
 
 const uppercaseInput = (field: string) => {
   const value = (formData.value as any)[field]
   if (typeof value === 'string') {
-    ;(formData.value as any)[field] = value.toUpperCase()
+    ; (formData.value as any)[field] = value.toUpperCase()
   }
 }
 
@@ -589,53 +504,53 @@ const setTodayAsCheckIn = () => {
 
 const validateFirstName = () => {
   delete errors.value.firstName
-  
+
   if (!formData.value.firstName.trim()) {
     errors.value.firstName = 'First name is required'
     return false
   }
-  
+
   if (formData.value.firstName.trim().length < 2) {
     errors.value.firstName = 'First name must be at least 2 characters'
     return false
   }
-  
+
   if (formData.value.firstName.trim().length > 50) {
     errors.value.firstName = 'First name must not exceed 50 characters'
     return false
   }
-  
+
   if (!/^[a-zA-Z\s'-]+$/.test(formData.value.firstName.trim())) {
     errors.value.firstName = 'First name can only contain letters, spaces, hyphens, and apostrophes'
     return false
   }
-  
+
   return true
 }
 
 const validateLastName = () => {
   delete errors.value.lastName
-  
+
   if (!formData.value.lastName.trim()) {
     errors.value.lastName = 'Last name is required'
     return false
   }
-  
+
   if (formData.value.lastName.trim().length < 2) {
     errors.value.lastName = 'Last name must be at least 2 characters'
     return false
   }
-  
+
   if (formData.value.lastName.trim().length > 50) {
     errors.value.lastName = 'Last name must not exceed 50 characters'
     return false
   }
-  
+
   if (!/^[a-zA-Z\s'-]+$/.test(formData.value.lastName.trim())) {
     errors.value.lastName = 'Last name can only contain letters, spaces, hyphens, and apostrophes'
     return false
   }
-  
+
   return true
 }
 
@@ -646,126 +561,126 @@ const validateMiddleName = () => {
       errors.value.middleName = 'Middle name must not exceed 50 characters'
       return false
     }
-    
+
     if (!/^[a-zA-Z\s'-]+$/.test(formData.value.middleName.trim())) {
       errors.value.middleName = 'Middle name can only contain letters, spaces, hyphens, and apostrophes'
       return false
     }
   }
-  
+
   delete errors.value.middleName
   return true
 }
 
 const validateEmail = () => {
   delete errors.value.email
-  
+
   if (!formData.value.email.trim()) {
     errors.value.email = 'Email is required'
     return false
   }
-  
+
   // Auto-complete with @gmail.com if user typed just a username
   const email = formData.value.email.trim()
   if (email && !email.includes('@') && !email.includes('.')) {
     formData.value.email = email + '@gmail.com'
     console.log(`📧 Auto-completed email: ${formData.value.email}`)
   }
-  
+
   // Basic email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(formData.value.email.trim())) {
     errors.value.email = 'Please enter a valid email address'
     return false
   }
-  
+
   if (formData.value.email.trim().length > 100) {
     errors.value.email = 'Email must not exceed 100 characters'
     return false
   }
-  
+
   return true
 }
 
 const validateIdDocument = () => {
   delete errors.value.idDocument
-  
+
   if (!formData.value.idDocument.trim()) {
     errors.value.idDocument = 'ID document is required'
     return false
   }
-  
+
   if (formData.value.idDocument.trim().length < 5) {
     errors.value.idDocument = 'ID document must be at least 5 characters'
     return false
   }
-  
+
   if (formData.value.idDocument.trim().length > 20) {
     errors.value.idDocument = 'ID document must not exceed 20 characters'
     return false
   }
-  
+
   // Allow alphanumeric characters, hyphens, and spaces
   if (!/^[A-Z0-9\s-]+$/.test(formData.value.idDocument.trim())) {
     errors.value.idDocument = 'ID document can only contain letters, numbers, spaces, and hyphens'
     return false
   }
-  
+
   return true
 }
 
 const validateAddress = () => {
   delete errors.value.address
-  
+
   if (!formData.value.address.trim()) {
     errors.value.address = 'Address is required'
     return false
   }
-  
+
   if (formData.value.address.trim().length < 10) {
     errors.value.address = 'Address must be at least 10 characters'
     return false
   }
-  
+
   if (formData.value.address.trim().length > 200) {
     errors.value.address = 'Address must not exceed 200 characters'
     return false
   }
-  
+
   return true
 }
 
 const validateNumGuest = () => {
   delete errors.value.numGuest
-  
+
   if (!formData.value.numGuest || formData.value.numGuest < 1) {
     errors.value.numGuest = 'Number of guests is required'
     return false
   }
-  
+
   if (formData.value.numGuest > 10) {
     errors.value.numGuest = 'Maximum 10 guests allowed'
     return false
   }
-  
+
   return true
 }
 
 const validateRoomSelection = () => {
   delete errors.value.roomNumber
-  
+
   if (!formData.value.roomNumber) {
     errors.value.roomNumber = 'Room selection is required'
     return false
   }
-  
+
   // Check if selected room is available
   const selectedRoom = rooms.value.find(room => room.number === formData.value.roomNumber)
   if (selectedRoom && !isRoomAvailable(selectedRoom)) {
     errors.value.roomNumber = 'Selected room is not available for the chosen dates'
     return false
   }
-  
+
   return true
 }
 
@@ -805,15 +720,15 @@ const handleEmailInput = () => {
 
 const handleEmailKeydown = (event: KeyboardEvent) => {
   const email = formData.value.email.trim()
-  
+
   // Auto-complete on Tab, Space, or Enter if user typed just a username
-  if ((event.key === 'Tab' || event.key === ' ' || event.key === 'Enter') && 
-      email && !email.includes('@') && !email.includes('.')) {
-    
+  if ((event.key === 'Tab' || event.key === ' ' || event.key === 'Enter') &&
+    email && !email.includes('@') && !email.includes('.')) {
+
     event.preventDefault() // Prevent default behavior
     formData.value.email = email + '@gmail.com'
     console.log(`📧 Auto-completed email with ${event.key}: ${formData.value.email}`)
-    
+
     // If it was Enter, also validate the email
     if (event.key === 'Enter') {
       validateEmail()
@@ -839,7 +754,7 @@ const handleAddressInput = () => {
 
 const handleNumGuestChange = () => {
   validateNumGuest()
-  
+
   // Check if currently selected room can still accommodate the new guest count
   if (formData.value.roomNumber) {
     const currentRoom = rooms.value.find(room => room.number === formData.value.roomNumber)
@@ -849,31 +764,31 @@ const handleNumGuestChange = () => {
       console.log(`🔄 Cleared room selection - cannot accommodate ${formData.value.numGuest} guests`)
     }
   }
-  
+
   filterAvailableRooms()
 }
 
 const formatPhoneInput = () => {
   // Remove all non-numeric characters
   let phone = formData.value.phone.replace(/\D/g, '')
-  
+
   // Format based on country code
   const countryCode = formData.value.countryCode
-  
+
   // Limit length based on country
   const maxLength = getMaxPhoneLength(countryCode)
   if (phone.length > maxLength) {
     phone = phone.substring(0, maxLength)
   }
-  
+
   // Apply formatting based on country
   formData.value.phone = formatPhoneByCountry(phone, countryCode)
-  
+
   // Clear phone error when user starts typing
   if (errors.value.phone && phone.length > 0) {
     delete errors.value.phone
   }
-  
+
   autoSaveDraft()
 }
 
@@ -899,7 +814,7 @@ const getMaxPhoneLength = (countryCode: string): number => {
 
 const formatPhoneByCountry = (phone: string, countryCode: string): string => {
   if (!phone) return ''
-  
+
   switch (countryCode) {
     case '+1': // US/Canada: (123) 456-7890
       if (phone.length >= 6) {
@@ -908,7 +823,7 @@ const formatPhoneByCountry = (phone: string, countryCode: string): string => {
         return `(${phone.substring(0, 3)}) ${phone.substring(3)}`
       }
       return phone
-    
+
     case '+63': // Philippines: 0912 345 6789
       if (phone.length >= 7) {
         return `${phone.substring(0, 4)} ${phone.substring(4, 7)} ${phone.substring(7)}`
@@ -916,19 +831,19 @@ const formatPhoneByCountry = (phone: string, countryCode: string): string => {
         return `${phone.substring(0, 4)} ${phone.substring(4)}`
       }
       return phone
-    
+
     case '+44': // UK: 01234 567890
       if (phone.length >= 6) {
         return `${phone.substring(0, 5)} ${phone.substring(5)}`
       }
       return phone
-    
+
     case '+65': // Singapore: 1234 5678
       if (phone.length >= 4) {
         return `${phone.substring(0, 4)} ${phone.substring(4)}`
       }
       return phone
-    
+
     default: // Default formatting: groups of 3-4 digits
       if (phone.length >= 6) {
         return `${phone.substring(0, 3)} ${phone.substring(3, 6)} ${phone.substring(6)}`
@@ -942,35 +857,35 @@ const formatPhoneByCountry = (phone: string, countryCode: string): string => {
 const validatePhone = () => {
   const phone = formData.value.phone.replace(/\D/g, '') // Remove formatting
   const countryCode = formData.value.countryCode
-  
+
   // Clear existing phone error
   delete errors.value.phone
-  
+
   if (!phone) {
     errors.value.phone = 'Phone number is required'
     return false
   }
-  
+
   // Check minimum and maximum length based on country
   const minLength = getMinPhoneLength(countryCode)
   const maxLength = getMaxPhoneLength(countryCode)
-  
+
   if (phone.length < minLength) {
     errors.value.phone = `Phone number must be at least ${minLength} digits for ${getCountryName(countryCode)}`
     return false
   }
-  
+
   if (phone.length > maxLength) {
     errors.value.phone = `Phone number must not exceed ${maxLength} digits for ${getCountryName(countryCode)}`
     return false
   }
-  
+
   // Country-specific validation patterns
   if (!isValidPhoneForCountry(phone, countryCode)) {
     errors.value.phone = `Invalid phone number format for ${getCountryName(countryCode)}`
     return false
   }
-  
+
   return true
 }
 
@@ -1018,28 +933,28 @@ const isValidPhoneForCountry = (phone: string, countryCode: string): boolean => 
   switch (countryCode) {
     case '+1': // US/Canada: must not start with 0 or 1
       return !/^[01]/.test(phone)
-    
+
     case '+63': // Philippines: mobile starts with 9, landline varies
       return /^(9|2|3|4|5|6|7|8)/.test(phone)
-    
+
     case '+44': // UK: various patterns
       return /^(1|2|3|7|8)/.test(phone)
-    
+
     case '+65': // Singapore: starts with 6, 8, or 9
       return /^[689]/.test(phone)
-    
+
     case '+86': // China: mobile starts with 1
       return /^1/.test(phone)
-    
+
     case '+81': // Japan: various patterns
       return /^[1-9]/.test(phone)
-    
+
     case '+82': // South Korea: mobile starts with 1
       return /^1/.test(phone)
-    
+
     case '+91': // India: mobile starts with 6, 7, 8, or 9
       return /^[6-9]/.test(phone)
-    
+
     default:
       return true // Allow any format for other countries
   }
@@ -1049,29 +964,29 @@ const validateDates = () => {
   // Clear existing date errors
   delete errors.value.checkIn
   delete errors.value.checkOut
-  
+
   if (formData.value.checkIn) {
     if (isDateInPast(formData.value.checkIn)) {
       errors.value.checkIn = 'Check-in date cannot be in the past'
     }
   }
-  
+
   if (formData.value.checkIn && formData.value.checkOut) {
     // Use string comparison for consistency
     const checkInDate = formData.value.checkIn
     const checkOutDate = formData.value.checkOut
-    
+
     if (checkOutDate <= checkInDate) {
       errors.value.checkOut = 'Check-out date must be after check-in date'
     }
   }
-  
+
   filterAvailableRooms()
 }
 
 const validateForm = (): boolean => {
   errors.value = {}
-  
+
   // Validate all fields using their specific validation functions
   const validations = [
     validateFirstName(),
@@ -1084,23 +999,23 @@ const validateForm = (): boolean => {
     validateNumGuest(),
     validateRoomSelection()
   ]
-  
+
   // Validate dates
   validateDates()
-  
+
   // Check if all validations passed
   const allFieldsValid = validations.every(isValid => isValid)
   const noDateErrors = !errors.value.checkIn && !errors.value.checkOut
-  
+
   return allFieldsValid && noDateErrors && Object.keys(errors.value).length === 0
 }
 
 const submitReservation = async () => {
   if (!validateForm()) return
-  
+
   modalState.value.isLoading = true
   modalState.value.error = null
-  
+
   try {
     // Debug logging to check date formats
     console.log('📅 Submitting reservation with dates:', {
@@ -1125,7 +1040,7 @@ const submitReservation = async () => {
       resetForm() // Reset form only on successful submission
       closeModal()
     }, 1500)
-    
+
   } catch (error) {
     if (error instanceof ApiClientError) {
       if (error.status === 409) {
@@ -1163,7 +1078,7 @@ const resetForm = () => {
   errors.value = {}
   modalState.value.error = null
   modalState.value.success = false
-  
+
   // Clear saved draft when form is intentionally reset
   clearFormDraft()
 }
@@ -1182,7 +1097,7 @@ const saveFormDraft = () => {
     }
     localStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
     console.log('💾 Form draft saved')
-    
+
     // Show draft saved indicator
     showDraftSavedIndicator('Draft saved')
   } catch (error) {
@@ -1193,7 +1108,7 @@ const saveFormDraft = () => {
 const showDraftSavedIndicator = (message: string) => {
   draftSaveState.value.message = message
   draftSaveState.value.isVisible = true
-  
+
   // Hide after 2 seconds
   setTimeout(() => {
     draftSaveState.value.isVisible = false
@@ -1205,18 +1120,18 @@ const loadFormDraft = () => {
     const saved = localStorage.getItem(DRAFT_KEY)
     if (saved) {
       const draft = JSON.parse(saved)
-      
+
       // Check if draft is not too old (24 hours)
       const isRecentDraft = draft.timestamp && (Date.now() - draft.timestamp) < 24 * 60 * 60 * 1000
-      
+
       if (isRecentDraft) {
         // Remove timestamp before applying to form
         delete draft.timestamp
-        
+
         // Only restore if there's meaningful data (not just defaults)
-        const hasData = draft.firstName || draft.lastName || draft.email || draft.phone || 
-                       draft.address || draft.idDocument || draft.specialRequest
-        
+        const hasData = draft.firstName || draft.lastName || draft.email || draft.phone ||
+          draft.address || draft.idDocument || draft.specialRequest
+
         if (hasData) {
           formData.value = { ...formData.value, ...draft }
           console.log('📋 Form draft restored')
@@ -1257,14 +1172,14 @@ const autoSaveDraft = () => {
   if (autoSaveTimeout) {
     clearTimeout(autoSaveTimeout)
   }
-  
+
   // Set new timeout to save after 2 seconds of inactivity
   autoSaveTimeout = setTimeout(() => {
     // Only auto-save if there's meaningful data
-    const hasData = formData.value.firstName || formData.value.lastName || formData.value.email || 
-                   formData.value.phone || formData.value.address || formData.value.idDocument || 
-                   formData.value.specialRequest
-    
+    const hasData = formData.value.firstName || formData.value.lastName || formData.value.email ||
+      formData.value.phone || formData.value.address || formData.value.idDocument ||
+      formData.value.specialRequest
+
     if (hasData) {
       saveFormDraft()
     }
@@ -1274,12 +1189,12 @@ const autoSaveDraft = () => {
 const closeModal = () => {
   // Save draft before closing (in case it was accidental)
   saveFormDraft()
-  
+
   // Clear only modal state, not form data (for persistence)
   modalState.value.error = null
   modalState.value.success = false
   modalState.value.isLoading = false
-  
+
   emit('close')
 }
 
@@ -1291,32 +1206,32 @@ const handleBackdropClick = (event: MouseEvent) => {
 
 const applyPrefilledData = () => {
   if (!props.prefilledData) return
-  
+
   console.log('🎯 Applying prefilled data:', props.prefilledData)
-  
+
   // Set default number of guests to 1 FIRST (required for room filtering)
   formData.value.numGuest = 1
-  
+
   // Set check-in date if provided
   if (props.prefilledData.checkInDate) {
     formData.value.checkIn = props.prefilledData.checkInDate
-    
+
     // Validate dates after setting them
     validateDates()
   }
-  
+
   // Trigger room availability filtering first to ensure room list is updated
   filterAvailableRooms()
-  
+
   // Set room number if provided (after numGuest and dates are set and rooms are filtered)
   if (props.prefilledData?.roomNumber) {
     // Find the room to verify it's available and can accommodate guests
     const selectedRoom = rooms.value.find(room => room.number === props.prefilledData?.roomNumber)
-    
+
     if (selectedRoom && isRoomAvailable(selectedRoom)) {
       formData.value.roomNumber = props.prefilledData.roomNumber
       console.log(`✅ Pre-filled room ${props.prefilledData.roomNumber} is available`)
-      
+
       // Validate room selection
       validateRoomSelection()
     } else {
@@ -1331,10 +1246,10 @@ const applyPrefilledData = () => {
 watch(() => props.isOpen, async (newValue) => {
   if (newValue) {
     await refreshAll()
-    
+
     // Try to load saved draft first
     const draftLoaded = loadFormDraft()
-    
+
     // Apply prefilled data if available and no draft was loaded
     if (props.prefilledData && !draftLoaded) {
       setTimeout(() => {
@@ -1356,18 +1271,18 @@ watch([() => formData.value.checkIn, () => formData.value.checkOut], () => {
   }
 })
 
-  // Watch for country code changes to reformat and revalidate phone number
-  watch(() => formData.value.countryCode, () => {
-    if (formData.value.phone) {
-      formatPhoneInput()
-      validatePhone()
-    }
-  })
+// Watch for country code changes to reformat and revalidate phone number
+watch(() => formData.value.countryCode, () => {
+  if (formData.value.phone) {
+    formatPhoneInput()
+    validatePhone()
+  }
+})
 
-  // Load initial data
-  onMounted(() => {
-    if (props.isOpen) {
-      refreshAll()
-    }
-  })
+// Load initial data
+onMounted(() => {
+  if (props.isOpen) {
+    refreshAll()
+  }
+})
 </script>
