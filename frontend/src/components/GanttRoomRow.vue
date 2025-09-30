@@ -1,5 +1,4 @@
 <template>
-  <!-- Room Number Column -->
   <td
     class="sticky left-0 z-10 bg-white px-6 py-2 border-r border-gray-200 outline outline-1 outline-gray-100 w-270px min-w-270px max-w-270px overflow-hidden text-ellipsis whitespace-nowrap h-48px"
   >
@@ -9,7 +8,6 @@
     </div>
   </td>
 
-  <!-- Day Cells (clickable for creating reservations) -->
   <td 
     v-for="day in dateRange" 
     :key="`${room.number}-${day.date}`"
@@ -24,7 +22,6 @@
     @mouseleave="$emit('columnLeave')"
     @click="handleCellClick(room.number, day.date)"
   >
-    <!-- Empty cell to preserve grid; reservation spans are rendered in overlay layer -->
   </td>
 </template>
 
@@ -55,9 +52,6 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-/**
- * Get tooltip text for a cell
- */
 const getCellTooltip = (roomNumber: string, date: string): string => {
   const available = props.isRoomAvailable(roomNumber, date)
   return available 
@@ -65,9 +59,6 @@ const getCellTooltip = (roomNumber: string, date: string): string => {
     : `Room ${roomNumber} is not available on ${date}`
 }
 
-/**
- * Handle cell click - only emit if room is available
- */
 const handleCellClick = (roomNumber: string, date: string): void => {
   if (props.isRoomAvailable(roomNumber, date)) {
     emit('cellClick', { roomNumber, date })

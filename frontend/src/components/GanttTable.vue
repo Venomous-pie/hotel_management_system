@@ -109,7 +109,6 @@
       </tbody>
     </table>
 
-    <!-- Spanning reservation blocks overlay -->
     <div class="absolute inset-0 pointer-events-none z-30">
       <template v-for="category in roomCategories" :key="category.name">
         <template v-if="expandedCategories[category.type]">

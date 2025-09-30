@@ -247,12 +247,14 @@ export const useGanttNavigation = (
     const [newYear, newMonth] = newValues
     const [oldYear, oldMonth] = oldValues || [newYear, newMonth]
 
-    // Only reset view if this is a manual month/year change from parent
+    // Only adjust view if this is a manual month/year change from parent
     if (oldYear !== undefined && oldMonth !== undefined) {
       if (!isInternalNavigation.value) {
-        // Manual date change - reset to beginning of month
+        // Align view to the first day of the selected month/year
         console.log(`📅 Manual date change: ${oldYear}-${oldMonth + 1} → ${newYear}-${newMonth + 1}`)
-        initializeViewDate()
+        const firstDay = new Date(newYear, newMonth, 1)
+        firstDay.setHours(0, 0, 0, 0)
+        viewStartDate.value = firstDay
       } else {
         // Internal navigation - keep current view position
         console.log(`🔄 Internal navigation: ${oldYear}-${oldMonth + 1} → ${newYear}-${newMonth + 1}`)

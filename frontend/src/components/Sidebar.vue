@@ -6,8 +6,7 @@
         </div>
 
         <div class="flex w-full items-center p-2 rounded-lg pl-5 mr-5 mt-4">
-            <img src="/receptionist.jpg" alt="Profile"
-                class="h-10 w-10 object-cover object-top rounded-full" />
+            <img src="/receptionist.jpg" alt="Profile" class="h-10 w-10 object-cover object-top rounded-full" />
 
             <div class="ml-3 leading-tight">
                 <p class="text-sm font-semibold text-black">Grace Hoppers</p>
@@ -20,35 +19,35 @@
             <nav class="flex flex-col space-y-1 mr-7">
                 <RouterLink to="/frontdesk" custom v-slot="{ href, navigate, isActive }">
                     <a :href="href" @click="navigate"
-                       :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
+                        :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
                         <i class="pi pi-th-large text-sm"></i>
                         Front Desk
                     </a>
                 </RouterLink>
                 <RouterLink to="/reservations" custom v-slot="{ href, navigate, isActive }">
                     <a :href="href" @click="navigate"
-                       :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
+                        :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
                         <i class="pi pi-calendar-plus text-sm"></i>
                         Reservations
                     </a>
                 </RouterLink>
                 <RouterLink to="/guests" custom v-slot="{ href, navigate, isActive }">
                     <a :href="href" @click="navigate"
-                       :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
+                        :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
                         <i class="pi pi-users text-sm"></i>
                         Guests
                     </a>
                 </RouterLink>
                 <RouterLink to="/housekeeping" custom v-slot="{ href, navigate, isActive }">
                     <a :href="href" @click="navigate"
-                       :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
+                        :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
                         <i class="pi pi-home text-sm"></i>
                         Housekeeping
                     </a>
                 </RouterLink>
                 <RouterLink to="/tasks" custom v-slot="{ href, navigate, isActive }">
                     <a :href="href" @click="navigate"
-                       :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
+                        :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
                         <i class="pi pi-list text-sm"></i>
                         Tasks
                     </a>
@@ -66,21 +65,21 @@
                 </a>
                 <RouterLink to="/accounting" custom v-slot="{ href, navigate, isActive }">
                     <a :href="href" @click="navigate"
-                       :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
+                        :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
                         <i class="pi pi-calculator text-sm"></i>
                         Accounting
                     </a>
                 </RouterLink>
                 <RouterLink to="/cashbooks" custom v-slot="{ href, navigate, isActive }">
                     <a :href="href" @click="navigate"
-                       :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
+                        :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
                         <i class="pi pi-book text-sm"></i>
                         Cashbooks
                     </a>
                 </RouterLink>
                 <RouterLink to="/reports" custom v-slot="{ href, navigate, isActive }">
                     <a :href="href" @click="navigate"
-                       :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
+                        :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
                         <i class="pi pi-file-o text-sm"></i>
                         Reports
                     </a>
@@ -93,14 +92,14 @@
             <nav class="flex flex-col space-y-1 mr-7">
                 <RouterLink to="/orders" custom v-slot="{ href, navigate, isActive }">
                     <a :href="href" @click="navigate"
-                       :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
+                        :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
                         <i class="pi pi-shopping-cart text-sm"></i>
                         Orders
                     </a>
                 </RouterLink>
                 <RouterLink to="/services" custom v-slot="{ href, navigate, isActive }">
                     <a :href="href" @click="navigate"
-                       :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
+                        :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
                         <i class="pi pi-wrench text-sm"></i>
                         Services
                     </a>
@@ -111,7 +110,7 @@
         <div class="w-52 mt-auto p-4 bg-gray-50">
             <RouterLink to="/settings" custom v-slot="{ href, navigate, isActive }">
                 <a :href="href" @click="navigate"
-                   :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
+                    :class="['flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline', isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900']">
                     <i class="pi pi-cog text-sm"></i>
                     Settings
                 </a>

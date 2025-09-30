@@ -3,11 +3,6 @@
  * Pure functions for mapping reservation statuses to CSS classes
  */
 
-/**
- * Get reservation display color based on status
- * @param reservation - Reservation object with status property
- * @returns CSS classes for styling the reservation display
- */
 export const getReservationStatusColor = (reservation: any): string => {
   if (!reservation) return ''
   const raw = (reservation.status || '').toString()

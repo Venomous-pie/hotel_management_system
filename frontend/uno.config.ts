@@ -80,6 +80,10 @@ export default defineConfig({
     'text-red-800',
     'bg-orange-100',
     'text-orange-800',
-    // PrimeIcons are loaded via CSS, no need to safelist
+    // Dynamically generated reservation span colors (safelisted explicitly)
+    'bg-yellow-200', 'bg-blue-200', 'bg-red-200', 'bg-orange-200', 'bg-amber-200', 'bg-gray-200',
+    'border-blue-300', 'border-green-300', 'border-red-300', 'border-orange-300', 'border-amber-300', 'border-gray-300',
+    'text-amber-800', 'text-gray-800',
+    'bg-green-500', 'bg-amber-500', 'bg-gray-500',
   ],
 })
