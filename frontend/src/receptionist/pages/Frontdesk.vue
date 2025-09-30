@@ -160,28 +160,47 @@ import Searchbar from '@/components/Searchbar.vue';
 import Ganttchart from '@/components/GanttChart.vue';
 import Custombutton from '@/components/Custombutton.vue';
 import AddReservationModal from '@/components/AddReservationModal.vue';
-import { getTodayAtMidnight } from '@/utils/date'
 import { useHotelData } from '@/composables/useHotelData'
-
-// Current date state
-const currentDate = getTodayAtMidnight()
-const selectedYear = ref(currentDate.getFullYear())
-const selectedMonth = ref(currentDate.getMonth())
-const targetDate = ref<Date | null>(null)
+import { useFrontdeskDateNavigation } from '@/composables/useFrontdeskDateNavigation'
+import { useFrontdeskFilters } from '@/composables/useFrontdeskFilters'
+import { useFilterOptions } from '@/composables/useFilterOptions'
+import { useSuccessNotification } from '@/composables/useSuccessNotification'
+import { useClickOutside } from '@/composables/useClickOutside'
 
 // Shared hotel data (composable)
 const { rooms, reservations, loading, error, refreshAll } = useHotelData()
 
-// Search and filters
-const searchQuery = ref('')
-const selectedReservationFilter = ref('All Reservations')
-const selectedRoomTypeFilter = ref('All Room Types')
-const selectedBookingFilter = ref('All Booking')
+// Date navigation
+const {
+  selectedYear,
+  selectedMonth,
+  targetDate,
+  years,
+  months,
+  emitDateChangeToChart,
+  navigateYear,
+  navigateMonth,
+  selectYear,
+  selectMonth,
+  handleDateUpdate,
+} = useFrontdeskDateNavigation()
 
-// Dropdown states
-const showReservationDropdown = ref(false)
-const showRoomTypeDropdown = ref(false)
-const showBookingDropdown = ref(false)
+// Filters and dropdowns
+const {
+  searchQuery,
+  selectedReservationFilter,
+  selectedRoomTypeFilter,
+  selectedBookingFilter,
+  showReservationDropdown,
+  showRoomTypeDropdown,
+  showBookingDropdown,
+  hasActiveFilters,
+  clearAllFilters,
+  toggleReservationDropdown,
+  toggleRoomTypeDropdown,
+  toggleBookingDropdown,
+  closeDropdowns,
+} = useFrontdeskFilters()
 
 // Modal state
 const showAddReservationModal = ref(false)
@@ -190,185 +209,23 @@ const prefilledReservationData = ref<{
   checkInDate?: string
 } | null>(null)
 
-// Success notification state
-const showSuccessNotification = ref(false)
-const successMessage = ref('')
+// Success notification
+const { showSuccessNotification, successMessage, showWithTimeout } = useSuccessNotification()
 
-// Years for navigation (16 years: current year ± 7)
-const years = computed(() => {
-  const current = getTodayAtMidnight().getFullYear()
-  const yearList = []
-  for (let i = -7; i <= 8; i++) {
-    yearList.push(current + i)
-  }
-  return yearList
-})
-
-// Months
-const months = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-]
+// Filter options derived from backend data
+const { roomTypeOptions, reservationStatusOptions, bookingSourceOptions } = useFilterOptions(rooms, reservations)
 
 // Data loading handled by useHotelData.refreshAll
 
-// Navigation functions
-const navigateYear = (direction: number) => {
-  const currentIndex = years.value.indexOf(selectedYear.value)
-  const newIndex = currentIndex + direction
+// (moved options into useFilterOptions composable)
 
-  if (newIndex >= 0 && newIndex < years.value.length) {
-    selectedYear.value = years.value[newIndex]
-    emitDateChangeToChart()
-  }
-}
-
-const navigateMonth = (direction: number) => {
-  let newMonth = selectedMonth.value + direction
-  let newYear = selectedYear.value
-
-  // Handle month overflow/underflow
-  if (newMonth > 11) {
-    newMonth = 0
-    newYear += 1
-  } else if (newMonth < 0) {
-    newMonth = 11
-    newYear -= 1
-  }
-
-  // Check if the new year is within allowed range
-  if (years.value.includes(newYear)) {
-    selectedYear.value = newYear
-    selectedMonth.value = newMonth
-    emitDateChangeToChart()
-  }
-}
-
-const selectYear = (year: number) => {
-  selectedYear.value = year
-  emitDateChangeToChart()
-}
-
-const selectMonth = (monthIndex: number) => {
-  selectedMonth.value = monthIndex
-  emitDateChangeToChart()
-}
-
-// Filter options from backend data
-const roomTypeOptions = computed(() => {
-  // Extract unique room types from the actual backend data
-  const types = new Set(rooms.value.map(room => room.type || room.RoomType?.typeName || 'Standard'))
-  const allTypes = Array.from(types).filter(type => type) // Include all types, including 'Standard'
-
-  // Start with "All Room Types"
-  const categoryFilters = ['All Room Types']
-
-  // Add all actual room types from backend, sorted alphabetically
-  categoryFilters.push(...allTypes.sort())
-
-  return categoryFilters
-})
-
-// Dynamic reservation status options from backend data
-const reservationStatusOptions = computed(() => {
-  // Extract unique statuses from actual reservations
-  const statuses = new Set(reservations.value.map(reservation => reservation.status))
-  const allStatuses = Array.from(statuses).filter(status => status)
-
-  // Standard reservation statuses (fallback if backend data is limited)
-  const standardStatuses = ['confirmed', 'pending', 'checkedIn', 'cancelled']
-
-  // Combine actual statuses with standard ones to ensure all options are available
-  const combinedStatuses = new Set([...allStatuses, ...standardStatuses])
-  const allStatusesArray = Array.from(combinedStatuses)
-
-  // Start with "All Reservations"
-  const statusOptions = ['All Reservations']
-
-  // Add all statuses with proper capitalization
-  const capitalizedStatuses = allStatusesArray.map(status => {
-    // Convert backend status to display format
-    switch (status.toLowerCase()) {
-      case 'confirmed': return 'Confirmed'
-      case 'pending': return 'Pending'
-      case 'checkedin': return 'Checked In'
-      case 'cancelled': return 'Cancelled'
-      default: return status.charAt(0).toUpperCase() + status.slice(1)
-    }
-  }).sort()
-
-  statusOptions.push(...capitalizedStatuses)
-
-  return statusOptions
-})
-
-  // Dynamic booking source options from backend data
-  const bookingSourceOptions = computed(() => {
-    // Extract unique sources from actual reservations
-    const rawSources: string[] = reservations.value.reduce<string[]>((acc, r) => {
-      const s = r.source
-      if (typeof s === 'string' && s.trim().length > 0) acc.push(s)
-      return acc
-    }, [])
-
-    const uniqueSources = Array.from(new Set<string>(rawSources))
-
-    // Standard booking sources (fallback if backend data is limited)
-    const standardSources = ['direct', 'booking.com', 'expedia', 'airbnb', 'kayak']
-
-    // Combine actual sources with standard ones to ensure all options are available
-    const combinedSources = new Set<string>([...uniqueSources, ...standardSources])
-    const allSourcesArray: string[] = Array.from(combinedSources)
-
-  // Start with "All Booking"
-  const sourceOptions = ['All Booking']
-
-  // Add all sources with proper capitalization
-  const capitalizedSources = allSourcesArray.map((source: string): string => {
-    // Convert backend source to display format
-    switch (source.toLowerCase()) {
-      case 'direct': return 'Direct'
-      case 'booking.com': return 'Booking.com'
-      case 'expedia': return 'Expedia'
-      case 'airbnb': return 'Airbnb'
-      case 'kayak': return 'Kayak'
-      default: return source.charAt(0).toUpperCase() + source.slice(1)
-    }
-  }).sort()
-
-  sourceOptions.push(...capitalizedSources)
-
-  return sourceOptions
-})
-
-// Handle search
 const handleSearch = (query: string) => {
   searchQuery.value = query
   // The Gantt chart will handle the filtering
 }
 
-// Check if any filters are active (not default values)
-const hasActiveFilters = computed(() => {
-  return searchQuery.value !== '' ||
-    selectedReservationFilter.value !== 'All Reservations' ||
-    selectedRoomTypeFilter.value !== 'All Room Types' ||
-    selectedBookingFilter.value !== 'All Booking'
-})
+// hasActiveFilters and clearAllFilters come from useFrontdeskFilters
 
-// Clear all filters
-const clearAllFilters = () => {
-  searchQuery.value = ''
-  selectedReservationFilter.value = 'All Reservations'
-  selectedRoomTypeFilter.value = 'All Room Types'
-  selectedBookingFilter.value = 'All Booking'
-
-  // Close any open dropdowns
-  closeDropdowns()
-
-  console.log('🧹 All filters cleared')
-}
-
-// Handle Add Reservation
 const handleAddReservation = () => {
   prefilledReservationData.value = null // Clear any prefilled data
   showAddReservationModal.value = true
@@ -404,70 +261,28 @@ const handleModalClose = () => {
 }
 
 const handleReservationSuccess = async (reservation: any) => {
-  console.log('Reservation created successfully:', reservation)
-
-  // Show success notification
-  successMessage.value = `Reservation created successfully for ${reservation.Guest?.firstName || 'guest'} in room ${reservation.roomNumber}`
-  showSuccessNotification.value = true
-
-  // Show loading state while refreshing data
+  const msg = `Reservation created successfully for ${reservation.Guest?.firstName || 'guest'} in room ${reservation.roomNumber}`
   loading.value = true
-
   try {
-    // Refresh data to show the new reservation
     await refreshAll()
-    console.log('Frontdesk data refreshed after new reservation')
   } catch (error) {
     console.error('Failed to refresh data after reservation:', error)
-    // Still close modal even if refresh fails
   } finally {
     loading.value = false
   }
-
-  // Close modal after successful refresh
+  showWithTimeout(msg, 3000)
   showAddReservationModal.value = false
-
-  // Hide success notification after 3 seconds
-  setTimeout(() => {
-    showSuccessNotification.value = false
-  }, 3000)
 }
 
-// Handle date updates from Gantt chart
-const handleDateUpdate = ({ year, month }: { year: number; month: number }) => {
-  selectedYear.value = year
-  selectedMonth.value = month
-  emitDateChangeToChart()
-}
+// emitDateChangeToChart provided by date navigation composable
 
-// Emit date change to Gantt chart to reset view to 1st of month
-const emitDateChangeToChart = () => {
-  // Create a date object for the 1st of the selected month/year
-  const firstDayOfMonth = new Date(selectedYear.value, selectedMonth.value, 1)
-  
-  // Set the target date to trigger Gantt chart update
-  targetDate.value = firstDayOfMonth
-  
-  console.log(`📅 Navigating to: ${firstDayOfMonth.toLocaleDateString()}`)
-}
-
-// Close dropdowns when clicking outside
-const closeDropdowns = () => {
-  showReservationDropdown.value = false
-  showRoomTypeDropdown.value = false
-  showBookingDropdown.value = false
-}
-
-// Load data on mount
 onMounted(() => {
   refreshAll()
-
-  // Add click outside listener
-  document.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement
-    if (!target.closest('.relative')) {
-      closeDropdowns()
-    }
-  })
 })
+
+// Click outside for dropdowns
+useClickOutside(
+  (target: HTMLElement) => !!target.closest('.relative'),
+  () => closeDropdowns()
+)
 </script>

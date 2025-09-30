@@ -20,6 +20,9 @@ export {
     isRoomAvailableOnDate,
     getAvailableRoomCount,
     formatReservationDateRange,
+    overlapsExclusive,
+    roomHasConflict,
+    isRoomAvailableForRange,
 } from '@/utils/reservations'
 
 // Color and status utilities

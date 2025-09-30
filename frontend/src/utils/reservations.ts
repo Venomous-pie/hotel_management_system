@@ -97,3 +97,63 @@ export const formatReservationDateRange = (reservation: any): string => {
   
   return `${formatDate(checkInDate)} - ${formatDate(checkOutDate)}`
 }
+
+/**
+ * Normalize a date-like value to YYYY-MM-DD (date-only) string.
+ */
+const normalizeDate = (d: string | Date): string => {
+  const s = typeof d === 'string' ? d : d.toISOString()
+  return s.split('T')[0]
+}
+
+/**
+ * Exclusive overlap check for reservation ranges.
+ * Returns true when [aStart, aEnd) overlaps with [bStart, bEnd).
+ * Uses date-only string comparison to avoid timezone issues.
+ */
+export const overlapsExclusive = (
+  aStart: string | Date,
+  aEnd: string | Date,
+  bStart: string | Date,
+  bEnd: string | Date,
+): boolean => {
+  const as = normalizeDate(aStart)
+  const ae = normalizeDate(aEnd)
+  const bs = normalizeDate(bStart)
+  const be = normalizeDate(bEnd)
+  return as < be && ae > bs
+}
+
+/**
+ * Check if a room has any conflicting reservations over a date range.
+ * Checkout is exclusive; cancelled reservations ignored.
+ */
+export const roomHasConflict = (
+  reservations: Reservation[],
+  roomNumber: string,
+  start: string | Date,
+  end: string | Date,
+): boolean => {
+  return reservations.some(res => {
+    const resRoomNumber = (res.room || res.roomNumber || '').toString()
+    if (resRoomNumber !== roomNumber.toString()) return false
+    if (res.status === 'cancelled') return false
+
+    const checkInStr = (res.checkIn || res.checkInDate || '').toString()
+    const checkOutStr = (res.checkOut || res.checkOutDate || '').toString()
+    if (!checkInStr || !checkOutStr) return false
+    return overlapsExclusive(start, end, checkInStr, checkOutStr)
+  })
+}
+
+/**
+ * Determine if a room is available for a date range.
+ */
+export const isRoomAvailableForRange = (
+  reservations: Reservation[],
+  roomNumber: string,
+  start: string | Date,
+  end: string | Date,
+): boolean => {
+  return !roomHasConflict(reservations, roomNumber, start, end)
+}

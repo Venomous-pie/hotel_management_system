@@ -142,3 +142,14 @@ export interface ReservationFilters {
   dateRange?: DateRange
   searchQuery?: string
 }
+
+// Prefill data for AddReservationModal
+export interface PrefilledReservationData {
+  roomNumber?: string
+  checkInDate?: string
+}
+
+// Local draft shape used in form persistence
+export interface ReservationDraft extends ReservationFormData {
+  timestamp?: number
+}

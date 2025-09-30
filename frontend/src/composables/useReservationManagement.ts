@@ -74,7 +74,6 @@ export const useReservationManagement = (
   }
 
   /**
-   * Search reservations by guest name, booking ID, or room number
    */
   const searchReservations = (
     reservationList: Reservation[], 
@@ -87,18 +86,29 @@ export const useReservationManagement = (
     const normalizedQuery = query.toLowerCase().trim()
 
     return reservationList.filter(reservation => {
-      const guestName = (reservation.guest || reservation.guestName || '').toLowerCase()
-      const bookingId = (reservation.id || reservation.bookingNumber || '').toString().toLowerCase()
-      const roomNumber = (reservation.room || reservation.roomNumber || '').toString().toLowerCase()
+      const guestFirst = (reservation as any).Guest?.firstName || ''
+      const guestLast = (reservation as any).Guest?.lastName || ''
+      const guestFullFromObject = `${guestFirst} ${guestLast}`.trim()
+      const guestName = (reservation as any).guest || (reservation as any).guestName || guestFullFromObject
+      const guestNameLc = guestName ? guestName.toString().toLowerCase() : ''
+      const guestEmailLc = ((reservation as any).Guest?.email || '').toString().toLowerCase()
+      const guestPhoneLc = ((reservation as any).Guest?.phone || '').toString().toLowerCase()
+      const bookingId = (reservation.id || (reservation as any).bookingNumber || '').toString().toLowerCase()
+      const roomNumber = (reservation as any).room?.toString().toLowerCase() || (reservation as any).roomNumber?.toString().toLowerCase() || ''
 
-      return guestName.includes(normalizedQuery) || 
-             bookingId.includes(normalizedQuery) || 
-             roomNumber.includes(normalizedQuery)
+      return guestNameLc.includes(normalizedQuery)
+        || guestEmailLc.includes(normalizedQuery)
+        || guestPhoneLc.includes(normalizedQuery)
+        || bookingId.includes(normalizedQuery)
+        || roomNumber.includes(normalizedQuery)
+        || (reservation as any).Guest?.firstName?.toLowerCase().includes(normalizedQuery)
+        || (reservation as any).Guest?.lastName?.toLowerCase().includes(normalizedQuery)
     })
   }
 
   /**
    * Apply all filters to reservations
+{{ ... }}
    */
   const filteredReservations = computed(() => {
     let filtered = reservations.value

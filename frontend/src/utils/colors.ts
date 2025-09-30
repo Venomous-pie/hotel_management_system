@@ -10,28 +10,29 @@
  */
 export const getReservationStatusColor = (reservation: any): string => {
   if (!reservation) return ''
+  const raw = (reservation.status || '').toString()
+  const norm = raw.toLowerCase().replace(/[\s_-]+/g, '')
 
-  switch (reservation.status) {
-    case 'new': 
+  switch (norm) {
+    case 'new':
       return 'bg-yellow-200 border-yellow-400 text-yellow-800'
-    case 'confirmed': 
+    case 'confirmed':
       return 'bg-blue-200 border-blue-300 text-blue-800'
-    case 'booked': 
+    case 'booked':
       return 'bg-green-200 border-green-300 text-green-800'
-    case 'checkedIn': 
+    case 'checkedin':
       return 'bg-green-200 border-green-300 text-green-800'
-    case 'dueOut': 
+    case 'dueout':
       return 'bg-red-200 border-red-300 text-red-800'
-    case 'checkedOut': 
+    case 'checkedout':
       return 'bg-orange-200 border-orange-300 text-orange-800'
-    case 'outOfOrder': 
+    case 'outoforder':
       return 'bg-amber-200 border-amber-300 text-amber-800'
-    case 'cancelled': 
+    case 'cancelled':
       return 'bg-red-200 border-red-300 text-red-800'
-    // Legacy status mapping
-    case 'pending': 
+    case 'pending':
       return 'bg-yellow-200 border-yellow-400 text-yellow-800'
-    default: 
+    default:
       return 'bg-gray-200 border-gray-300 text-gray-800'
   }
 }
@@ -43,28 +44,27 @@ export const getReservationStatusColor = (reservation: any): string => {
  */
 export const getReservationAccentColor = (reservation: any): string => {
   if (!reservation) return 'bg-gray-600'
+  const raw = (reservation.status || '').toString()
+  const norm = raw.toLowerCase().replace(/[\s_-]+/g, '')
 
-  switch (reservation.status) {
-    case 'new': 
+  switch (norm) {
+    case 'new':
       return 'bg-yellow-500'
-    case 'confirmed': 
+    case 'confirmed':
       return 'bg-blue-500'
-    case 'booked': 
+    case 'booked':
+    case 'checkedin':
       return 'bg-green-500'
-    case 'checkedIn': 
-      return 'bg-green-500'
-    case 'dueOut': 
+    case 'dueout':
       return 'bg-red-500'
-    case 'checkedOut': 
+    case 'checkedout':
       return 'bg-orange-500'
-    case 'outOfOrder': 
+    case 'outoforder':
       return 'bg-amber-500'
-    case 'cancelled': 
-      return 'bg-red-500'
-    // Legacy status mapping
-    case 'pending': 
+    case 'cancelled':
+    case 'pending':
       return 'bg-yellow-500'
-    default: 
+    default:
       return 'bg-gray-500'
   }
 }

@@ -38,16 +38,16 @@
         </button>
 
         <!-- User Dropdown -->
-        <div class="relative user-dropdown-container">
+        <div class="relative user-dropdown-container rounded-full bg-gray-50">
           <button 
             @click="showUserDropdown = !showUserDropdown"
-            class="flex items-center gap-2 hover:bg-gray-50 rounded-lg px-3 py-2 transition-colors cursor-pointer"
+            class="flex items-center gap-2 hover:bg-gray-100 rounded-full px-3 py-2 transition-colors cursor-pointer"
             :class="{ 'bg-gray-50': showUserDropdown }"
           >
-            <img src="/receptionist.jpg" alt="Profile" class="w-8 h-8 rounded-full object-cover object-top" />
+            <img src="/receptionist.jpg" alt="Profile" class="w-6 h-6 rounded-full object-cover object-top" />
             <span class="text-xs font-medium text-gray-700">Grace Hoppers</span>
             <i 
-              class="pi pi-chevron-down text-gray-300 w-4 h-4 inline-block transition-transform"
+              class="pi pi-chevron-down text-gray-500 text-center transition-transform"
               :class="{ 'rotate-180': showUserDropdown }"
             ></i>
           </button>
@@ -62,7 +62,7 @@
                 v-for="option in userMenuOptions"
                 :key="option.action"
                 @click="handleUserMenuAction(option.action)"
-                class="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                class="w-full flex items-center gap-3 px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors"
                 :class="{ 'text-red-600 hover:bg-red-50': option.action === 'signout' }"
               >
                 <i :class="option.icon" class="w-4 h-4"></i>

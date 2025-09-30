@@ -9,7 +9,8 @@ import type { Room } from '@/types/hotel'
 export const useRoomCategorization = (
   rooms: Ref<Room[]>,
   searchQuery: Ref<string>,
-  roomTypeFilter: Ref<string>
+  roomTypeFilter: Ref<string>,
+  matchingRoomsFromReservations?: Ref<Set<string>>
 ) => {
   // ============================================================================
   // STATE MANAGEMENT
@@ -30,12 +31,16 @@ export const useRoomCategorization = (
   const filteredRooms = computed(() => {
     let filtered = rooms.value
 
-    // Filter by search query (room number)
+    // Filter by search query
     if (searchQuery.value && searchQuery.value.trim()) {
       const query = searchQuery.value.toLowerCase().trim()
+      const matchSet = matchingRoomsFromReservations?.value
       filtered = filtered.filter(room => {
-        const roomNumber = (room.roomNumber || room.number || room.id || '').toString().toLowerCase()
-        return roomNumber.includes(query)
+        const roomNumberRaw = (room.roomNumber || room.number || room.id || '').toString()
+        const roomNumber = roomNumberRaw.toLowerCase()
+        const numberMatch = roomNumber.includes(query)
+        const reservationMatch = matchSet ? matchSet.has(roomNumberRaw) : false
+        return numberMatch || reservationMatch
       })
     }
 

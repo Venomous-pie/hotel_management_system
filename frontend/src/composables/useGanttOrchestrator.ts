@@ -46,10 +46,20 @@ export const useGanttOrchestrator = (props: any, emit: any) => {
     bookingFilterRef
   )
 
+  const matchingRoomsFromReservations = computed(() => {
+    const set = new Set<string>()
+    reservationMgmt.filteredReservations.value.forEach((res: any) => {
+      const rn = (res.room || res.roomNumber || '').toString()
+      if (rn) set.add(rn)
+    })
+    return set
+  })
+
   const roomCategorization = useRoomCategorization(
     roomsRef,
     searchQueryRef,
-    roomTypeFilterRef
+    roomTypeFilterRef,
+    matchingRoomsFromReservations
   )
 
   const positioning = useGanttPositioning(
