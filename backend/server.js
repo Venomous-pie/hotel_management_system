@@ -23,10 +23,19 @@ const normalizeToStartOfDay = (dateInput) => {
   d.setHours(0, 0, 0, 0);
   return d;
 };
+const toDateOnlyLocal = (d) => {
+  const date = new Date(d);
+  const y = date.getFullYear();
+  const m = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
 const calculateNights = (startDate, endDate) => {
   const MS_DAY = 24 * 60 * 60 * 1000;
   return Math.round((endDate.getTime() - startDate.getTime()) / MS_DAY);
 };
+// Simple sleep helper for retry backoff
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 // Overlap helper with exclusive checkout logic
 // Overlap if: existing.checkIn < newCheckOut AND existing.checkOut > newCheckIn
 const buildOverlapWhere = ({ roomId, startDate, endDate, excludeId }) => ({
@@ -204,7 +213,7 @@ app.get('/api/reservations', async (req, res) => {
             include: [
                 {
                     model: Guest,
-                    attributes: ['firstName', 'middleName', 'lastName', 'email', 'phone']
+                    attributes: ['firstName', 'middleName', 'lastName', 'email', 'phone', 'address', 'idDocument']
                 },
                 {
                     model: Room,
@@ -219,8 +228,8 @@ app.get('/api/reservations', async (req, res) => {
             id: reservation.id.toString(),
             room: reservation.Room?.roomNumber?.toString() || 'N/A',
             guest: `${reservation.Guest?.firstName || ''} ${reservation.Guest?.middleName ? reservation.Guest.middleName + ' ' : ''}${reservation.Guest?.lastName || ''}`.trim(),
-            checkIn: reservation.checkIn,
-            checkOut: reservation.checkOut,
+            checkIn: toDateOnlyLocal(reservation.checkIn),
+            checkOut: toDateOnlyLocal(reservation.checkOut),
             status: reservation.status,
             type: 'standard', // Default type since not in backend model yet
             amount: reservation.totalPrice || 0,
@@ -238,76 +247,215 @@ app.get('/api/reservations', async (req, res) => {
     }
 })
 
-// Update reservation
-app.put('/api/reservations/:id', async (req, res) => {
-    const t = await sequelize.transaction();
+// Get single reservation with details
+app.get('/api/reservations/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, checkIn, checkOut, numGuest, specialRequest, totalPrice } = req.body;
+        const reservation = await Reservation.findByPk(id, {
+            include: [
+                {
+                    model: Guest,
+                    attributes: ['firstName', 'middleName', 'lastName', 'email', 'phone', 'address', 'idDocument']
+                },
+                {
+                    model: Room,
+                    attributes: ['roomNumber']
+                }
+            ]
+        })
 
-        const reservation = await Reservation.findByPk(id, { transaction: t });
         if (!reservation) {
-            await t.rollback();
-            return res.status(404).json({ error: 'Reservation not found' });
+            return res.status(404).json({ error: 'Reservation not found' })
         }
 
-        // Normalize dates (if provided) and validate
-        const newCheckIn = checkIn ? normalizeToStartOfDay(checkIn) : reservation.checkIn;
-        const newCheckOut = checkOut ? normalizeToStartOfDay(checkOut) : reservation.checkOut;
-        if (newCheckOut <= newCheckIn) {
-            await t.rollback();
-            return res.status(400).json({ error: 'Check-out date must be after check-in date.' });
-        }
-
-        // Validate guest count range
-        const newNumGuest = typeof numGuest === 'number' ? numGuest : reservation.numGuest;
-        if (newNumGuest < 1 || newNumGuest > 10) {
-            await t.rollback();
-            return res.status(400).json({ error: 'Number of guests must be between 1 and 10.' });
-        }
-
-        // Capacity check
-        const room = await Room.findByPk(reservation.RoomId, {
-            include: [{ model: RoomType, attributes: ['maxCapacity'] }],
-            transaction: t
-        });
-        if (!room) {
-            await t.rollback();
-            return res.status(404).json({ error: 'Room not found for reservation' });
-        }
-        if (newNumGuest > (room.RoomType?.maxCapacity || 0)) {
-            await t.rollback();
-            return res.status(400).json({ error: `Room ${room.roomNumber} can accommodate maximum ${room.RoomType?.maxCapacity || 0} guests. You selected ${newNumGuest} guests.` });
-        }
-
-        // Conflict detection excluding current reservation
-        const conflict = await Reservation.findOne({
-            where: buildOverlapWhere({ roomId: room.id, startDate: newCheckIn, endDate: newCheckOut, excludeId: reservation.id }),
-            transaction: t
-        });
-        if (conflict) {
-            await t.rollback();
-            return res.status(409).json({
-                error: `Room ${room.roomNumber} is already booked for the selected dates.`,
-                conflictingReservation: { checkIn: conflict.checkIn, checkOut: conflict.checkOut }
-            });
-        }
-
-        await reservation.update({
-            status: status ?? reservation.status,
-            checkIn: newCheckIn,
-            checkOut: newCheckOut,
-            numGuest: newNumGuest,
-            specialRequest: specialRequest ?? reservation.specialRequest,
-            totalPrice: (typeof totalPrice === 'number' && totalPrice >= 0) ? totalPrice : reservation.totalPrice
-        }, { transaction: t });
-
-        await t.commit();
-        res.json({ message: 'Reservation updated successfully', reservation });
+        // Return raw reservation with relations; frontend can map as needed
+        return res.json({
+            id: reservation.id.toString(),
+            checkIn: toDateOnlyLocal(reservation.checkIn),
+            checkOut: toDateOnlyLocal(reservation.checkOut),
+            status: reservation.status,
+            numGuest: reservation.numGuest,
+            specialRequest: reservation.specialRequest,
+            totalPrice: reservation.totalPrice,
+            roomNumber: reservation.Room?.roomNumber?.toString() || reservation.roomNumber || '',
+            RoomId: reservation.RoomId,
+            GuestId: reservation.GuestId,
+            Guest: reservation.Guest ? {
+                firstName: reservation.Guest.firstName,
+                middleName: reservation.Guest.middleName,
+                lastName: reservation.Guest.lastName,
+                email: reservation.Guest.email,
+                phone: reservation.Guest.phone,
+                address: reservation.Guest.address,
+                idDocument: reservation.Guest.idDocument,
+            } : null
+        })
     } catch (error) {
-        await t.rollback();
-        console.error('Reservation update error:', error);
-        return res.status(500).json({ error: `Error updating reservation: ${error.message}` })
+        console.error('Reservation fetch error:', error);
+        return res.status(500).json({ error: `Error fetching reservation: ${error.message}` })
+    }
+})
+
+// Update reservation
+app.put('/api/reservations/:id', async (req, res) => {
+    const MAX_RETRIES = 3;
+    const BASE_DELAY_MS = 300;
+
+    const { id } = req.params;
+    const { status, checkIn, checkOut, numGuest, specialRequest, totalPrice } = req.body;
+    const { firstName, middleName, lastName, email, phone, address, idDocument } = req.body; // optional guest updates
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        let t;
+        try {
+            t = await sequelize.transaction();
+
+            const reservation = await Reservation.findByPk(id, { transaction: t });
+            if (!reservation) {
+                await t.rollback();
+                return res.status(404).json({ error: 'Reservation not found' });
+            }
+
+            // Normalize dates (if provided) and validate
+            const newCheckIn = checkIn ? normalizeToStartOfDay(checkIn) : reservation.checkIn;
+            const newCheckOut = checkOut ? normalizeToStartOfDay(checkOut) : reservation.checkOut;
+            if (newCheckOut <= newCheckIn) {
+                await t.rollback();
+                return res.status(400).json({ error: 'Check-out date must be after check-in date.' });
+            }
+
+            // Validate guest count range
+            const newNumGuest = typeof numGuest === 'number' ? numGuest : reservation.numGuest;
+            if (newNumGuest < 1 || newNumGuest > 10) {
+                await t.rollback();
+                return res.status(400).json({ error: 'Number of guests must be between 1 and 10.' });
+            }
+
+            // Determine target room (allow changing rooms via roomNumber or roomId)
+            const requestedRoomNumber = (req.body.roomNumber ?? req.body.roomId ?? '').toString();
+            let room;
+            let roomChanged = false;
+            let targetRoomNumber;
+
+            if (requestedRoomNumber) {
+                // Treat roomId same as roomNumber (visible number), consistent with create
+                room = await Room.findOne({
+                    where: { roomNumber: requestedRoomNumber },
+                    include: [{ model: RoomType, attributes: ['maxCapacity', 'basePrice'] }],
+                    transaction: t
+                });
+                if (!room) {
+                    await t.rollback();
+                    return res.status(404).json({ error: `Room with number: ${requestedRoomNumber} doesn't exist.` });
+                }
+                roomChanged = room.id !== reservation.RoomId;
+                targetRoomNumber = room.roomNumber;
+            } else {
+                // No change requested: use current room
+                room = await Room.findByPk(reservation.RoomId, {
+                    include: [{ model: RoomType, attributes: ['maxCapacity', 'basePrice'] }],
+                    transaction: t
+                });
+                if (!room) {
+                    await t.rollback();
+                    return res.status(404).json({ error: 'Room not found for reservation' });
+                }
+                targetRoomNumber = room.roomNumber;
+            }
+
+            // Capacity check
+            if (newNumGuest > (room.RoomType?.maxCapacity || 0)) {
+                await t.rollback();
+                return res.status(400).json({ error: `Room ${targetRoomNumber} can accommodate maximum ${room.RoomType?.maxCapacity || 0} guests. You selected ${newNumGuest} guests.` });
+            }
+
+            // Conflict detection (exclude current reservation) in the target room
+            const conflict = await Reservation.findOne({
+                where: buildOverlapWhere({ roomId: room.id, startDate: newCheckIn, endDate: newCheckOut, excludeId: reservation.id }),
+                transaction: t
+            });
+            if (conflict) {
+                await t.rollback();
+                return res.status(409).json({
+                    error: `Room ${targetRoomNumber} is already booked for the selected dates.`,
+                    conflictingReservation: { checkIn: conflict.checkIn, checkOut: conflict.checkOut }
+                });
+            }
+
+            // Pricing: recompute if dates or room changed and totalPrice not explicitly provided
+            const nights = calculateNights(newCheckIn, newCheckOut);
+            const nightlyRate = room.pricePerNight || room.RoomType?.basePrice || 0;
+            const datesChanged = Boolean(checkIn) || Boolean(checkOut);
+            const shouldAutoPrice = (datesChanged || roomChanged) && !(typeof totalPrice === 'number' && totalPrice >= 0);
+            const finalTotalPrice = shouldAutoPrice
+                ? nightlyRate * nights
+                : ((typeof totalPrice === 'number' && totalPrice >= 0) ? totalPrice : reservation.totalPrice);
+
+            // Apply reservation updates (including potential room move)
+            await reservation.update({
+                status: status ?? reservation.status,
+                checkIn: newCheckIn,
+                checkOut: newCheckOut,
+                numGuest: newNumGuest,
+                specialRequest: specialRequest ?? reservation.specialRequest,
+                totalPrice: finalTotalPrice,
+                RoomId: room.id
+            }, { transaction: t });
+
+            // Apply guest updates if provided
+            if (firstName || middleName !== undefined || lastName || email || phone || address || idDocument) {
+                const resWithGuest = await Reservation.findByPk(id, { include: [Guest], transaction: t });
+                if (!resWithGuest?.Guest) {
+                    await t.rollback();
+                    return res.status(404).json({ error: 'Guest not found for reservation' });
+                }
+                await resWithGuest.Guest.update({
+                    firstName: firstName ?? resWithGuest.Guest.firstName,
+                    middleName: middleName !== undefined ? (middleName || null) : resWithGuest.Guest.middleName,
+                    lastName: lastName ?? resWithGuest.Guest.lastName,
+                    email: email ?? resWithGuest.Guest.email,
+                    phone: phone ?? resWithGuest.Guest.phone,
+                    address: address ?? resWithGuest.Guest.address,
+                    idDocument: idDocument ?? resWithGuest.Guest.idDocument,
+                }, { transaction: t })
+            }
+
+            await t.commit();
+            const updated = await Reservation.findByPk(id, { include: [Guest, Room], transaction: undefined });
+            return res.json({ message: 'Reservation updated successfully', reservation: {
+                id: updated.id.toString(),
+                checkIn: toDateOnlyLocal(updated.checkIn),
+                checkOut: toDateOnlyLocal(updated.checkOut),
+                status: updated.status,
+                numGuest: updated.numGuest,
+                specialRequest: updated.specialRequest,
+                totalPrice: updated.totalPrice,
+                roomNumber: updated.Room?.roomNumber?.toString() || updated.roomNumber || '',
+                RoomId: updated.RoomId,
+                GuestId: updated.GuestId,
+                Guest: updated.Guest ? {
+                    firstName: updated.Guest.firstName,
+                    middleName: updated.Guest.middleName,
+                    lastName: updated.Guest.lastName,
+                    email: updated.Guest.email,
+                    phone: updated.Guest.phone,
+                    address: updated.Guest.address,
+                    idDocument: updated.Guest.idDocument,
+                } : null
+            }});
+        } catch (error) {
+            if (t) await t.rollback();
+            const message = (error && (error.message || error.toString())) || '';
+            const isBusy = /SQLITE_BUSY|database is locked/i.test(message) || error?.name === 'SequelizeTimeoutError';
+            if (isBusy && attempt < MAX_RETRIES) {
+                const delay = BASE_DELAY_MS * (attempt + 1);
+                console.warn(`Update retry ${attempt + 1}/${MAX_RETRIES} after SQLITE_BUSY (waiting ${delay}ms)...`);
+                await sleep(delay);
+                continue;
+            }
+            console.error('Reservation update error:', error);
+            return res.status(500).json({ error: `Error updating reservation: ${error.message}` })
+        }
     }
 })
 
@@ -522,8 +670,8 @@ sequelize.sync({ force: FORCE_SYNC }).then(async () => {
     // Apply SQLite performance/concurrency PRAGMAs
     try {
         await sequelize.query('PRAGMA journal_mode = WAL;')
-        await sequelize.query('PRAGMA busy_timeout = 5000;')
-        console.log('\x1b[35m%s\x1b[0m', 'SQLite PRAGMAs applied: journal_mode=WAL, busy_timeout=5000ms')
+        await sequelize.query('PRAGMA busy_timeout = 10000;')
+        console.log('\x1b[35m%s\x1b[0m', 'SQLite PRAGMAs applied: journal_mode=WAL, busy_timeout=10000ms')
     } catch (e) {
         console.warn('Failed to apply SQLite PRAGMAs:', e)
     }

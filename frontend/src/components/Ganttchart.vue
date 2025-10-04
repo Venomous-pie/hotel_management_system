@@ -15,7 +15,9 @@
             :is-open="isModalOpen" 
             :reservation="selectedReservation" 
             :room-details="selectedRoomDetails"
-            @close="closeModal" />
+            @close="closeModal"
+            @edit="handleReservationEdit"
+        />
     </div>
 </template>
 
@@ -43,6 +45,7 @@ const props = defineProps<{
 const emit = defineEmits<{
     updateDate: [{ year: number; month: number }]
     openReservationModal: [{ roomNumber: string; checkInDate: string; isAvailable: boolean }]
+    openReservationEditor: [prefilled: any]
 }>()
 
 const {
@@ -74,6 +77,53 @@ const {
 // Handle reservation span clicks
 const handleReservationClick = (reservation: any) => {
     openModal(reservation)
+}
+
+import { getReservationById } from '@/services/reservations'
+import { formatDateForInput } from '@/utils'
+const toDateOnly = (value: any): string => {
+    if (!value) return ''
+    if (typeof value === 'string') {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+        const tIndex = value.indexOf('T')
+        if (tIndex > 0) return value.slice(0, 10)
+        // Fallback for non-ISO strings
+        const d = new Date(value)
+        return formatDateForInput(d)
+    }
+    if (value instanceof Date) return formatDateForInput(value)
+    try {
+        return formatDateForInput(new Date(value))
+    } catch {
+        return ''
+    }
+}
+const handleReservationEdit = async (reservation: any) => {
+    try {
+        const full = await getReservationById((reservation.id || '').toString())
+        const prefilled = {
+            reservationId: (full.id || reservation.id || '').toString(),
+            // Guest
+            firstName: full.Guest?.firstName || '',
+            middleName: full.Guest?.middleName || '',
+            lastName: full.Guest?.lastName || '',
+            email: full.Guest?.email || '',
+            phone: full.Guest?.phone || '',
+            address: full.Guest?.address || '',
+            idDocument: full.Guest?.idDocument || '',
+            // Reservation
+            numGuest: full.numGuest || reservation.numGuest,
+            checkInDate: toDateOnly(full.checkIn || reservation.checkIn || ''),
+            checkOutDate: toDateOnly(full.checkOut || reservation.checkOut || ''),
+            specialRequest: full.specialRequest || reservation.notes || '',
+            status: full.status || reservation.status,
+            roomNumber: full.roomNumber || reservation.room || reservation.roomNumber,
+        }
+        closeModal()
+        emit('openReservationEditor', prefilled)
+    } catch (e) {
+        console.error('Failed to fetch reservation details for editing', e)
+    }
 }
 
 </script>

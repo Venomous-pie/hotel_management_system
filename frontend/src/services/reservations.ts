@@ -11,3 +11,14 @@ export async function createReservation(payload: ReservationFormData): Promise<a
     body: JSON.stringify(payload)
   })
 }
+
+export async function updateReservation(id: string, payload: Partial<ReservationFormData> & { totalPrice?: number; status?: string; numGuest?: number; specialRequest?: string }): Promise<any> {
+  return apiFetch<any>(`/reservations/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  })
+}
+
+export async function getReservationById(id: string): Promise<any> {
+  return apiFetch<any>(`/reservations/${id}`)
+}

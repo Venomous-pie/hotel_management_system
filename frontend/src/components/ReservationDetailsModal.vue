@@ -31,27 +31,27 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
-                <p class="text-sm text-gray-900">{{ guestFullName }}</p>
+                <p class="text-xs font-medium text-gray-900">{{ guestFullName }}</p>
               </div>
               <div v-if="reservation?.Guest?.email">
                 <label class="block text-xs font-medium text-gray-600 mb-1">Email</label>
-                <p class="text-sm text-gray-900">{{ reservation.Guest.email }}</p>
+                <p class="text-xs font-medium text-gray-900">{{ reservation.Guest.email }}</p>
               </div>
               <div v-if="reservation?.Guest?.phone">
                 <label class="block text-xs font-medium text-gray-600 mb-1">Phone</label>
-                <p class="text-sm text-gray-900">{{ reservation.Guest.phone }}</p>
+                <p class="text-xs font-medium text-gray-900">{{ reservation.Guest.phone }}</p>
               </div>
               <div v-if="reservation?.Guest?.address">
                 <label class="block text-xs font-medium text-gray-600 mb-1">Address</label>
-                <p class="text-sm text-gray-900">{{ reservation.Guest.address }}</p>
+                <p class="text-xs font-medium text-gray-900">{{ reservation.Guest.address }}</p>
               </div>
               <div v-if="reservation?.Guest?.idDocument">
                 <label class="block text-xs font-medium text-gray-600 mb-1">ID Document</label>
-                <p class="text-sm text-gray-900">{{ reservation.Guest.idDocument }}</p>
+                <p class="text-xs font-medium text-gray-900">{{ reservation.Guest.idDocument }}</p>
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">Number of Guests</label>
-                <p class="text-sm text-gray-900">{{ reservation?.numGuest || 1 }}</p>
+                <p class="text-xs font-medium text-gray-900">{{ reservation?.numGuest || 1 }}</p>
               </div>
             </div>
           </div>
@@ -67,27 +67,27 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">Check-in Date</label>
-                <p class="text-sm text-gray-900">{{ formatDate(reservation?.checkIn || reservation?.checkInDate) }}</p>
+                <p class="text-xs font-medium text-gray-900">{{ formatDate(reservation?.checkIn || reservation?.checkInDate) }}</p>
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">Check-out Date</label>
-                <p class="text-sm text-gray-900">{{ formatDate(reservation?.checkOut || reservation?.checkOutDate) }}</p>
+                <p class="text-xs font-medium text-gray-900">{{ formatDate(reservation?.checkOut || reservation?.checkOutDate) }}</p>
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">Duration</label>
-                <p class="text-sm text-gray-900">{{ nightsCount }} {{ nightsCount === 1 ? 'night' : 'nights' }}</p>
+                <p class="text-xs font-medium text-gray-900">{{ nightsCount }} {{ nightsCount === 1 ? 'night' : 'nights' }}</p>
               </div>
               <div v-if="reservation?.bookingNumber">
                 <label class="block text-xs font-medium text-gray-600 mb-1">Booking Number</label>
-                <p class="text-sm text-gray-900">{{ reservation.bookingNumber }}</p>
+                <p class="text-xs font-medium text-gray-900">{{ reservation.bookingNumber }}</p>
               </div>
               <div v-if="reservation?.source">
                 <label class="block text-xs font-medium text-gray-600 mb-1">Booking Source</label>
-                <p class="text-sm text-gray-900 capitalize">{{ reservation.source }}</p>
+                <p class="text-xs font-medium text-gray-900 capitalize">{{ reservation.source }}</p>
               </div>
               <div v-if="reservation?.bookingDate">
                 <label class="block text-xs font-medium text-gray-600 mb-1">Booking Date</label>
-                <p class="text-sm text-gray-900">{{ formatDate(reservation.bookingDate) }}</p>
+                <p class="text-xs font-medium text-gray-900">{{ formatDate(reservation.bookingDate) }}</p>
               </div>
             </div>
           </div>
@@ -103,19 +103,19 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">Room Number</label>
-                <p class="text-sm text-gray-900 font-medium">{{ reservation?.roomNumber || reservation?.room }}</p>
+                <p class="text-xs font-medium text-gray-900">{{ reservation?.roomNumber || reservation?.room }}</p>
               </div>
               <div v-if="roomDetails?.type || roomDetails?.roomType">
                 <label class="block text-xs font-medium text-gray-600 mb-1">Room Type</label>
-                <p class="text-sm text-gray-900">{{ roomDetails?.type || roomDetails?.roomType }}</p>
+                <p class="text-xs font-medium text-gray-900">{{ roomDetails?.type || roomDetails?.roomType }}</p>
               </div>
               <div v-if="roomDetails?.maxCapacity">
                 <label class="block text-xs font-medium text-gray-600 mb-1">Max Capacity</label>
-                <p class="text-sm text-gray-900">{{ roomDetails.maxCapacity }} guests</p>
+                <p class="text-xs font-medium text-gray-900">{{ roomDetails.maxCapacity }} guests</p>
               </div>
               <div v-if="roomDetails?.pricePerNight">
                 <label class="block text-xs font-medium text-gray-600 mb-1">Price per Night</label>
-                <p class="text-sm text-gray-900">₱{{ roomDetails.pricePerNight.toLocaleString() }}</p>
+                <p class="text-xs font-medium text-gray-900">₱{{ roomDetails.pricePerNight.toLocaleString() }}</p>
               </div>
             </div>
             
@@ -142,11 +142,11 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">Total Amount</label>
-                <p class="text-sm text-gray-900 font-medium">₱{{ (reservation?.totalPrice || reservation?.amount || 0).toLocaleString() }}</p>
+                <p class="text-xs font-medium text-gray-900">₱{{ (reservation?.totalPrice || reservation?.amount || 0).toLocaleString() }}</p>
               </div>
               <div v-if="reservation?.balance !== undefined">
                 <label class="block text-xs font-medium text-gray-600 mb-1">Balance</label>
-                <p class="text-sm text-gray-900" :class="reservation.balance > 0 ? 'text-red-600' : 'text-green-600'">
+                <p class="text-xs font-medium text-gray-900" :class="reservation.balance > 0 ? 'text-red-600' : 'text-green-600'">
                   ₱{{ reservation.balance.toLocaleString() }}
                 </p>
               </div>
@@ -163,11 +163,11 @@
           <div class="bg-gray-50 rounded-lg p-4 space-y-3">
             <div v-if="reservation?.specialRequest">
               <label class="block text-xs font-medium text-gray-600 mb-1">Special Requests</label>
-              <p class="text-sm text-gray-900">{{ reservation.specialRequest }}</p>
+              <p class="text-xs font-medium text-gray-900">{{ reservation.specialRequest }}</p>
             </div>
             <div v-if="reservation?.notes">
               <label class="block text-xs font-medium text-gray-600 mb-1">Notes</label>
-              <p class="text-sm text-gray-900">{{ reservation.notes }}</p>
+              <p class="text-xs font-medium text-gray-900">{{ reservation.notes }}</p>
             </div>
           </div>
         </div>
@@ -175,12 +175,11 @@
       </div>
 
       <!-- Footer -->
-      <div class="flex justify-end gap-3 p-6 border-t border-gray-200">
-        <button @click="closeModal" 
-          class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-          Close
-        </button>
-        <!-- Future: Add edit/modify buttons here if needed -->
+      <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
+        <Custombutton label="Close" bg-color="bg-gray-100" hover-bg-color="hover:bg-gray-200"
+          text-color="text-gray-700" :hover="true" @click="closeModal" />
+        <Custombutton label="Update Reservation" bg-color="bg-blue-600" hover-bg-color="hover:bg-blue-700"
+          text-color="white" :hover="true" @click="handleUpdateReservation" />
       </div>
     </div>
   </div>
@@ -188,6 +187,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import Custombutton from './Custombutton.vue'
 import { getReservationStatusColor } from '@/utils/colors'
 import { formatReservationDateRange } from '@/utils/reservations'
 import type { Reservation, Room } from '@/types/hotel'
@@ -202,6 +202,7 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   close: []
+  edit: [reservation: Reservation]
 }>()
 
 // Computed properties for display
@@ -265,6 +266,13 @@ const formatDate = (date: string | Date | undefined) => {
 
 const closeModal = () => {
   emit('close')
+}
+
+const handleUpdateReservation = () => {
+  if (props.reservation) {
+    // Emit edit event to open AddReservationModal with prefilled data
+    emit('edit', props.reservation)
+  }
 }
 
 const handleBackdropClick = (event: MouseEvent) => {

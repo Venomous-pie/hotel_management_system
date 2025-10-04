@@ -129,10 +129,24 @@ export interface ReservationFilters {
 }
 
 export interface PrefilledReservationData {
-  roomNumber?: string
-  checkInDate?: string
-}
+  // Presence of reservationId indicates edit mode
+  reservationId?: string
 
-export interface ReservationDraft extends ReservationFormData {
-  timestamp?: number
+  // Guest fields
+  firstName?: string
+  middleName?: string
+  lastName?: string
+  email?: string
+  phone?: string
+  countryCode?: string
+  address?: string
+  idDocument?: string
+
+  // Reservation fields
+  numGuest?: number
+  checkInDate?: string
+  checkOutDate?: string
+  specialRequest?: string
+  status?: 'confirmed' | 'pending' | 'checkedIn'
+  roomNumber?: string
 }

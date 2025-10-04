@@ -8,6 +8,7 @@ export const useRoomAvailability = (
   rooms: Ref<Room[]>,
   reservations: Ref<Reservation[]>,
   formData: Ref<ReservationFormData>,
+  excludeReservationId?: Ref<string | null | undefined>,
 ) => {
   const isCheckingAvailability = ref(false)
 
@@ -41,8 +42,14 @@ export const useRoomAvailability = (
   const isRoomAvailable = (room: Room): boolean => {
     if (!formData.value.checkIn || !formData.value.checkOut) return true
     if (formData.value.numGuest > room.maxCapacity) return false
+
+    // Exclude current reservation when editing
+    const resList = excludeReservationId?.value
+      ? reservations.value.filter(r => (r.id || '').toString() !== (excludeReservationId!.value || '').toString())
+      : reservations.value
+
     return isRoomAvailableForRange(
-      reservations.value,
+      resList,
       room.number,
       formData.value.checkIn,
       formData.value.checkOut,

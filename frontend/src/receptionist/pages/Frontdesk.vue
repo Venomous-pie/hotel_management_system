@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full bg-white">
+  <div class="h-full bg-white" ref="frontdeskContainer">
     <div class="flex items-center justify-between px-6 pb-2">
       <h2 class="font-medium text-gray-700">Front Desk</h2>
       <div class="flex items-center gap-2">
@@ -68,7 +68,7 @@
 
           
           <div class="relative">
-            <div @click="showReservationDropdown = !showReservationDropdown"
+            <div @click="toggleReservationDropdown"
               class="flex items-center bg-gray-50 outline outline-1 outline-gray-200 rounded-full px-3 py-2 pr-8 text-xs text-gray-700 transition-colors cursor-pointer hover:bg-gray-100">
               {{ selectedReservationFilter }}
               <i class="pi pi-chevron-down absolute right-2 text-gray-300 w-4 h-4"></i>
@@ -86,7 +86,7 @@
 
           
           <div class="relative">
-            <div @click="showRoomTypeDropdown = !showRoomTypeDropdown"
+            <div @click="toggleRoomTypeDropdown"
               class="flex items-center bg-gray-50 outline outline-1 outline-gray-200 rounded-full px-3 py-2 pr-8 text-xs text-gray-700 transition-colors cursor-pointer hover:bg-gray-100">
               {{ selectedRoomTypeFilter }}
               <i class="pi pi-chevron-down absolute right-2 text-gray-300 w-4 h-4"></i>
@@ -104,7 +104,7 @@
 
           
           <div class="relative">
-            <div @click="showBookingDropdown = !showBookingDropdown"
+            <div @click="toggleBookingDropdown"
               class="flex items-center bg-gray-50 outline outline-1 outline-gray-200 rounded-full px-3 py-2 pr-8 text-xs text-gray-700 transition-colors cursor-pointer hover:bg-gray-100">
               {{ selectedBookingFilter }}
               <i class="pi pi-chevron-down absolute right-2 text-gray-300 w-4 h-4"></i>
@@ -126,7 +126,8 @@
       <Ganttchart :selected-year="selectedYear" :selected-month="selectedMonth" :search-query="searchQuery"
         :reservation-filter="selectedReservationFilter" :room-type-filter="selectedRoomTypeFilter"
         :booking-filter="selectedBookingFilter" :rooms="rooms" :reservations="reservations" :loading="loading"
-        :error="error" :target-date="targetDate" @update-date="handleDateUpdate" @open-reservation-modal="handleOpenReservationModal" />
+        :error="error" :target-date="targetDate" @update-date="handleDateUpdate" @open-reservation-modal="handleOpenReservationModal" 
+        @open-reservation-editor="handleOpenReservationEditor" />
     </div>
 
     
@@ -149,7 +150,7 @@
     </div>
 
     
-    <AddReservationModal :is-open="showAddReservationModal" :prefilled-data="prefilledReservationData"
+<AddReservationModal :is-open="showAddReservationModal" :prefilled-data="prefilledReservationData" :mode="currentMode"
       @close="handleModalClose" @success="handleReservationSuccess" />
   </div>
 </template>
@@ -157,7 +158,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import Searchbar from '@/components/Searchbar.vue';
-import Ganttchart from '@/components/GanttChart.vue';
+import Ganttchart from '@/components/Ganttchart.vue';
 import Custombutton from '@/components/Custombutton.vue';
 import AddReservationModal from '@/components/AddReservationModal.vue';
 import { useHotelData } from '@/composables/useHotelData'
@@ -176,7 +177,6 @@ const {
   targetDate,
   years,
   months,
-  emitDateChangeToChart,
   navigateYear,
   navigateMonth,
   selectYear,
@@ -201,9 +201,23 @@ const {
 } = useFrontdeskFilters()
 
 const showAddReservationModal = ref(false)
+const currentMode = ref<'new' | 'edit'>('new')
 const prefilledReservationData = ref<{
-  roomNumber?: string
+  reservationId?: string
+  firstName?: string
+  middleName?: string
+  lastName?: string
+  email?: string
+  phone?: string
+  countryCode?: string
+  address?: string
+  idDocument?: string
+  numGuest?: number
   checkInDate?: string
+  checkOutDate?: string
+  specialRequest?: string
+  status?: 'confirmed' | 'pending' | 'checkedIn'
+  roomNumber?: string
 } | null>(null)
 
 const { showSuccessNotification, successMessage, showWithTimeout } = useSuccessNotification()
@@ -216,6 +230,7 @@ const handleSearch = (query: string) => {
 
 const handleAddReservation = () => {
   prefilledReservationData.value = null
+  currentMode.value = 'new'
   showAddReservationModal.value = true
 }
 
@@ -231,6 +246,12 @@ const handleOpenReservationModal = ({ roomNumber, checkInDate, isAvailable }: {
     }
     showAddReservationModal.value = true
   }
+}
+
+const handleOpenReservationEditor = (prefilled: any) => {
+  prefilledReservationData.value = prefilled
+  currentMode.value = 'edit'
+  showAddReservationModal.value = true
 }
 
 const handleModalClose = () => {
