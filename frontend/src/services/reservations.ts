@@ -8,14 +8,22 @@ export async function getReservations(): Promise<Reservation[]> {
 export async function createReservation(payload: ReservationFormData): Promise<any> {
   return apiFetch<any>('/reserve-room', {
     method: 'POST',
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   })
 }
 
-export async function updateReservation(id: string, payload: Partial<ReservationFormData> & { totalPrice?: number; status?: string; numGuest?: number; specialRequest?: string }): Promise<any> {
+export async function updateReservation(
+  id: string,
+  payload: Partial<ReservationFormData> & {
+    totalPrice?: number
+    status?: string
+    numGuest?: number
+    specialRequest?: string
+  },
+): Promise<any> {
   return apiFetch<any>(`/reservations/${id}`, {
     method: 'PUT',
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   })
 }
 

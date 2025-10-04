@@ -11,14 +11,11 @@ import { useGanttPositioning } from './useGanttPositioning'
 import { useGanttEventHandlers } from './useGanttEventHandlers'
 import { useGanttLifecycle } from './useGanttLifecycle'
 import { useGanttWatchers } from './useGanttWatchers'
-import {
-  calculateReservationSpanStyle,
-  findDateRangeIndices
-} from '@/utils/gantt'
+import { calculateReservationSpanStyle, findDateRangeIndices } from '@/utils/gantt'
 
 export const useGanttOrchestrator = (props: any, emit: any) => {
   const hoveredColumn = ref<string | null>(null)
-  
+
   // Convert props to refs for composables
   const roomsRef = computed(() => props.rooms)
   const reservationsRef = computed(() => props.reservations)
@@ -36,14 +33,14 @@ export const useGanttOrchestrator = (props: any, emit: any) => {
     selectedMonthRef,
     searchQueryRef,
     reservationsRef,
-    targetDateRef
+    targetDateRef,
   )
 
   const reservationMgmt = useReservationManagement(
     reservationsRef,
     searchQueryRef,
     reservationFilterRef,
-    bookingFilterRef
+    bookingFilterRef,
   )
 
   const matchingRoomsFromReservations = computed(() => {
@@ -59,12 +56,12 @@ export const useGanttOrchestrator = (props: any, emit: any) => {
     roomsRef,
     searchQueryRef,
     roomTypeFilterRef,
-    matchingRoomsFromReservations
+    matchingRoomsFromReservations,
   )
 
   const positioning = useGanttPositioning(
     roomCategorization.roomCategories,
-    roomCategorization.expandedCategories
+    roomCategorization.expandedCategories,
   )
 
   // Extract core functionality
@@ -74,27 +71,23 @@ export const useGanttOrchestrator = (props: any, emit: any) => {
     navigateDates: navDates,
     jumpToToday: navJumpToToday,
     initializeViewDate,
-    isInternalNavigation
+    isInternalNavigation,
   } = navigation
 
   const {
     isRoomAvailable,
     getAvailableRoomCountForDate,
-    getReservationSpans: getSpans
+    getReservationSpans: getSpans,
   } = reservationMgmt
 
-  const {
-    roomCategories,
-    expandedCategories,
-    toggleCategory
-  } = roomCategorization
+  const { roomCategories, expandedCategories, toggleCategory } = roomCategorization
 
   const {
     setRowRef,
     getRoomTopPosition,
     recomputePositions,
     setContainerRef,
-    validatePositioning
+    validatePositioning,
   } = positioning
 
   // Initialize event handlers
@@ -124,7 +117,7 @@ export const useGanttOrchestrator = (props: any, emit: any) => {
     recomputePositions,
     roomCategories,
     expandedCategories,
-    dateRange
+    dateRange,
   )
   watchers.setupAllWatchers()
 
@@ -135,7 +128,7 @@ export const useGanttOrchestrator = (props: any, emit: any) => {
       dateRange.value,
       getRoomTopPosition,
       findDateRangeIndices,
-      calculateReservationSpanStyle
+      calculateReservationSpanStyle,
     )
   }
 
@@ -143,23 +136,23 @@ export const useGanttOrchestrator = (props: any, emit: any) => {
     // UI State
     hoveredColumn,
     ganttTableRef,
-    
+
     // Core Data
     dateRange,
     roomCategories,
     expandedCategories,
     highlightedReservation,
-    
+
     // Event Handlers
     navigateDates,
     jumpToToday,
     handleCellClick,
     toggleCategory,
-    
+
     // Functions
     isRoomAvailable,
     getAvailableRoomCountForDate,
     getReservationSpans,
-    setRowRef
+    setRowRef,
   }
 }

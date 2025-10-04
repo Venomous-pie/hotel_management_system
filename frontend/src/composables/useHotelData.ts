@@ -22,9 +22,7 @@ const refreshAll = async () => {
   error.value = null
   try {
     await Promise.all([fetchRooms(), fetchReservations()])
-    // Optional: console.log('✅ Hotel data refreshed')
   } catch (e) {
-    console.error('Error refreshing hotel data:', e)
     error.value = 'Failed to load hotel data'
   } finally {
     loading.value = false

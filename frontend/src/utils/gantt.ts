@@ -8,32 +8,43 @@ export const GANTT_LAYOUT = {
 export const calculateReservationSpanStyle = (
   startIndex: number,
   endIndex: number,
-  rowTop: number
+  rowTop: number,
 ): { left: string; width: string; top: string; height: string } => {
   const { ROOM_COLUMN_WIDTH, CELL_WIDTH } = GANTT_LAYOUT
-  
-  const widthCells = endIndex - startIndex + 1
-  
-  const CELL_PADDING = 2
-  const SPAN_INSET = 1 
-  
-  const START_END_MARGIN = CELL_WIDTH * 0.75 / 4
-  const left = ROOM_COLUMN_WIDTH + (startIndex * CELL_WIDTH) + CELL_PADDING + SPAN_INSET + START_END_MARGIN
 
-  const width = (widthCells * CELL_WIDTH) - (2 * CELL_PADDING) - (2 * SPAN_INSET) - (2 * START_END_MARGIN)
+  const widthCells = endIndex - startIndex + 1
+
+  const CELL_PADDING = 2
+  const SPAN_INSET = 1
+
+  const START_END_MARGIN = (CELL_WIDTH * 0.75) / 4
+  const CHECKIN_GAP = CELL_WIDTH * 0.1 // Small gap to prevent reservations from touching
+  const left =
+    ROOM_COLUMN_WIDTH + startIndex * CELL_WIDTH + CELL_PADDING + SPAN_INSET + START_END_MARGIN + CHECKIN_GAP
+
+  // Reduce width by half a cell to not fully cover checkout date
+  // This creates visual separation for consecutive reservations
+  const CHECKOUT_OVERLAP = CELL_WIDTH * 0.5
+  const width =
+    widthCells * CELL_WIDTH -
+    2 * CELL_PADDING -
+    2 * SPAN_INSET -
+    2 * START_END_MARGIN -
+    CHECKOUT_OVERLAP -
+    CHECKIN_GAP
 
   return {
     left: `${left}px`,
     width: `${width}px`,
     top: `${rowTop}px`,
-    height: `${GANTT_LAYOUT.RESERVATION_HEIGHT}px`
+    height: `${GANTT_LAYOUT.RESERVATION_HEIGHT}px`,
   }
 }
 
 export const findDateRangeIndices = (
   dateRange: Array<{ date: string }>,
   checkInStr: string,
-  checkOutStr: string
+  checkOutStr: string,
 ): { startIndex: number; endIndex: number } | null => {
   let startIndex = -1
   let endIndex = -1
@@ -46,16 +57,14 @@ export const findDateRangeIndices = (
     }
   })
 
-  const result = startIndex !== -1 && endIndex !== -1 
-    ? { startIndex, endIndex }
-    : null
+  const result = startIndex !== -1 && endIndex !== -1 ? { startIndex, endIndex } : null
 
   return result
 }
 
 export const validateGanttLayout = () => {
   const { ROOM_COLUMN_WIDTH, CELL_WIDTH, TOTAL_DATE_COLUMNS } = GANTT_LAYOUT
-  const EXPECTED_MIN_WIDTH = ROOM_COLUMN_WIDTH + (TOTAL_DATE_COLUMNS * CELL_WIDTH)
+  const EXPECTED_MIN_WIDTH = ROOM_COLUMN_WIDTH + TOTAL_DATE_COLUMNS * CELL_WIDTH
 
   return {
     roomColumnWidth: ROOM_COLUMN_WIDTH,
@@ -69,16 +78,16 @@ export const debugReservationSpanPositioning = (
   startIndex: number,
   endIndex: number,
   checkInStr: string,
-  checkOutStr: string
+  checkOutStr: string,
 ) => {
   const { ROOM_COLUMN_WIDTH, CELL_WIDTH } = GANTT_LAYOUT
   const widthCells = endIndex - startIndex + 1
   const CELL_PADDING = 2
   const SPAN_INSET = 1
-  
-  const left = ROOM_COLUMN_WIDTH + (startIndex * CELL_WIDTH) + CELL_PADDING + SPAN_INSET
-  const width = (widthCells * CELL_WIDTH) - (2 * CELL_PADDING) - (2 * SPAN_INSET)
-  
+
+  const left = ROOM_COLUMN_WIDTH + startIndex * CELL_WIDTH + CELL_PADDING + SPAN_INSET
+  const width = widthCells * CELL_WIDTH - 2 * CELL_PADDING - 2 * SPAN_INSET
+
   return {
     reservation: { checkIn: checkInStr, checkOut: checkOutStr },
     indices: { startIndex, endIndex, widthCells },
@@ -89,22 +98,21 @@ export const debugReservationSpanPositioning = (
       cellPadding: CELL_PADDING,
       spanInset: SPAN_INSET,
       leftCalculation: `${ROOM_COLUMN_WIDTH} + (${startIndex} * ${CELL_WIDTH}) + ${CELL_PADDING} + ${SPAN_INSET} = ${left}`,
-      widthCalculation: `(${widthCells} * ${CELL_WIDTH}) - (2 * ${CELL_PADDING}) - (2 * ${SPAN_INSET}) = ${width}`
-    }
+      widthCalculation: `(${widthCells} * ${CELL_WIDTH}) - (2 * ${CELL_PADDING}) - (2 * ${SPAN_INSET}) = ${width}`,
+    },
   }
 }
 
 export const normalizeDateString = (dateInput: string | Date): string => {
   try {
     const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput
-    
+
     const year = date.getFullYear()
     const month = (date.getMonth() + 1).toString().padStart(2, '0')
     const day = date.getDate().toString().padStart(2, '0')
-    
+
     return `${year}-${month}-${day}`
   } catch (error) {
-    console.error('Error normalizing date:', dateInput, error)
     return ''
   }
 }
@@ -112,27 +120,31 @@ export const normalizeDateString = (dateInput: string | Date): string => {
 export const validateReservationVisibility = (
   checkInStr: string,
   checkOutStr: string,
-  dateRange: Array<{ date: string }>
+  dateRange: Array<{ date: string }>,
 ) => {
   const firstVisible = dateRange[0]?.date.split('T')[0]
   const lastVisible = dateRange[dateRange.length - 1]?.date.split('T')[0]
-  
+
   const overlaps = checkInStr < lastVisible && checkOutStr > firstVisible
-  
+
   return {
     checkIn: checkInStr,
     checkOut: checkOutStr,
     visibleRange: { first: firstVisible, last: lastVisible },
     overlaps,
-    reason: overlaps ? 'visible' : 
-            checkOutStr <= firstVisible ? 'before visible range' :
-            checkInStr >= lastVisible ? 'after visible range' : 'unknown'
+    reason: overlaps
+      ? 'visible'
+      : checkOutStr <= firstVisible
+        ? 'before visible range'
+        : checkInStr >= lastVisible
+          ? 'after visible range'
+          : 'unknown',
   }
 }
 
 export const generateDateRange = (
-  startDate: Date, 
-  numberOfDays: number = GANTT_LAYOUT.TOTAL_DATE_COLUMNS
+  startDate: Date,
+  numberOfDays: number = GANTT_LAYOUT.TOTAL_DATE_COLUMNS,
 ): Array<{ date: string; dayName: string; dayNumber: string }> => {
   const days = []
   const baseDate = new Date(startDate)
@@ -144,7 +156,7 @@ export const generateDateRange = (
     days.push({
       date: `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`,
       dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
-      dayNumber: date.getDate().toString().padStart(2, '0')
+      dayNumber: date.getDate().toString().padStart(2, '0'),
     })
   }
 

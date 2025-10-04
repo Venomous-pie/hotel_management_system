@@ -2,12 +2,12 @@ export interface Room {
   id: string
   number: string
   roomNumber?: string
-  type: string  
+  type: string
   roomType?: string
   status: 'available' | 'occupied' | 'maintenance' | 'out-of-order'
   statusColor: string
   pricePerNight: number
-  floorNumber: number 
+  floorNumber: number
   maxCapacity: number
   amenities: string[]
   notes?: string
@@ -41,9 +41,18 @@ export interface Reservation {
   checkOut: string | Date
   checkInDate?: string | Date
   checkOutDate?: string | Date
-  guestName?: string 
-  bookingNumber?: string 
-  status: 'confirmed' | 'pending' | 'checkedIn' | 'cancelled' | 'checkedOut' | 'new' | 'booked' | 'dueOut' | 'outOfOrder'
+  guestName?: string
+  bookingNumber?: string
+  status:
+    | 'confirmed'
+    | 'pending'
+    | 'checkedIn'
+    | 'cancelled'
+    | 'checkedOut'
+    | 'new'
+    | 'booked'
+    | 'dueOut'
+    | 'outOfOrder'
   type?: 'standard' | 'vip' | 'family' | 'group'
   amount: number
   balance?: number
@@ -69,7 +78,7 @@ export interface ReservationFormData {
   countryCode: string
   address: string
   idDocument: string
-  
+
   numGuest: number
   checkIn: string
   checkOut: string

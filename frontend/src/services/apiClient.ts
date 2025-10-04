@@ -17,7 +17,11 @@ function buildUrl(path: string): string {
   return `${API_BASE}${normalizedPath}`
 }
 
-export async function apiFetch<T = any>(path: string, options: RequestInit = {}, retries = 2): Promise<T> {
+export async function apiFetch<T = any>(
+  path: string,
+  options: RequestInit = {},
+  retries = 2,
+): Promise<T> {
   const method = (options.method || 'GET').toString().toUpperCase()
 
   const doFetch = async (attempt: number): Promise<T> => {
@@ -31,18 +35,27 @@ export async function apiFetch<T = any>(path: string, options: RequestInit = {},
     let payload: any = null
     const contentType = response.headers.get('Content-Type') || ''
     if (contentType.includes('application/json')) {
-      try { payload = await response.json() } catch (_) { payload = null }
+      try {
+        payload = await response.json()
+      } catch (_) {
+        payload = null
+      }
     } else {
-      try { payload = await response.text() } catch (_) { payload = null }
+      try {
+        payload = await response.text()
+      } catch (_) {
+        payload = null
+      }
     }
 
     if (!response.ok) {
-      const message: string = (payload && (payload.error || payload.message)) || `API request failed (${response.status})`
+      const message: string =
+        (payload && (payload.error || payload.message)) || `API request failed (${response.status})`
 
       const isTransientSqlite = /SQLITE_BUSY|database is locked/i.test(message)
       if (method === 'GET' && isTransientSqlite && attempt < retries) {
         const delayMs = 200 * (attempt + 1)
-        await new Promise(res => setTimeout(res, delayMs))
+        await new Promise((res) => setTimeout(res, delayMs))
         return doFetch(attempt + 1)
       }
 

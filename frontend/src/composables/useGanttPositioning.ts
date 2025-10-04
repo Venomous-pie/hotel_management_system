@@ -1,13 +1,8 @@
-/**
- * Gantt chart positioning composable
- * Handles DOM positioning, overlay calculations, and row reference management
- */
-
 import { ref, nextTick, type Ref, type ComponentPublicInstance } from 'vue'
 
 export const useGanttPositioning = (
   roomCategories: Ref<any[]>,
-  expandedCategories: Ref<Record<string, boolean>>
+  expandedCategories: Ref<Record<string, boolean>>,
 ) => {
   // ============================================================================
   // STATE MANAGEMENT
@@ -41,7 +36,7 @@ export const useGanttPositioning = (
    */
   const setRowRef = (roomNumber: string, el: Element | ComponentPublicInstance | null): void => {
     // Vue may pass a component instance; extract its $el
-    const domEl = (el && (el as any).$el) ? (el as any).$el as Element : (el as Element | null)
+    const domEl = el && (el as any).$el ? ((el as any).$el as Element) : (el as Element | null)
     rowRefs.value[roomNumber] = (domEl as HTMLElement) || null
   }
 
@@ -71,37 +66,28 @@ export const useGanttPositioning = (
   const computeRowTops = (): void => {
     const container = containerEl.value
     if (!container) {
-      if (import.meta.env.DEV) {
-        console.warn('🚨 Container element not available for position computation')
-      }
       return
     }
-    
+
     const containerRect = container.getBoundingClientRect()
     const tops: Record<string, number> = {}
     let computedCount = 0
 
     for (const category of roomCategories.value) {
       if (!expandedCategories.value[category.type]) continue
-      
+
       for (const room of category.rooms) {
         const tr = rowRefs.value[room.number]
         if (tr) {
           const r = tr.getBoundingClientRect()
-          const offset = Math.max(0, (r.height - 24) / 2) // Center reservation span vertically
+          const offset = Math.max(0, (r.height - 24) / 2)
           tops[room.number] = r.top - containerRect.top + offset
           computedCount++
-        } else if (import.meta.env.DEV) {
-          console.warn(`🚨 No row reference found for room ${room.number}`)
         }
       }
     }
-    
+
     rowTops.value = tops
-    
-    if (import.meta.env.DEV) {
-      console.log(`📐 Computed positions for ${computedCount} rooms:`, Object.keys(tops))
-    }
   }
 
   /**
@@ -125,11 +111,6 @@ export const useGanttPositioning = (
         if (room.number === roomNumber) {
           // Found our room, center vertically in the 48px row
           const roomCenterTop = fallbackTop + 12 // Center of the 48px row
-          
-          if (import.meta.env.DEV) {
-            console.log(`📍 Fallback position for room ${roomNumber}: ${roomCenterTop}px`)
-          }
-          
           return roomCenterTop
         }
         fallbackTop += 48 // Each room row is 48px high
@@ -138,10 +119,6 @@ export const useGanttPositioning = (
       // If we found the room, break out of category loop
       const roomFound = category.rooms.some((room: any) => room.number === roomNumber)
       if (roomFound) break
-    }
-
-    if (import.meta.env.DEV) {
-      console.warn(`🚨 Room ${roomNumber} not found in any category for fallback positioning`)
     }
 
     return fallbackTop + 12
@@ -154,20 +131,12 @@ export const useGanttPositioning = (
     // Return cached position if available
     if (rowTops.value[roomNumber] !== undefined) {
       const cachedPosition = rowTops.value[roomNumber]
-      if (import.meta.env.DEV) {
-        console.log(`📍 Using cached position for room ${roomNumber}: ${cachedPosition}px`)
-      }
       return cachedPosition
     }
 
     // Calculate and cache fallback position
     const fallbackTop = getFallbackPosition(roomNumber)
     rowTops.value[roomNumber] = fallbackTop
-    
-    if (import.meta.env.DEV) {
-      console.log(`📍 Using fallback position for room ${roomNumber}: ${fallbackTop}px`)
-    }
-    
     return fallbackTop
   }
 
@@ -180,17 +149,10 @@ export const useGanttPositioning = (
    */
   const setContainerRef = (el: HTMLElement | null): void => {
     containerEl.value = el
-    
-    if (import.meta.env.DEV) {
-      if (el) {
-        console.log('📦 Container element set for positioning calculations')
-        // Trigger position computation after container is set
-        nextTick(() => {
-          computeRowTops()
-        })
-      } else {
-        console.warn('📦 Container element cleared')
-      }
+    if (el) {
+      nextTick(() => {
+        computeRowTops()
+      })
     }
   }
 
@@ -199,7 +161,7 @@ export const useGanttPositioning = (
    */
   const getContainerDimensions = () => {
     if (!containerEl.value) return null
-    
+
     const rect = containerEl.value.getBoundingClientRect()
     return {
       width: rect.width,
@@ -207,7 +169,7 @@ export const useGanttPositioning = (
       top: rect.top,
       left: rect.left,
       bottom: rect.bottom,
-      right: rect.right
+      right: rect.right,
     }
   }
 
@@ -229,10 +191,10 @@ export const useGanttPositioning = (
   const recomputePositions = async (): Promise<void> => {
     // Wait for DOM updates
     await nextTick()
-    
+
     // Clear existing positions
     rowTops.value = {}
-    
+
     // Recompute positions
     computeRowTops()
   }
@@ -243,12 +205,12 @@ export const useGanttPositioning = (
    */
   const updateRoomPositions = async (roomNumbers: string[]): Promise<void> => {
     await nextTick()
-    
+
     const container = containerEl.value
     if (!container) return
-    
+
     const containerRect = container.getBoundingClientRect()
-    
+
     for (const roomNumber of roomNumbers) {
       const tr = rowRefs.value[roomNumber]
       if (tr) {
@@ -272,7 +234,7 @@ export const useGanttPositioning = (
   const arePositionsComputed = (): boolean => {
     for (const category of roomCategories.value) {
       if (!expandedCategories.value[category.type]) continue
-      
+
       for (const room of category.rooms) {
         if (rowTops.value[room.number] === undefined) {
           return false
@@ -295,7 +257,7 @@ export const useGanttPositioning = (
       roomEl.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
-        inline: 'nearest'
+        inline: 'nearest',
       })
     }
   }
@@ -306,12 +268,12 @@ export const useGanttPositioning = (
   const isRoomVisible = (roomNumber: string): boolean => {
     const roomEl = rowRefs.value[roomNumber]
     const container = containerEl.value
-    
+
     if (!roomEl || !container) return false
-    
+
     const roomRect = roomEl.getBoundingClientRect()
     const containerRect = container.getBoundingClientRect()
-    
+
     return (
       roomRect.top >= containerRect.top &&
       roomRect.bottom <= containerRect.bottom &&
@@ -325,17 +287,17 @@ export const useGanttPositioning = (
    */
   const getVisibleRooms = (): string[] => {
     const visibleRooms: string[] = []
-    
+
     for (const category of roomCategories.value) {
       if (!expandedCategories.value[category.type]) continue
-      
+
       for (const room of category.rooms) {
         if (isRoomVisible(room.number)) {
           visibleRooms.push(room.number)
         }
       }
     }
-    
+
     return visibleRooms
   }
 
@@ -347,12 +309,12 @@ export const useGanttPositioning = (
    * Debounced position recomputation
    */
   let recomputeTimeout: ReturnType<typeof setTimeout> | null = null
-  
+
   const debouncedRecompute = (delay: number = 100): void => {
     if (recomputeTimeout) {
       clearTimeout(recomputeTimeout)
     }
-    
+
     recomputeTimeout = setTimeout(() => {
       recomputePositions()
       recomputeTimeout = null
@@ -364,28 +326,17 @@ export const useGanttPositioning = (
    */
   const validatePositioning = (): void => {
     if (!import.meta.env.DEV) return
-    
-    console.log('🔍 Positioning System Validation:')
-    console.log('  Container:', containerEl.value ? '✅ Available' : '❌ Missing')
-    console.log('  Row refs:', Object.keys(rowRefs.value).length, 'rooms')
-    console.log('  Computed positions:', Object.keys(rowTops.value).length, 'rooms')
-    
+
     // Check for rooms with missing positions
     const missingPositions: string[] = []
     for (const category of roomCategories.value) {
       if (!expandedCategories.value[category.type]) continue
-      
+
       for (const room of category.rooms) {
         if (!rowTops.value[room.number] && !rowRefs.value[room.number]) {
           missingPositions.push(room.number)
         }
       }
-    }
-    
-    if (missingPositions.length > 0) {
-      console.warn('⚠️ Rooms missing position data:', missingPositions)
-    } else {
-      console.log('✅ All visible rooms have position data')
     }
   }
 
@@ -406,17 +357,17 @@ export const useGanttPositioning = (
     containerEl,
     rowRefs,
     rowTops,
-    
+
     // DOM reference management
     setRowRef,
     clearRowRefs,
     getRowRef,
-    
+
     // Container management
     setContainerRef,
     getContainerDimensions,
     hasContainer,
-    
+
     // Position calculations
     computeRowTops,
     getFallbackPosition,
@@ -425,16 +376,16 @@ export const useGanttPositioning = (
     updateRoomPositions,
     getAllPositions,
     arePositionsComputed,
-    
+
     // Scroll & viewport
     scrollToRoom,
     isRoomVisible,
     getVisibleRooms,
-    
+
     // Performance
     debouncedRecompute,
     cleanup,
-    
+
     // Debugging
     validatePositioning,
   }

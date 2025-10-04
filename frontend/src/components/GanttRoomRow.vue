@@ -8,21 +8,20 @@
     </div>
   </td>
 
-  <td 
-    v-for="day in dateRange" 
+  <td
+    v-for="day in dateRange"
     :key="`${room.number}-${day.date}`"
     class="px-0.5 py-2 outline outline-1 outline-gray-100 transition-colors hover:bg-green-100 w-61.5px min-w-61.5px max-w-61.5px overflow-hidden h-48px"
-    :class="{ 
+    :class="{
       'bg-green-50': hoveredColumn === day.date,
       'hover:bg-blue-50 cursor-pointer': isRoomAvailable(room.number, day.date),
-      'hover:bg-red-50 cursor-not-allowed': !isRoomAvailable(room.number, day.date)
+      'hover:bg-red-50 cursor-not-allowed': !isRoomAvailable(room.number, day.date),
     }"
     :title="getCellTooltip(room.number, day.date)"
-    @mouseenter="$emit('columnHover', day.date)" 
+    @mouseenter="$emit('columnHover', day.date)"
     @mouseleave="$emit('columnLeave')"
     @click="handleCellClick(room.number, day.date)"
-  >
-  </td>
+  ></td>
 </template>
 
 <script setup lang="ts">
@@ -54,8 +53,8 @@ const emit = defineEmits<Emits>()
 
 const getCellTooltip = (roomNumber: string, date: string): string => {
   const available = props.isRoomAvailable(roomNumber, date)
-  return available 
-    ? `Click to create reservation for Room ${roomNumber} on ${date}` 
+  return available
+    ? `Click to create reservation for Room ${roomNumber} on ${date}`
     : `Room ${roomNumber} is not available on ${date}`
 }
 

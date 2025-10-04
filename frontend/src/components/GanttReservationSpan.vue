@@ -1,15 +1,25 @@
 <template>
-  <div class="absolute pointer-events-auto cursor-pointer rounded-lg shadow-sm" :class="[
-    reservationColor,
-    {
-      'ring-2 ring-yellow-400 ring-offset-1 animate-pulse': isHighlighted
-    }
-  ]" :style="style" :title="tooltipText" @click="handleClick">
+  <div
+    class="absolute pointer-events-auto cursor-pointer rounded-lg shadow-sm"
+    :class="[
+      reservationColor,
+      {
+        'ring-2 ring-yellow-400 ring-offset-1 animate-pulse': isHighlighted,
+      },
+    ]"
+    :style="style"
+    :title="tooltipText"
+    @click="handleClick"
+  >
     <div class="h-full flex items-center text-xs font-medium overflow-hidden">
-      <div :class="accentColor" class="h-full w-3 rounded-l-lg flex-shrink-0 relative overflow-hidden">
-        <div :class="reservationColor"
-          class="absolute right--4 top-1/2 transform -translate-y-1/2 w-7 h-7 rounded-lg -mr-1.5">
-        </div>
+      <div
+        :class="accentColor"
+        class="h-full w-3 rounded-l-lg flex-shrink-0 relative overflow-hidden"
+      >
+        <div
+          :class="reservationColor"
+          class="absolute right--4 top-1/2 transform -translate-y-1/2 w-7 h-7 rounded-lg -mr-1.5"
+        ></div>
       </div>
       <span class="px-3 truncate">
         {{ guestDisplayName }}
@@ -55,7 +65,6 @@ const tooltipText = computed(() => {
   return `${guestName} - ${dateRange}`
 })
 
-// Click handler - emits the reservation for parent to handle
 const handleClick = () => {
   emit('click', props.reservation)
 }

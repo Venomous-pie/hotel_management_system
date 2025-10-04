@@ -13,20 +13,26 @@ import type { Reservation } from '@/types/hotel'
  * @returns Reservation object if found, undefined otherwise
  */
 export const findReservationForRoomAndDate = (
-  reservations: Reservation[], 
-  roomNumber: string, 
-  date: string
+  reservations: Reservation[],
+  roomNumber: string,
+  date: string,
 ): Reservation | undefined => {
-  return reservations.find(reservation => {
+  return reservations.find((reservation) => {
     // Use string-based date comparison to avoid timezone issues
-    const checkInStr = (reservation.checkIn || reservation.checkInDate || '').toString().split('T')[0]
-    const checkOutStr = (reservation.checkOut || reservation.checkOutDate || '').toString().split('T')[0]
+    const checkInStr = (reservation.checkIn || reservation.checkInDate || '')
+      .toString()
+      .split('T')[0]
+    const checkOutStr = (reservation.checkOut || reservation.checkOutDate || '')
+      .toString()
+      .split('T')[0]
     const targetDateStr = date.split('T')[0]
 
     const resRoomNumber = (reservation.room || reservation.roomNumber || '').toString()
-    return resRoomNumber === roomNumber.toString() &&
-           targetDateStr >= checkInStr &&
-           targetDateStr <= checkOutStr  // Inclusive checkout (guest shown until checkout date)
+    return (
+      resRoomNumber === roomNumber.toString() &&
+      targetDateStr >= checkInStr &&
+      targetDateStr < checkOutStr
+    ) // Exclusive checkout (guest shown until day before checkout)
   })
 }
 
@@ -38,9 +44,9 @@ export const findReservationForRoomAndDate = (
  * @returns True if room is available, false if occupied
  */
 export const isRoomAvailableOnDate = (
-  reservations: Reservation[], 
-  roomNumber: string, 
-  date: string
+  reservations: Reservation[],
+  roomNumber: string,
+  date: string,
 ): boolean => {
   // Normalize target date to YYYY-MM-DD to avoid timezone issues
   const targetDateStr = date.split('T')[0]
@@ -48,7 +54,7 @@ export const isRoomAvailableOnDate = (
   // Room is unavailable if any active reservation either:
   // - Covers the target date (inclusive of checkout day), or
   // - Has a checkout where the day AFTER checkout is the target date (buffer/turnover day)
-  const hasBlockingReservation = reservations.some(reservation => {
+  const hasBlockingReservation = reservations.some((reservation) => {
     const status = reservation.status
     // Ignore cancelled or already checked-out reservations
     if (status === 'cancelled' || status === 'checkedOut') return false
@@ -56,25 +62,18 @@ export const isRoomAvailableOnDate = (
     const resRoomNumber = (reservation.room || reservation.roomNumber || '').toString()
     if (resRoomNumber !== roomNumber.toString()) return false
 
-    const checkInStr = (reservation.checkIn || reservation.checkInDate || '').toString().split('T')[0]
-    const checkOutStr = (reservation.checkOut || reservation.checkOutDate || '').toString().split('T')[0]
+    const checkInStr = (reservation.checkIn || reservation.checkInDate || '')
+      .toString()
+      .split('T')[0]
+    const checkOutStr = (reservation.checkOut || reservation.checkOutDate || '')
+      .toString()
+      .split('T')[0]
     if (!checkInStr || !checkOutStr) return false
 
-    // Inclusive occupancy from check-in through checkout
-    const occupiesTarget = targetDateStr >= checkInStr && targetDateStr <= checkOutStr
+    // Exclusive checkout: guest occupies from check-in up to (but not including) checkout day
+    const occupiesTarget = targetDateStr >= checkInStr && targetDateStr < checkOutStr
 
-    // Buffer/turnover day: block the day after checkout
-    const nextDay = (() => {
-      const d = new Date(checkOutStr)
-      d.setDate(d.getDate() + 1)
-      const y = d.getFullYear()
-      const m = (d.getMonth() + 1).toString().padStart(2, '0')
-      const day = d.getDate().toString().padStart(2, '0')
-      return `${y}-${m}-${day}`
-    })()
-    const isBufferDay = targetDateStr === nextDay
-
-    return occupiesTarget || isBufferDay
+    return occupiesTarget
   })
 
   return !hasBlockingReservation
@@ -88,9 +87,9 @@ export const isRoomAvailableOnDate = (
  * @returns Number of available rooms in the category
  */
 export const getAvailableRoomCount = (
-  rooms: any[], 
-  reservations: Reservation[], 
-  date: string
+  rooms: any[],
+  reservations: Reservation[],
+  date: string,
 ): number => {
   return rooms.filter((room: any) => {
     // Check room status first
@@ -116,11 +115,12 @@ export const formatReservationDateRange = (reservation: any): string => {
 
   const checkInDate = new Date(checkIn)
   const checkOutDate = new Date(checkOut)
-  const formatDate = (date: Date) => date.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric' 
-  })
-  
+  const formatDate = (date: Date) =>
+    date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    })
+
   return `${formatDate(checkInDate)} - ${formatDate(checkOutDate)}`
 }
 
@@ -160,7 +160,7 @@ export const roomHasConflict = (
   start: string | Date,
   end: string | Date,
 ): boolean => {
-  return reservations.some(res => {
+  return reservations.some((res) => {
     const resRoomNumber = (res.room || res.roomNumber || '').toString()
     if (resRoomNumber !== roomNumber.toString()) return false
     if (res.status === 'cancelled') return false

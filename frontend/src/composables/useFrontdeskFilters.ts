@@ -13,10 +13,12 @@ export const useFrontdeskFilters = () => {
   const showBookingDropdown = ref(false)
 
   const hasActiveFilters = computed(() => {
-    return searchQuery.value !== '' ||
+    return (
+      searchQuery.value !== '' ||
       selectedReservationFilter.value !== 'All Reservations' ||
       selectedRoomTypeFilter.value !== 'All Room Types' ||
       selectedBookingFilter.value !== 'All Booking'
+    )
   })
 
   const clearAllFilters = () => {

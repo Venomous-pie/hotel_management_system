@@ -1,12 +1,12 @@
-import { Sequelize } from 'sequelize';
-import GuestsModel from './Guest.js';
-import ReservationsModel from './Reservation.js';
-import RoomModel from './Room.js';
-import RoomTypeModel from './RoomType.js';
+import { Sequelize } from "sequelize";
+import GuestsModel from "./Guest.js";
+import ReservationsModel from "./Reservation.js";
+import RoomModel from "./Room.js";
+import RoomTypeModel from "./RoomType.js";
 
 const sequelize = new Sequelize({
-    dialect: "sqlite",
-    storage: './system.db'
+  dialect: "sqlite",
+  storage: "./system.db",
 });
 
 const Guest = GuestsModel(sequelize);

@@ -1,24 +1,39 @@
 <template>
-    <div class="h-full bg-white">
-        <GanttHeader :date-range="dateRange" @navigate-dates="navigateDates" @jump-to-today="jumpToToday" />
+  <div class="h-full bg-white">
+    <GanttHeader
+      :date-range="dateRange"
+      @navigate-dates="navigateDates"
+      @jump-to-today="jumpToToday"
+    />
 
-        <GanttTable ref="ganttTableRef" :date-range="dateRange" :room-categories="roomCategories"
-            :expanded-categories="expandedCategories" :hovered-column="hoveredColumn"
-            :highlighted-reservation="highlightedReservation" :loading="props.loading" :error="props.error"
-            :is-room-available="isRoomAvailable" :get-available-room-count-for-date="getAvailableRoomCountForDate"
-            :get-reservation-spans="getReservationSpans" :set-row-ref="setRowRef" @column-hover="hoveredColumn = $event"
-            @column-leave="hoveredColumn = null" @toggle-category="toggleCategory" @cell-click="handleCellClick" 
-            @reservation-click="handleReservationClick" />
+    <GanttTable
+      ref="ganttTableRef"
+      :date-range="dateRange"
+      :room-categories="roomCategories"
+      :expanded-categories="expandedCategories"
+      :hovered-column="hoveredColumn"
+      :highlighted-reservation="highlightedReservation"
+      :loading="props.loading"
+      :error="props.error"
+      :is-room-available="isRoomAvailable"
+      :get-available-room-count-for-date="getAvailableRoomCountForDate"
+      :get-reservation-spans="getReservationSpans"
+      :set-row-ref="setRowRef"
+      @column-hover="hoveredColumn = $event"
+      @column-leave="hoveredColumn = null"
+      @toggle-category="toggleCategory"
+      @cell-click="handleCellClick"
+      @reservation-click="handleReservationClick"
+    />
 
-        <!-- Reservation Details Modal -->
-        <ReservationDetailsModal 
-            :is-open="isModalOpen" 
-            :reservation="selectedReservation" 
-            :room-details="selectedRoomDetails"
-            @close="closeModal"
-            @edit="handleReservationEdit"
-        />
-    </div>
+    <ReservationDetailsModal
+      :is-open="isModalOpen"
+      :reservation="selectedReservation"
+      :room-details="selectedRoomDetails"
+      @close="closeModal"
+      @edit="handleReservationEdit"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -29,101 +44,91 @@ import GanttTable from './GanttTable.vue'
 import ReservationDetailsModal from './ReservationDetailsModal.vue'
 
 const props = defineProps<{
-    selectedYear: number
-    selectedMonth: number
-    searchQuery: string
-    reservationFilter: string
-    roomTypeFilter: string
-    bookingFilter: string
-    rooms: any[]
-    reservations: any[]
-    loading: boolean
-    error: string | null
-    targetDate?: Date | null
+  selectedYear: number
+  selectedMonth: number
+  searchQuery: string
+  reservationFilter: string
+  roomTypeFilter: string
+  bookingFilter: string
+  rooms: any[]
+  reservations: any[]
+  loading: boolean
+  error: string | null
+  targetDate?: Date | null
 }>()
 
 const emit = defineEmits<{
-    updateDate: [{ year: number; month: number }]
-    openReservationModal: [{ roomNumber: string; checkInDate: string; isAvailable: boolean }]
-    openReservationEditor: [prefilled: any]
+  updateDate: [{ year: number; month: number }]
+  openReservationModal: [{ roomNumber: string; checkInDate: string; isAvailable: boolean }]
+  openReservationEditor: [prefilled: any]
 }>()
 
 const {
-    hoveredColumn,
-    ganttTableRef,
-    dateRange,
-    roomCategories,
-    expandedCategories,
-    highlightedReservation,
-    navigateDates,
-    jumpToToday,
-    handleCellClick,
-    toggleCategory,
-    isRoomAvailable,
-    getAvailableRoomCountForDate,
-    getReservationSpans,
-    setRowRef
+  hoveredColumn,
+  ganttTableRef,
+  dateRange,
+  roomCategories,
+  expandedCategories,
+  highlightedReservation,
+  navigateDates,
+  jumpToToday,
+  handleCellClick,
+  toggleCategory,
+  isRoomAvailable,
+  getAvailableRoomCountForDate,
+  getReservationSpans,
+  setRowRef,
 } = useGanttOrchestrator(props, emit)
 
 // Reservation details modal functionality
-const {
-    isModalOpen,
-    selectedReservation,
-    selectedRoomDetails,
-    openModal,
-    closeModal
-} = useReservationDetails()
+const { isModalOpen, selectedReservation, selectedRoomDetails, openModal, closeModal } =
+  useReservationDetails()
 
 // Handle reservation span clicks
 const handleReservationClick = (reservation: any) => {
-    openModal(reservation)
+  openModal(reservation)
 }
 
 import { getReservationById } from '@/services/reservations'
 import { formatDateForInput } from '@/utils'
 const toDateOnly = (value: any): string => {
-    if (!value) return ''
-    if (typeof value === 'string') {
-        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
-        const tIndex = value.indexOf('T')
-        if (tIndex > 0) return value.slice(0, 10)
-        // Fallback for non-ISO strings
-        const d = new Date(value)
-        return formatDateForInput(d)
-    }
-    if (value instanceof Date) return formatDateForInput(value)
-    try {
-        return formatDateForInput(new Date(value))
-    } catch {
-        return ''
-    }
+  if (!value) return ''
+  if (typeof value === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+    const tIndex = value.indexOf('T')
+    if (tIndex > 0) return value.slice(0, 10)
+    // Fallback for non-ISO strings
+    const d = new Date(value)
+    return formatDateForInput(d)
+  }
+  if (value instanceof Date) return formatDateForInput(value)
+  try {
+    return formatDateForInput(new Date(value))
+  } catch {
+    return ''
+  }
 }
 const handleReservationEdit = async (reservation: any) => {
-    try {
-        const full = await getReservationById((reservation.id || '').toString())
-        const prefilled = {
-            reservationId: (full.id || reservation.id || '').toString(),
-            // Guest
-            firstName: full.Guest?.firstName || '',
-            middleName: full.Guest?.middleName || '',
-            lastName: full.Guest?.lastName || '',
-            email: full.Guest?.email || '',
-            phone: full.Guest?.phone || '',
-            address: full.Guest?.address || '',
-            idDocument: full.Guest?.idDocument || '',
-            // Reservation
-            numGuest: full.numGuest || reservation.numGuest,
-            checkInDate: toDateOnly(full.checkIn || reservation.checkIn || ''),
-            checkOutDate: toDateOnly(full.checkOut || reservation.checkOut || ''),
-            specialRequest: full.specialRequest || reservation.notes || '',
-            status: full.status || reservation.status,
-            roomNumber: full.roomNumber || reservation.room || reservation.roomNumber,
-        }
-        closeModal()
-        emit('openReservationEditor', prefilled)
-    } catch (e) {
-        console.error('Failed to fetch reservation details for editing', e)
+  try {
+    const full = await getReservationById((reservation.id || '').toString())
+    const prefilled = {
+      reservationId: (full.id || reservation.id || '').toString(),
+      firstName: full.Guest?.firstName || '',
+      middleName: full.Guest?.middleName || '',
+      lastName: full.Guest?.lastName || '',
+      email: full.Guest?.email || '',
+      phone: full.Guest?.phone || '',
+      address: full.Guest?.address || '',
+      idDocument: full.Guest?.idDocument || '',
+      numGuest: full.numGuest || reservation.numGuest,
+      checkInDate: toDateOnly(full.checkIn || reservation.checkIn || ''),
+      checkOutDate: toDateOnly(full.checkOut || reservation.checkOut || ''),
+      specialRequest: full.specialRequest || reservation.notes || '',
+      status: full.status || reservation.status,
+      roomNumber: full.roomNumber || reservation.room || reservation.roomNumber,
     }
+    closeModal()
+    emit('openReservationEditor', prefilled)
+  } catch (e) {}
 }
-
 </script>

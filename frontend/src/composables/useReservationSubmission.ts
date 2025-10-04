@@ -11,7 +11,12 @@ export const useReservationSubmission = (
   onSuccess?: (reservation: any) => void,
   onAfterSuccess?: () => void,
 ) => {
-  const modalState = ref<ModalState>({ isOpen: false, isLoading: false, error: null, success: false })
+  const modalState = ref<ModalState>({
+    isOpen: false,
+    isLoading: false,
+    error: null,
+    success: false,
+  })
 
   const submitReservation = async () => {
     if (!validateForm()) return
@@ -24,18 +29,20 @@ export const useReservationSubmission = (
       modalState.value.success = true
       clearFormDraft()
       onSuccess?.(data.reservation)
-      setTimeout(() => { onAfterSuccess?.() }, 1500)
+      setTimeout(() => {
+        onAfterSuccess?.()
+      }, 1500)
       return data.reservation
     } catch (error: any) {
       if (error instanceof ApiClientError) {
         if (error.status === 409) {
           modalState.value.error = `Room conflict: ${error.data?.error || 'Room is not available for the chosen dates'}`
         } else {
-          modalState.value.error = (error.data?.error as string) || error.message || 'Failed to create reservation'
+          modalState.value.error =
+            (error.data?.error as string) || error.message || 'Failed to create reservation'
         }
       } else {
         modalState.value.error = 'Network error. Please try again.'
-        console.error('Reservation error:', error)
       }
     } finally {
       modalState.value.isLoading = false

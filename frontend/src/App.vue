@@ -2,7 +2,7 @@
 
 <template>
   <div class="font-sans">
-    <router-view/>
+    <router-view />
   </div>
 </template>
 

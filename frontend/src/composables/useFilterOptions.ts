@@ -8,10 +8,7 @@ import {
   formatSourceLabel,
 } from '@/utils/frontdesk'
 
-export const useFilterOptions = (
-  rooms: Ref<Room[]>,
-  reservations: Ref<Reservation[]>
-) => {
+export const useFilterOptions = (rooms: Ref<Room[]>, reservations: Ref<Reservation[]>) => {
   const roomTypeOptions = computed<string[]>(() => {
     const types = getUniqueRoomTypes(rooms.value)
     const all = ['All Room Types', ...types.sort()]

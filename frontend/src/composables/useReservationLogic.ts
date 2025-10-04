@@ -5,10 +5,10 @@
 
 import { type Ref } from 'vue'
 import type { Reservation } from '@/types/hotel'
-import { 
-  findReservationForRoomAndDate, 
-  isRoomAvailableOnDate, 
-  getAvailableRoomCount 
+import {
+  findReservationForRoomAndDate,
+  isRoomAvailableOnDate,
+  getAvailableRoomCount,
 } from '@/utils/reservations'
 
 export const useReservationLogic = (reservations: Ref<Reservation[]>) => {
@@ -48,7 +48,7 @@ export const useReservationLogic = (reservations: Ref<Reservation[]>) => {
    * @returns Array of reservations for the room
    */
   const getRoomReservations = (roomNumber: string): Reservation[] => {
-    return reservations.value.filter(res => {
+    return reservations.value.filter((res) => {
       const resRoomNumber = (res.room || res.roomNumber || '').toString()
       return resRoomNumber === roomNumber.toString()
     })
@@ -62,13 +62,17 @@ export const useReservationLogic = (reservations: Ref<Reservation[]>) => {
    * @returns True if reservation overlaps with the date range
    */
   const reservationOverlapsDateRange = (
-    reservation: Reservation, 
-    startDate: string, 
-    endDate: string
+    reservation: Reservation,
+    startDate: string,
+    endDate: string,
   ): boolean => {
-    const checkInStr = (reservation.checkIn || reservation.checkInDate || '').toString().split('T')[0]
-    const checkOutStr = (reservation.checkOut || reservation.checkOutDate || '').toString().split('T')[0]
-    
+    const checkInStr = (reservation.checkIn || reservation.checkInDate || '')
+      .toString()
+      .split('T')[0]
+    const checkOutStr = (reservation.checkOut || reservation.checkOutDate || '')
+      .toString()
+      .split('T')[0]
+
     // Check for overlap using string comparison
     return checkInStr <= endDate && checkOutStr >= startDate
   }

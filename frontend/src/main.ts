@@ -14,10 +14,10 @@ import App from './App.vue'
 import router from './router'
 
 const vuetify = createVuetify({
-    components,
-    directives,
-  })
-  
+  components,
+  directives,
+})
+
 const app = createApp(App)
 
 app.use(createPinia())

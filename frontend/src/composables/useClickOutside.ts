@@ -2,7 +2,7 @@ import { onMounted, onBeforeUnmount } from 'vue'
 
 export const useClickOutside = (
   isInside: (target: HTMLElement) => boolean,
-  onOutside: () => void
+  onOutside: () => void,
 ) => {
   const handler = (e: MouseEvent) => {
     const target = e.target as HTMLElement

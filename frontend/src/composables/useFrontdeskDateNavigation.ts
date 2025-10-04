@@ -11,8 +11,18 @@ export const useFrontdeskDateNavigation = () => {
   const years = computed<number[]>(() => generateYearRange(getTodayAtMidnight().getFullYear()))
 
   const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ]
 
   const emitDateChangeToChart = () => {
@@ -64,13 +74,11 @@ export const useFrontdeskDateNavigation = () => {
   }
 
   return {
-    // state
     selectedYear,
     selectedMonth,
     targetDate,
     years,
     months,
-    // actions
     emitDateChangeToChart,
     navigateYear,
     navigateMonth,

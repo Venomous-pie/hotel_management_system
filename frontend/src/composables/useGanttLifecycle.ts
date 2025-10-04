@@ -9,7 +9,7 @@ export const useGanttLifecycle = (
   initializeViewDate: () => void,
   navigation: any,
   recomputePositions: () => void,
-  validatePositioning: () => void
+  validatePositioning: () => void,
 ) => {
   const setupComponent = async () => {
     initializeViewDate()
@@ -41,6 +41,6 @@ export const useGanttLifecycle = (
 
   return {
     setupComponent,
-    cleanupComponent
+    cleanupComponent,
   }
 }

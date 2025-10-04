@@ -1,28 +1,29 @@
 <template>
-  <div class="relative overflow-x-auto overflow-hidden rounded-lg outline outline-1 outline-gray-200 bg-white shadow-sm"
-    ref="containerEl">
+  <div
+    class="relative overflow-x-auto overflow-hidden rounded-lg outline outline-1 outline-gray-200 bg-white shadow-sm"
+    ref="containerEl"
+  >
     <table class="w-full table-fixed border-collapse min-w-1254px">
-      <!-- Table Header -->
       <thead>
         <tr>
-          <!-- Rooms Header -->
           <th
-            class="sticky left-0 z-10 bg-gray-50 px-4 py-3 text-left outline outline-1 outline-gray-100 w-270px min-w-270px max-w-270px overflow-hidden text-ellipsis whitespace-nowrap">
+            class="sticky left-0 z-10 bg-gray-50 px-4 py-3 text-left outline outline-1 outline-gray-100 w-270px min-w-270px max-w-270px overflow-hidden text-ellipsis whitespace-nowrap"
+          >
             <div class="text-sm font-bold text-gray-700">Rooms</div>
           </th>
 
-          <!-- Day Headers (16 days) -->
-          <th v-for="day in dateRange" :key="day.date"
+          <th
+            v-for="day in dateRange"
+            :key="day.date"
             class="px-1 py-2 text-center outline outline-1 outline-gray-100 transition-colors w-61.5px min-w-61.5px max-w-61.5px overflow-hidden h-48px"
             :class="{ 'bg-green-50': hoveredColumn === day.date }"
-            @mouseenter="$emit('columnHover', day.date)" 
-            @mouseleave="$emit('columnLeave')">
+            @mouseenter="$emit('columnHover', day.date)"
+            @mouseleave="$emit('columnLeave')"
+          >
             <div class="flex flex-col">
-              <!-- Day Name -->
               <div class="text-xs font-bold text-gray-600 mb-1">
                 {{ day.dayName }}
               </div>
-              <!-- Date -->
               <div class="text-xs text-gray-500">
                 {{ day.dayNumber }}
               </div>
@@ -31,59 +32,67 @@
         </tr>
       </thead>
 
-      <!-- Table Body -->
       <tbody>
-        <!-- Loading State -->
         <tr v-if="loading">
           <td colspan="100%" class="text-center py-8 text-gray-500">
             Loading rooms and reservations...
           </td>
         </tr>
 
-        <!-- Error State -->
         <tr v-else-if="error">
           <td colspan="100%" class="text-center py-8 text-red-500">
             {{ error }}
           </td>
         </tr>
 
-        <!-- No Results State -->
         <tr v-else-if="!roomCategories.length">
           <td colspan="100%" class="text-center py-8 text-gray-500">
             No rooms match the current filters
           </td>
         </tr>
 
-        <!-- Room Categories -->
         <template v-else v-for="category in roomCategories" :key="category.name">
-          <!-- Category Header Row -->
           <tr class="cursor-pointer" @click="$emit('toggleCategory', category.type)">
             <td
-              class="sticky left-0 z-10 px-4 py-2 bg-white border-r border-gray-200 outline outline-1 outline-gray-100 w-270px min-w-270px max-w-270px overflow-hidden text-ellipsis whitespace-nowrap h-48px">
+              class="sticky left-0 z-10 px-4 py-2 bg-white border-r border-gray-200 outline outline-1 outline-gray-100 w-270px min-w-270px max-w-270px overflow-hidden text-ellipsis whitespace-nowrap h-48px"
+            >
               <div class="flex items-center">
-                <!-- Expand/Collapse Icon -->
                 <div class="mr-2 text-gray-500">
-                  <svg v-if="expandedCategories[category.type]" class="w-4 h-4" fill="none"
-                    stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M19 9l-7 7-7-7"></path>
+                  <svg
+                    v-if="expandedCategories[category.type]"
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    ></path>
                   </svg>
-                  <svg v-else class="w-4 h-4" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 5l7 7-7 7"></path>
+                  <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    ></path>
                   </svg>
                 </div>
                 <div class="text-sm font-medium text-gray-800">{{ category.name }}</div>
                 <div class="ml-2 text-xs text-gray-600">({{ category.rooms.length }})</div>
               </div>
             </td>
-            <td v-for="day in dateRange" :key="`${category.name}-${day.date}`"
+            <td
+              v-for="day in dateRange"
+              :key="`${category.name}-${day.date}`"
               class="px-0.5 py-2 outline outline-1 outline-gray-100 transition-colors text-center w-61.5px min-w-61.5px max-w-61.5px overflow-hidden h-48px"
               :class="{ 'bg-green-50': hoveredColumn === day.date }"
-              @mouseenter="$emit('columnHover', day.date)" 
-              @mouseleave="$emit('columnLeave')">
-              <!-- Category availability summary -->
+              @mouseenter="$emit('columnHover', day.date)"
+              @mouseleave="$emit('columnLeave')"
+            >
               <div class="inline-flex items-center justify-center bg-green-200 h-8 w-8 rounded">
                 <span class="text-xs font-medium text-green-600">
                   {{ getAvailableRoomCountForDate(category, day.date) }}
@@ -92,9 +101,13 @@
             </td>
           </tr>
 
-          <!-- Room rows for this category -->
-          <tr v-for="room in category.rooms" :key="room.number" v-show="expandedCategories[category.type]"
-            class="border-t border-gray-100" :ref="el => setRowRef(room.number, el)">
+          <tr
+            v-for="room in category.rooms"
+            :key="room.number"
+            v-show="expandedCategories[category.type]"
+            class="border-t border-gray-100"
+            :ref="(el) => setRowRef(room.number, el)"
+          >
             <GanttRoomRow
               :room="room"
               :date-range="dateRange"
@@ -114,15 +127,17 @@
         <template v-if="expandedCategories[category.type]">
           <template v-for="room in category.rooms" :key="room.number">
             <GanttReservationSpan
-              v-for="span in getReservationSpans(room.number)" 
+              v-for="span in getReservationSpans(room.number)"
               :key="span.key"
               :reservation="span.reservation"
               :style="span.style"
-              :is-highlighted="highlightedReservation === (span.reservation.id || span.reservation.bookingNumber)"
+              :is-highlighted="
+                highlightedReservation === (span.reservation.id || span.reservation.bookingNumber)
+              "
               @click="$emit('reservationClick', $event)"
             />
           </template>
-        </template> 
+        </template>
       </template>
     </div>
   </div>
@@ -167,6 +182,6 @@ const containerEl = ref<HTMLElement | null>(null)
 
 // Expose container element to parent
 defineExpose({
-  containerEl
+  containerEl,
 })
 </script>

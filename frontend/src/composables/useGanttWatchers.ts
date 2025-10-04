@@ -1,8 +1,3 @@
-/**
- * Gantt chart watchers composable
- * Handles all reactive watchers for the Gantt chart
- */
-
 import { watch, nextTick, type Ref } from 'vue'
 
 export const useGanttWatchers = (
@@ -16,7 +11,7 @@ export const useGanttWatchers = (
   recomputePositions: () => void,
   roomCategories: Ref<any[]>,
   expandedCategories: Ref<Record<string, boolean>>,
-  dateRange: Ref<any[]>
+  dateRange: Ref<any[]>,
 ) => {
   const setupDateChangeWatcher = () => {
     watch([() => props.selectedYear, () => props.selectedMonth], (newValues, oldValues) => {
@@ -25,7 +20,6 @@ export const useGanttWatchers = (
 
       if (oldYear !== undefined && oldMonth !== undefined) {
         if (!isInternalNavigation.value) {
-          console.log(`📅 Manual date change: ${oldYear}-${oldMonth + 1} → ${newYear}-${newMonth + 1}`)
           const firstOfMonth = new Date(newYear, newMonth, 1)
           firstOfMonth.setHours(0, 0, 0, 0)
           // Align the Gantt view to the selected month start
@@ -35,40 +29,42 @@ export const useGanttWatchers = (
             initializeViewDate()
           }
         } else {
-          console.log(`🔄 Internal navigation: ${oldYear}-${oldMonth + 1} → ${newYear}-${newMonth + 1}`)
         }
       }
     })
   }
 
   const setupSearchWatcher = () => {
-    watch(() => props.searchQuery, (newQuery) => {
-      if (newQuery && newQuery.trim()) {
-        const query = newQuery.toLowerCase().trim()
-        navigation.findAndNavigateToReservation(query)
-      } else {
-        highlightedReservation.value = null
-      }
-    })
+    watch(
+      () => props.searchQuery,
+      (newQuery) => {
+        if (newQuery && newQuery.trim()) {
+          const query = newQuery.toLowerCase().trim()
+          navigation.findAndNavigateToReservation(query)
+        } else {
+          highlightedReservation.value = null
+        }
+      },
+    )
   }
 
   const setupContainerWatcher = () => {
-    watch(containerEl, (newContainer) => {
-      if (newContainer) {
-        setContainerRef(newContainer)
-        nextTick(() => {
-          recomputePositions()
-        })
-      }
-    }, { immediate: true })
+    watch(
+      containerEl,
+      (newContainer) => {
+        if (newContainer) {
+          setContainerRef(newContainer)
+          nextTick(() => {
+            recomputePositions()
+          })
+        }
+      },
+      { immediate: true },
+    )
   }
 
   const setupLayoutWatcher = () => {
-    watch([
-      roomCategories,
-      () => ({ ...expandedCategories.value }),
-      dateRange
-    ], async () => {
+    watch([roomCategories, () => ({ ...expandedCategories.value }), dateRange], async () => {
       await nextTick()
       await nextTick()
       recomputePositions()
@@ -91,6 +87,6 @@ export const useGanttWatchers = (
     setupDateChangeWatcher,
     setupSearchWatcher,
     setupContainerWatcher,
-    setupLayoutWatcher
+    setupLayoutWatcher,
   }
 }
