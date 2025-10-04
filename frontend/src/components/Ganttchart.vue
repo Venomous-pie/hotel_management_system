@@ -7,14 +7,24 @@
             :highlighted-reservation="highlightedReservation" :loading="props.loading" :error="props.error"
             :is-room-available="isRoomAvailable" :get-available-room-count-for-date="getAvailableRoomCountForDate"
             :get-reservation-spans="getReservationSpans" :set-row-ref="setRowRef" @column-hover="hoveredColumn = $event"
-            @column-leave="hoveredColumn = null" @toggle-category="toggleCategory" @cell-click="handleCellClick" />
+            @column-leave="hoveredColumn = null" @toggle-category="toggleCategory" @cell-click="handleCellClick" 
+            @reservation-click="handleReservationClick" />
+
+        <!-- Reservation Details Modal -->
+        <ReservationDetailsModal 
+            :is-open="isModalOpen" 
+            :reservation="selectedReservation" 
+            :room-details="selectedRoomDetails"
+            @close="closeModal" />
     </div>
 </template>
 
 <script setup lang="ts">
 import { useGanttOrchestrator } from '@/composables/useGanttOrchestrator'
+import { useReservationDetails } from '@/composables/useReservationDetails'
 import GanttHeader from './GanttHeader.vue'
 import GanttTable from './GanttTable.vue'
+import ReservationDetailsModal from './ReservationDetailsModal.vue'
 
 const props = defineProps<{
     selectedYear: number
@@ -51,5 +61,19 @@ const {
     getReservationSpans,
     setRowRef
 } = useGanttOrchestrator(props, emit)
+
+// Reservation details modal functionality
+const {
+    isModalOpen,
+    selectedReservation,
+    selectedRoomDetails,
+    openModal,
+    closeModal
+} = useReservationDetails()
+
+// Handle reservation span clicks
+const handleReservationClick = (reservation: any) => {
+    openModal(reservation)
+}
 
 </script>

@@ -6,7 +6,6 @@ export async function getReservations(): Promise<Reservation[]> {
 }
 
 export async function createReservation(payload: ReservationFormData): Promise<any> {
-  // Backend calculates totalPrice; frontend passes form data
   return apiFetch<any>('/reserve-room', {
     method: 'POST',
     body: JSON.stringify(payload)

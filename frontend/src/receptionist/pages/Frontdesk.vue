@@ -29,7 +29,7 @@
         </div>
       </div>
 
-      <!-- Month Selector -->
+      
       <div class="flex items-center justify-center bg-green-50 outline outline-1 outline-gray-200 rounded-b h-8">
         <div @click="navigateMonth(-1)"
           class="w-8 h-8 flex items-center justify-center transition-colors outline outline-1 outline-gray-200 rounded-bl cursor-pointer hover:bg-gray-100">
@@ -58,7 +58,7 @@
         <Searchbar placeholder="Search by booking number or guest" icon="pi pi-search" @search="handleSearch"
           width="20rem" />
         <div class="flex items-center gap-4">
-          <!-- Clear Filters Button -->
+          
           <button @click="clearAllFilters"
             class="flex items-center gap-2 px-3 py-2 text-xs text-gray-600 bg-gray-50 outline outline-1 outline-gray-200 rounded-full transition-colors hover:bg-gray-100 hover:text-gray-800"
             :class="{ 'opacity-50 cursor-not-allowed': !hasActiveFilters }" :disabled="!hasActiveFilters">
@@ -66,7 +66,7 @@
             Clear Filters
           </button>
 
-          <!-- Reservation Status Filter -->
+          
           <div class="relative">
             <div @click="showReservationDropdown = !showReservationDropdown"
               class="flex items-center bg-gray-50 outline outline-1 outline-gray-200 rounded-full px-3 py-2 pr-8 text-xs text-gray-700 transition-colors cursor-pointer hover:bg-gray-100">
@@ -84,7 +84,7 @@
             </div>
           </div>
 
-          <!-- Room Type Filter -->
+          
           <div class="relative">
             <div @click="showRoomTypeDropdown = !showRoomTypeDropdown"
               class="flex items-center bg-gray-50 outline outline-1 outline-gray-200 rounded-full px-3 py-2 pr-8 text-xs text-gray-700 transition-colors cursor-pointer hover:bg-gray-100">
@@ -102,7 +102,7 @@
             </div>
           </div>
 
-          <!-- Booking Source Filter -->
+          
           <div class="relative">
             <div @click="showBookingDropdown = !showBookingDropdown"
               class="flex items-center bg-gray-50 outline outline-1 outline-gray-200 rounded-full px-3 py-2 pr-8 text-xs text-gray-700 transition-colors cursor-pointer hover:bg-gray-100">
@@ -129,7 +129,7 @@
         :error="error" :target-date="targetDate" @update-date="handleDateUpdate" @open-reservation-modal="handleOpenReservationModal" />
     </div>
 
-    <!-- Success Notification -->
+    
     <div v-if="showSuccessNotification"
       class="fixed top-4 right-4 bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg z-50 max-w-md">
       <div class="flex items-center">
@@ -148,14 +148,14 @@
       </div>
     </div>
 
-    <!-- Add Reservation Modal -->
+    
     <AddReservationModal :is-open="showAddReservationModal" :prefilled-data="prefilledReservationData"
       @close="handleModalClose" @success="handleReservationSuccess" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import Searchbar from '@/components/Searchbar.vue';
 import Ganttchart from '@/components/GanttChart.vue';
 import Custombutton from '@/components/Custombutton.vue';
@@ -166,11 +166,10 @@ import { useFrontdeskFilters } from '@/composables/useFrontdeskFilters'
 import { useFilterOptions } from '@/composables/useFilterOptions'
 import { useSuccessNotification } from '@/composables/useSuccessNotification'
 import { useClickOutside } from '@/composables/useClickOutside'
+import { buildReservationSuccessMessage } from '@/utils/messages'
 
-// Shared hotel data (composable)
 const { rooms, reservations, loading, error, refreshAll } = useHotelData()
 
-// Date navigation
 const {
   selectedYear,
   selectedMonth,
@@ -185,7 +184,6 @@ const {
   handleDateUpdate,
 } = useFrontdeskDateNavigation()
 
-// Filters and dropdowns
 const {
   searchQuery,
   selectedReservationFilter,
@@ -202,66 +200,50 @@ const {
   closeDropdowns,
 } = useFrontdeskFilters()
 
-// Modal state
 const showAddReservationModal = ref(false)
 const prefilledReservationData = ref<{
   roomNumber?: string
   checkInDate?: string
 } | null>(null)
 
-// Success notification
 const { showSuccessNotification, successMessage, showWithTimeout } = useSuccessNotification()
 
-// Filter options derived from backend data
 const { roomTypeOptions, reservationStatusOptions, bookingSourceOptions } = useFilterOptions(rooms, reservations)
-
-// Data loading handled by useHotelData.refreshAll
-
-// (moved options into useFilterOptions composable)
 
 const handleSearch = (query: string) => {
   searchQuery.value = query
-  // The Gantt chart will handle the filtering
 }
 
-// hasActiveFilters and clearAllFilters come from useFrontdeskFilters
-
 const handleAddReservation = () => {
-  prefilledReservationData.value = null // Clear any prefilled data
+  prefilledReservationData.value = null
   showAddReservationModal.value = true
 }
 
-// Handle opening reservation modal from Gantt chart cell click
 const handleOpenReservationModal = ({ roomNumber, checkInDate, isAvailable }: {
-  roomNumber: string;
-  checkInDate: string;
+  roomNumber: string
+  checkInDate: string
   isAvailable: boolean
 }) => {
   if (isAvailable) {
-    console.log(`🎯 Opening modal with prefilled data: Room ${roomNumber}, Date ${checkInDate}`)
-
-    // Set prefilled data
     prefilledReservationData.value = {
       roomNumber,
       checkInDate
     }
-
-    // Open the modal
     showAddReservationModal.value = true
-  } else {
-    console.log(`❌ Cannot open modal: Room ${roomNumber} is not available on ${checkInDate}`)
-    // Optionally show a notification that the room is not available
   }
 }
 
-// Handle modal events
 const handleModalClose = () => {
   showAddReservationModal.value = false
-  prefilledReservationData.value = null // Clear prefilled data when modal closes
+  prefilledReservationData.value = null
 }
 
-const handleReservationSuccess = async (reservation: any) => {
-  const msg = `Reservation created successfully for ${reservation.Guest?.firstName || 'guest'} in room ${reservation.roomNumber}`
+const handleReservationSuccess = async (payload: { reservation: any; roomNumber: string }) => {
+  const msg = buildReservationSuccessMessage({
+    reservation: payload.reservation,
+    rooms: rooms.value,
+    emittedRoomNumber: payload.roomNumber,
+  })
   loading.value = true
   try {
     await refreshAll()
@@ -274,13 +256,10 @@ const handleReservationSuccess = async (reservation: any) => {
   showAddReservationModal.value = false
 }
 
-// emitDateChangeToChart provided by date navigation composable
-
 onMounted(() => {
   refreshAll()
 })
 
-// Click outside for dropdowns
 useClickOutside(
   (target: HTMLElement) => !!target.closest('.relative'),
   () => closeDropdowns()

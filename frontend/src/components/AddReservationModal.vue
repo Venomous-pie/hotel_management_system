@@ -300,7 +300,7 @@ interface Props {
 
 interface Emits {
   (e: 'close'): void
-  (e: 'success', reservation: any): void
+  (e: 'success', payload: { reservation: any; roomNumber: string }): void
 }
 
 const props = defineProps<Props>()
@@ -375,7 +375,7 @@ const { modalState, submitReservation } = useReservationSubmission(
   formData,
   validateFormWithDates,
   clearFormDraft,
-  (reservation) => { emit('success', reservation) },
+  (reservation) => { emit('success', { reservation, roomNumber: formData.value.roomNumber }) },
   () => { resetForm(); closeModal() }
 )
 

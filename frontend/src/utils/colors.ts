@@ -1,8 +1,3 @@
-/**
- * Color and status utility functions
- * Pure functions for mapping reservation statuses to CSS classes
- */
-
 export const getReservationStatusColor = (reservation: any): string => {
   if (!reservation) return ''
   const raw = (reservation.status || '').toString()
@@ -32,11 +27,6 @@ export const getReservationStatusColor = (reservation: any): string => {
   }
 }
 
-/**
- * Get accent bar color based on reservation status
- * @param reservation - Reservation object with status property
- * @returns CSS classes for the left accent bar
- */
 export const getReservationAccentColor = (reservation: any): string => {
   if (!reservation) return 'bg-gray-600'
   const raw = (reservation.status || '').toString()
@@ -64,9 +54,6 @@ export const getReservationAccentColor = (reservation: any): string => {
   }
 }
 
-/**
- * Room status color mappings
- */
 export const getRoomStatusColor = (status: string): string => {
   switch (status) {
     case 'available':

@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import type { Ref } from 'vue'
 import type { ReservationFormData, ReservationDraft } from '@/types/hotel'
-
+ import { saveDraft, loadDraft, clearDraft as clearDraftService } from '@/services/drafts'
 export const useFormDraft = (formData: Ref<ReservationFormData>, resetForm: () => void, draftKey = 'hotel_reservation_draft') => {
   const draftSaveState = ref({ isVisible: false, message: '' })
 
@@ -19,8 +19,10 @@ export const useFormDraft = (formData: Ref<ReservationFormData>, resetForm: () =
   const saveFormDraft = () => {
     try {
       const draft: ReservationDraft = { ...formData.value, timestamp: Date.now() }
-      localStorage.setItem(draftKey, JSON.stringify(draft))
-      showDraftSavedIndicator('Draft saved')
+      const saved = saveDraft(draftKey, draft)
+      if (saved) {
+        showDraftSavedIndicator('Draft saved')
+      }
     } catch (e) {
       console.warn('Failed to save form draft:', e)
     }
@@ -28,9 +30,8 @@ export const useFormDraft = (formData: Ref<ReservationFormData>, resetForm: () =
 
   const loadFormDraft = (): boolean => {
     try {
-      const saved = localStorage.getItem(draftKey)
-      if (saved) {
-        const draft = JSON.parse(saved) as ReservationDraft
+      const draft = loadDraft<ReservationDraft>(draftKey)
+      if (draft) {
         const isRecent = draft.timestamp && (Date.now() - draft.timestamp) < 24 * 60 * 60 * 1000
         if (isRecent) {
           delete (draft as any).timestamp
@@ -52,7 +53,7 @@ export const useFormDraft = (formData: Ref<ReservationFormData>, resetForm: () =
 
   const clearFormDraft = () => {
     try {
-      localStorage.removeItem(draftKey)
+      clearDraftService(draftKey)
     } catch (e) {
       console.warn('Failed to clear form draft:', e)
     }

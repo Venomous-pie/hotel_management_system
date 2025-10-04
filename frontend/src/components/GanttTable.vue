@@ -119,6 +119,7 @@
               :reservation="span.reservation"
               :style="span.style"
               :is-highlighted="highlightedReservation === (span.reservation.id || span.reservation.bookingNumber)"
+              @click="$emit('reservationClick', $event)"
             />
           </template>
         </template> 
@@ -155,6 +156,7 @@ interface Emits {
   (e: 'columnLeave'): void
   (e: 'toggleCategory', categoryType: string): void
   (e: 'cellClick', data: { roomNumber: string; date: string }): void
+  (e: 'reservationClick', reservation: any): void
 }
 
 defineProps<Props>()

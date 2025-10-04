@@ -1,6 +1,3 @@
-// Centralized utility exports for the hotel management system
-
-// Date utilities
 export {
     getTodayAtMidnight,
     formatDateForInput,
