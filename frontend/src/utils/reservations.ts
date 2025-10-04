@@ -42,16 +42,42 @@ export const isRoomAvailableOnDate = (
   roomNumber: string, 
   date: string
 ): boolean => {
-  // Check if room has any active reservations on this date
-  const reservation = findReservationForRoomAndDate(reservations, roomNumber, date)
+  // Normalize target date to YYYY-MM-DD to avoid timezone issues
+  const targetDateStr = date.split('T')[0]
 
-  // Room is available if:
-  // 1. No reservation exists
-  // 2. Reservation is cancelled
-  // 3. Reservation is checked out
-  return !reservation ||
-         reservation.status === 'cancelled' ||
-         reservation.status === 'checkedOut'
+  // Room is unavailable if any active reservation either:
+  // - Covers the target date (inclusive of checkout day), or
+  // - Has a checkout where the day AFTER checkout is the target date (buffer/turnover day)
+  const hasBlockingReservation = reservations.some(reservation => {
+    const status = reservation.status
+    // Ignore cancelled or already checked-out reservations
+    if (status === 'cancelled' || status === 'checkedOut') return false
+
+    const resRoomNumber = (reservation.room || reservation.roomNumber || '').toString()
+    if (resRoomNumber !== roomNumber.toString()) return false
+
+    const checkInStr = (reservation.checkIn || reservation.checkInDate || '').toString().split('T')[0]
+    const checkOutStr = (reservation.checkOut || reservation.checkOutDate || '').toString().split('T')[0]
+    if (!checkInStr || !checkOutStr) return false
+
+    // Inclusive occupancy from check-in through checkout
+    const occupiesTarget = targetDateStr >= checkInStr && targetDateStr <= checkOutStr
+
+    // Buffer/turnover day: block the day after checkout
+    const nextDay = (() => {
+      const d = new Date(checkOutStr)
+      d.setDate(d.getDate() + 1)
+      const y = d.getFullYear()
+      const m = (d.getMonth() + 1).toString().padStart(2, '0')
+      const day = d.getDate().toString().padStart(2, '0')
+      return `${y}-${m}-${day}`
+    })()
+    const isBufferDay = targetDateStr === nextDay
+
+    return occupiesTarget || isBufferDay
+  })
+
+  return !hasBlockingReservation
 }
 
 /**

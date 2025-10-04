@@ -229,15 +229,6 @@ export const useReservationManagement = (
         console.error('Failed to normalize reservation dates:', { checkInRaw, checkOutRaw })
         continue
       }
-      
-      // Validate that this reservation should be visible
-      const visibility = validateReservationVisibility(checkInStr, checkOutStr, dateRange)
-      if (!visibility.overlaps) {
-        if (import.meta.env.DEV) {
-          console.log(`⏭️ Skipping reservation (${visibility.reason}):`, visibility)
-        }
-        continue
-      }
 
       // Find date range indices using utility function
       const dateIndices = findDateRangeIndices(dateRange, checkInStr, checkOutStr)
@@ -250,12 +241,6 @@ export const useReservationManagement = (
 
         // Calculate positioning using utility function
         const style = calculateReservationSpanStyle(startIndex, endIndex, top)
-
-        // Debug positioning in development
-        if (import.meta.env.DEV) {
-          const guest = reservation.guest || reservation.guestName || 'Unknown Guest'
-          console.log(`✅ Span created: ${guest} (Room ${roomNumber}) ${checkInStr} to ${checkOutStr} → indices ${startIndex}-${endIndex}, top: ${top}px`)
-        }
 
         spans.push({
           key: reservation.id || reservation.bookingNumber || `${roomNumber}-${startIndex}`,

@@ -11,10 +11,10 @@
   <td 
     v-for="day in dateRange" 
     :key="`${room.number}-${day.date}`"
-    class="px-0.5 py-2 outline outline-1 outline-gray-100 transition-colors hover:bg-green-100 w-61.5px min-w-61.5px max-w-61.5px overflow-hidden h-48px cursor-pointer"
+    class="px-0.5 py-2 outline outline-1 outline-gray-100 transition-colors hover:bg-green-100 w-61.5px min-w-61.5px max-w-61.5px overflow-hidden h-48px"
     :class="{ 
       'bg-green-50': hoveredColumn === day.date,
-      'hover:bg-blue-50': isRoomAvailable(room.number, day.date),
+      'hover:bg-blue-50 cursor-pointer': isRoomAvailable(room.number, day.date),
       'hover:bg-red-50 cursor-not-allowed': !isRoomAvailable(room.number, day.date)
     }"
     :title="getCellTooltip(room.number, day.date)"

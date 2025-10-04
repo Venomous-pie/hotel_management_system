@@ -50,10 +50,6 @@ export const findDateRangeIndices = (
     ? { startIndex, endIndex }
     : null
 
-  if (import.meta.env.DEV) {
-    console.log(`📍 Result: ${result ? `${result.startIndex}-${result.endIndex}` : 'null'}`)
-  }
-
   return result
 }
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="absolute pointer-events-auto cursor-pointer rounded-lg shadow-sm" :class="[
+  <div class="absolute pointer-events-auto cursor-not-allowed rounded-lg shadow-sm" :class="[
     reservationColor,
     {
       'ring-2 ring-yellow-400 ring-offset-1 animate-pulse': isHighlighted
