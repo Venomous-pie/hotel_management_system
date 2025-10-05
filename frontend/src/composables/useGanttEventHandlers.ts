@@ -1,10 +1,3 @@
-/**
- * Gantt chart event handling composable
- * Handles cell clicks, navigation events, and modal interactions
- */
-
-import type { Ref } from 'vue'
-
 export const useGanttEventHandlers = (
   isRoomAvailable: (roomNumber: string, date: string) => boolean,
   emit: (

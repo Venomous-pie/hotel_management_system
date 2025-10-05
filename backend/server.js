@@ -6,6 +6,7 @@ import {
   Reservation,
   Room,
   RoomType,
+  User,
 } from "./models/index.js";
 import { seedData } from "./services/seedService.js";
 import { getStatusColor } from "./data/roomData.js";

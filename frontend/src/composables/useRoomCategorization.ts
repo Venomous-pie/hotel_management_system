@@ -24,7 +24,6 @@ export const useRoomCategorization = (
       })
     }
 
-    // Filter by room type
     if (roomTypeFilter.value !== 'All Room Types') {
       filtered = filtered.filter((room) => {
         const typeName = room.RoomType?.typeName || room.roomType || room.type || 'Standard'
@@ -184,58 +183,34 @@ export const useRoomCategorization = (
     )
   }
 
-  // ============================================================================
-  // BULK OPERATIONS
-  // ============================================================================
-
-  /**
-   * Get all room numbers in a category
-   */
   const getRoomNumbersInCategory = (categoryType: string): string[] => {
     const category = roomCategories.value.find((cat) => cat.type === categoryType)
     return category ? category.rooms.map((room: any) => room.number) : []
   }
 
-  /**
-   * Check if any rooms match the current filters
-   */
   const hasMatchingRooms = computed(() => {
     return filteredRooms.value.length > 0
   })
 
-  /**
-   * Get total room count across all categories
-   */
   const totalRoomCount = computed(() => {
     return roomCategories.value.reduce((total, category) => total + category.rooms.length, 0)
   })
 
   return {
-    // State
     expandedCategories,
-
-    // Filtered data
     filteredRooms,
     roomCategories,
     roomTypes,
-
-    // Category management
     toggleCategory,
     expandAllCategories,
     collapseAllCategories,
     categoryHasRooms,
-
-    // Analysis functions
     getRoomCountByType,
     categoryStats,
-
-    // Search functions
     findRoomsByNumber,
     findRoomsByType,
     findRoomsByStatus,
     getRoomsByFloor,
-
-    // Bulk operations
     getRoomNumbersInCategory,
     hasMatchingRooms,
     totalRoomCount,

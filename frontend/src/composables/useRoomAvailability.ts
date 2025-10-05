@@ -49,7 +49,6 @@ export const useRoomAvailability = (
     if (!formData.value.checkIn || !formData.value.checkOut) return true
     if (formData.value.numGuest > room.maxCapacity) return false
 
-    // Exclude current reservation when editing
     const resList = excludeReservationId?.value
       ? reservations.value.filter(
           (r) => (r.id || '').toString() !== (excludeReservationId!.value || '').toString(),

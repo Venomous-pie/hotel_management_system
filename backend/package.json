@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "create-admin": "node scripts/createAdmin.js",
+    "dev": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +18,7 @@
     "sqlite3": "^5.1.7"
   },
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "sequelize": "^6.37.7"
   }
 }

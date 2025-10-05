@@ -1,8 +1,3 @@
-/**
- * Gantt chart orchestrator composable
- * Coordinates all Gantt chart composables and provides a unified interface
- */
-
 import { computed, ref } from 'vue'
 import { useGanttNavigation } from './useGanttNavigation'
 import { useReservationManagement } from './useReservationManagement'
@@ -16,7 +11,6 @@ import { calculateReservationSpanStyle, findDateRangeIndices } from '@/utils/gan
 export const useGanttOrchestrator = (props: any, emit: any) => {
   const hoveredColumn = ref<string | null>(null)
 
-  // Convert props to refs for composables
   const roomsRef = computed(() => props.rooms)
   const reservationsRef = computed(() => props.reservations)
   const searchQueryRef = computed(() => props.searchQuery)
@@ -26,8 +20,6 @@ export const useGanttOrchestrator = (props: any, emit: any) => {
   const selectedYearRef = computed(() => props.selectedYear)
   const selectedMonthRef = computed(() => props.selectedMonth)
   const targetDateRef = computed(() => props.targetDate || null)
-
-  // Initialize core composables
   const navigation = useGanttNavigation(
     selectedYearRef,
     selectedMonthRef,
@@ -64,7 +56,6 @@ export const useGanttOrchestrator = (props: any, emit: any) => {
     roomCategorization.expandedCategories,
   )
 
-  // Extract core functionality
   const {
     dateRange,
     highlightedReservation,
@@ -89,23 +80,16 @@ export const useGanttOrchestrator = (props: any, emit: any) => {
     setContainerRef,
     validatePositioning,
   } = positioning
-
-  // Initialize event handlers
   const eventHandlers = useGanttEventHandlers(isRoomAvailable, emit)
   const { handleCellClick, createNavigationHandler, createTodayHandler } = eventHandlers
 
-  // Create navigation handlers
   const navigateDates = createNavigationHandler(navDates, navigation, emit)
   const jumpToToday = createTodayHandler(navJumpToToday, navigation, emit)
 
-  // Container management
   const ganttTableRef = ref<any>(null)
   const containerEl = computed(() => ganttTableRef.value?.containerEl || null)
-
-  // Initialize lifecycle management
   useGanttLifecycle(initializeViewDate, navigation, recomputePositions, validatePositioning)
 
-  // Initialize watchers
   const watchers = useGanttWatchers(
     props,
     navigation,
@@ -121,7 +105,6 @@ export const useGanttOrchestrator = (props: any, emit: any) => {
   )
   watchers.setupAllWatchers()
 
-  // Span generation wrapper
   const getReservationSpans = (roomNumber: string) => {
     return getSpans(
       roomNumber,
@@ -133,23 +116,16 @@ export const useGanttOrchestrator = (props: any, emit: any) => {
   }
 
   return {
-    // UI State
     hoveredColumn,
     ganttTableRef,
-
-    // Core Data
     dateRange,
     roomCategories,
     expandedCategories,
     highlightedReservation,
-
-    // Event Handlers
     navigateDates,
     jumpToToday,
     handleCellClick,
     toggleCategory,
-
-    // Functions
     isRoomAvailable,
     getAvailableRoomCountForDate,
     getReservationSpans,

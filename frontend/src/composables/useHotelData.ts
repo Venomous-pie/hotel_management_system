@@ -3,7 +3,6 @@ import type { Room, Reservation } from '@/types/hotel'
 import { getRooms } from '@/services/rooms'
 import { getReservations as fetchReservationsService } from '@/services/reservations'
 
-// Shared reactive state (singleton across app)
 const rooms = ref<Room[]>([])
 const reservations = ref<Reservation[]>([])
 const loading = ref(false)

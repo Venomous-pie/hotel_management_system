@@ -22,13 +22,11 @@ export const useGanttWatchers = (
         if (!isInternalNavigation.value) {
           const firstOfMonth = new Date(newYear, newMonth, 1)
           firstOfMonth.setHours(0, 0, 0, 0)
-          // Align the Gantt view to the selected month start
           if (navigation?.viewStartDate) {
             navigation.viewStartDate.value = firstOfMonth
           } else {
             initializeViewDate()
           }
-        } else {
         }
       }
     })

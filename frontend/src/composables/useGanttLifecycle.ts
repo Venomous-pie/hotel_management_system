@@ -1,8 +1,3 @@
-/**
- * Gantt chart lifecycle management composable
- * Handles component mounting, positioning setup, and cleanup
- */
-
 import { onMounted, onBeforeUnmount, nextTick } from 'vue'
 
 export const useGanttLifecycle = (

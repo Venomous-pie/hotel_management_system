@@ -3,6 +3,7 @@ import GuestsModel from "./Guest.js";
 import ReservationsModel from "./Reservation.js";
 import RoomModel from "./Room.js";
 import RoomTypeModel from "./RoomType.js";
+import UserModel from "./User.js";
 
 const sequelize = new Sequelize({
   dialect: "sqlite",
@@ -13,7 +14,9 @@ const Guest = GuestsModel(sequelize);
 const Reservation = ReservationsModel(sequelize);
 const Room = RoomModel(sequelize);
 const RoomType = RoomTypeModel(sequelize);
+const User = UserModel(sequelize);
 
+// Associations
 Guest.hasMany(Reservation);
 
 Reservation.belongsTo(Guest);
@@ -24,4 +27,8 @@ Room.belongsTo(RoomType);
 
 RoomType.hasMany(Room);
 
-export { sequelize, Guest, Reservation, Room, RoomType };
+// User associations (self-referencing for createdBy)
+User.belongsTo(User, { as: 'Creator', foreignKey: 'createdBy' });
+User.hasMany(User, { as: 'CreatedUsers', foreignKey: 'createdBy' });
+
+export { sequelize, Guest, Reservation, Room, RoomType, User };

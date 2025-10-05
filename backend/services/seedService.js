@@ -6,9 +6,11 @@ import {
   getRoomTypeDescription,
   getStatusColor,
 } from "../data/roomData.js";
+import { seedAdminUser } from "./adminSeedService.js";
 
 export const seedData = async () => {
   try {
+    // Seed room types and rooms
     const roomTypes = await RoomType.bulkCreate(roomTypesData, {
       ignoreDuplicates: true,
     });
@@ -28,5 +30,11 @@ export const seedData = async () => {
     }));
 
     await Room.bulkCreate(roomsWithColors, { ignoreDuplicates: true });
-  } catch (error) {}
+    
+    // Seed admin user
+    await seedAdminUser();
+    
+  } catch (error) {
+    console.error('Seeding error:', error.message);
+  }
 };

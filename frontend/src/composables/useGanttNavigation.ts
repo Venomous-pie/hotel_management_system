@@ -1,6 +1,6 @@
 import { computed, ref, watch, type Ref } from 'vue'
 import { getTodayAtMidnight } from '@/utils/date'
-import { generateDateRange, validateGanttLayout, GANTT_LAYOUT } from '@/utils/gantt'
+import { generateDateRange, validateGanttLayout } from '@/utils/gantt'
 import type { Reservation } from '@/types/hotel'
 
 export const useGanttNavigation = (
@@ -12,16 +12,7 @@ export const useGanttNavigation = (
 ) => {
   const viewStartDate = ref<Date>(new Date())
 
-  /**
-   * Track if navigation was triggered internally (to prevent reset)
-   * Prevents infinite loops when updating parent component's date state
-   */
   const isInternalNavigation = ref(false)
-
-  /**
-   * Highlighted reservation for search results
-   * Stores the ID of a reservation that should be visually highlighted
-   */
   const highlightedReservation = ref<string | null>(null)
 
   const dateRange = computed(() => {
@@ -34,21 +25,17 @@ export const useGanttNavigation = (
   }
 
   const navigateDates = (direction: number) => {
-    // Move view by 5 days
     const newStartDate = new Date(viewStartDate.value)
     newStartDate.setDate(newStartDate.getDate() + direction * 5)
 
     viewStartDate.value = newStartDate
 
-    // Check if we need to update parent's year/month context
     const newYear = newStartDate.getFullYear()
     const newMonth = newStartDate.getMonth()
 
-    // Only emit if year or month changed to avoid unnecessary updates
     if (newYear !== selectedYear.value || newMonth !== selectedMonth.value) {
       isInternalNavigation.value = true
 
-      // Return the new date for parent to handle
       return { year: newYear, month: newMonth }
     }
 
@@ -57,30 +44,24 @@ export const useGanttNavigation = (
 
   const jumpToToday = () => {
     const today = getTodayAtMidnight()
-    // Set internal navigation flag to prevent parent from overriding with 1st of month
     isInternalNavigation.value = true
 
-    // Set view to start from today (not 1st of month)
     viewStartDate.value = today
 
-    // Update parent's year/month context
     const currentYear = today.getFullYear()
     const currentMonth = today.getMonth()
 
-    // Return the new date for parent to handle
     return { year: currentYear, month: currentMonth }
   }
 
   const navigateToDate = (targetDateStr: string) => {
     const target = new Date(targetDateStr)
 
-    // Set view to start a few days before the target date for context
     const newViewStart = new Date(target)
-    newViewStart.setDate(target.getDate() - 2) // Show 2 days before target
+    newViewStart.setDate(target.getDate() - 2)
 
     viewStartDate.value = newViewStart
 
-    // Update parent's year/month if needed
     const newYear = target.getFullYear()
     const newMonth = target.getMonth()
 

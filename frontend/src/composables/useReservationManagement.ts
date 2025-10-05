@@ -232,25 +232,16 @@ export const useReservationManagement = (
   }
 
   return {
-    // Filtered data
     filteredReservations,
-
-    // Filtering functions
     filterReservationsByStatus,
     filterReservationsBySource,
     searchReservations,
-
-    // Availability functions
     getReservation,
     isRoomAvailable,
     getAvailableRoomCountForDate,
     getRoomReservations,
     reservationOverlapsDateRange,
-
-    // Span generation
     getReservationSpans,
-
-    // Statistics
     reservationStats,
     getReservationsInDateRange,
   }
