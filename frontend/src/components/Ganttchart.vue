@@ -24,6 +24,7 @@
       @toggle-category="toggleCategory"
       @cell-click="handleCellClick"
       @reservation-click="handleReservationClick"
+      @room-info-click="handleRoomInfoClick"
     />
 
     <ReservationDetailsModal
@@ -33,15 +34,25 @@
       @close="closeModal"
       @edit="handleReservationEdit"
     />
+
+    <RoomInfoModal
+      :is-open="isRoomInfoModalOpen"
+      :room="selectedRoom"
+      :is-room-available="isRoomAvailable"
+      @close="closeRoomInfoModal"
+      @create-reservation="handleCreateReservationFromRoom"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useGanttOrchestrator } from '@/composables/useGanttOrchestrator'
 import { useReservationDetails } from '@/composables/useReservationDetails'
 import GanttHeader from './GanttHeader.vue'
 import GanttTable from './GanttTable.vue'
 import ReservationDetailsModal from './ReservationDetailsModal.vue'
+import RoomInfoModal from './RoomInfoModal.vue'
 
 const props = defineProps<{
   selectedYear: number
@@ -84,9 +95,32 @@ const {
 const { isModalOpen, selectedReservation, selectedRoomDetails, openModal, closeModal } =
   useReservationDetails()
 
+// Room info modal functionality
+const isRoomInfoModalOpen = ref(false)
+const selectedRoom = ref<any>(null)
+
 // Handle reservation span clicks
 const handleReservationClick = (reservation: any) => {
   openModal(reservation)
+}
+
+// Handle room info clicks
+const handleRoomInfoClick = (room: any) => {
+  selectedRoom.value = room
+  isRoomInfoModalOpen.value = true
+}
+
+const closeRoomInfoModal = () => {
+  isRoomInfoModalOpen.value = false
+  selectedRoom.value = null
+}
+
+const handleCreateReservationFromRoom = (data: { roomNumber: string; checkInDate: string }) => {
+  emit('openReservationModal', {
+    roomNumber: data.roomNumber,
+    checkInDate: data.checkInDate,
+    isAvailable: true
+  })
 }
 
 import { getReservationById } from '@/services/reservations'

@@ -116,6 +116,7 @@
               @column-hover="$emit('columnHover', $event)"
               @column-leave="$emit('columnLeave')"
               @cell-click="$emit('cellClick', $event)"
+              @room-info-click="$emit('roomInfoClick', $event)"
             />
           </tr>
         </template>
@@ -172,6 +173,7 @@ interface Emits {
   (e: 'toggleCategory', categoryType: string): void
   (e: 'cellClick', data: { roomNumber: string; date: string }): void
   (e: 'reservationClick', reservation: any): void
+  (e: 'roomInfoClick', room: any): void
 }
 
 defineProps<Props>()

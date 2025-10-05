@@ -1,10 +1,21 @@
 <template>
   <td
-    class="sticky left-0 z-10 bg-white px-6 py-2 border-r border-gray-200 outline outline-1 outline-gray-100 w-270px min-w-270px max-w-270px overflow-hidden text-ellipsis whitespace-nowrap h-48px"
+    class="sticky left-0 z-10 bg-white px-6 py-2 border-r border-gray-200 outline outline-1 outline-gray-100 w-270px min-w-270px max-w-270px overflow-hidden text-ellipsis whitespace-nowrap h-48px group"
   >
-    <div class="flex items-center py-2">
-      <div class="text-sm font-medium text-gray-900">{{ room.number }}</div>
-      <div class="ml-2 text-xs text-gray-500">{{ room.floor }}</div>
+    <div class="flex items-center justify-between py-2">
+      <div class="flex items-center">
+        <div class="text-sm font-medium text-gray-900">{{ room.number }}</div>
+        <div class="ml-2 text-xs text-gray-500">{{ room.floor }}</div>
+      </div>
+      
+      <!-- 3-dot menu button -->
+      <button
+        @click="handleRoomInfoClick"
+        class="hover:bg-gray-50 rounded text-gray-400 hover:text-gray-500 rounded-full"
+        title="View room information"
+      >
+        <i class="pi pi-ellipsis-v text-sm"></i>
+      </button>
     </div>
   </td>
 
@@ -46,6 +57,7 @@ interface Emits {
   (e: 'columnHover', date: string): void
   (e: 'columnLeave'): void
   (e: 'cellClick', data: { roomNumber: string; date: string }): void
+  (e: 'roomInfoClick', room: any): void
 }
 
 const props = defineProps<Props>()
@@ -62,5 +74,9 @@ const handleCellClick = (roomNumber: string, date: string): void => {
   if (props.isRoomAvailable(roomNumber, date)) {
     emit('cellClick', { roomNumber, date })
   }
+}
+
+const handleRoomInfoClick = (): void => {
+  emit('roomInfoClick', props.room)
 }
 </script>
