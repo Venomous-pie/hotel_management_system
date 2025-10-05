@@ -27,7 +27,6 @@ Room.belongsTo(RoomType);
 
 RoomType.hasMany(Room);
 
-// User associations (self-referencing for createdBy)
 User.belongsTo(User, { as: 'Creator', foreignKey: 'createdBy' });
 User.hasMany(User, { as: 'CreatedUsers', foreignKey: 'createdBy' });
 

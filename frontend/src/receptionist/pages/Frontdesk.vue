@@ -1,7 +1,7 @@
 <template>
   <div class="h-full bg-white" ref="frontdeskContainer">
     <div class="flex items-center justify-between px-6 pb-2">
-      <h2 class="font-medium text-gray-700">Front Desk</h2>
+      <h2 class="font-bold text-gray-700">Front Desk</h2>
       <div class="flex items-center gap-2">
         <Custombutton label="Add Reservation" :hover="true" @click="handleAddReservation" />
       </div>
@@ -184,9 +184,9 @@
         :booking-filter="selectedBookingFilter"
         :rooms="rooms"
         :reservations="reservations"
-        :loading="loading"
-        :error="error"
-        :target-date="targetDate"
+        :loading="loading || !isAuthenticated"
+        :error="error || (!isAuthenticated ? 'Authentication required' : null)"
+:target-date="normalizedTargetDate"
         @update-date="handleDateUpdate"
         @open-reservation-modal="handleOpenReservationModal"
         @open-reservation-editor="handleOpenReservationEditor"
@@ -226,7 +226,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useAuth } from '../../composables/useAuth'
 import Searchbar from '@/components/Searchbar.vue'
 import Ganttchart from '@/components/Ganttchart.vue'
 import Custombutton from '@/components/Custombutton.vue'
@@ -239,6 +240,7 @@ import { useSuccessNotification } from '@/composables/useSuccessNotification'
 import { useClickOutside } from '@/composables/useClickOutside'
 import { buildReservationSuccessMessage } from '@/utils/messages'
 
+const { isAuthenticated, checkAuthStatus } = useAuth()
 const { rooms, reservations, loading, error, refreshAll } = useHotelData()
 
 const {
@@ -253,6 +255,18 @@ const {
   selectMonth,
   handleDateUpdate,
 } = useFrontdeskDateNavigation()
+
+// Normalize targetDate to a Date instance for child prop validation
+const normalizedTargetDate = computed<Date | null>(() => {
+  const v: any = targetDate.value as any
+  if (!v) return null
+  if (v instanceof Date) return v
+  try {
+    return new Date(v)
+  } catch {
+    return null
+  }
+})
 
 const {
   searchQuery,
@@ -342,19 +356,29 @@ const handleReservationSuccess = async (payload: { reservation: any; roomNumber:
     rooms: rooms.value,
     emittedRoomNumber: payload.roomNumber,
   })
-  loading.value = true
   try {
     await refreshAll()
   } catch (error) {
-  } finally {
-    loading.value = false
+    // refreshAll already handles error state in the store
   }
   showWithTimeout(msg, 3000)
   showAddReservationModal.value = false
 }
 
-onMounted(() => {
-  refreshAll()
+onMounted(async () => {
+  // First verify authentication
+  await checkAuthStatus()
+  
+  // Only fetch data if authenticated
+  if (isAuthenticated.value) {
+    try {
+      await refreshAll()
+    } catch (error) {
+      console.error('Failed to fetch hotel data:', error)
+    }
+  } else {
+    console.warn('Not authenticated, skipping data fetch')
+  }
 })
 
 useClickOutside(

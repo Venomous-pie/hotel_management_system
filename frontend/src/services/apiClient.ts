@@ -29,6 +29,12 @@ export async function apiFetch<T = any>(
     if (!headers.has('Content-Type')) {
       headers.set('Content-Type', 'application/json')
     }
+    
+    // Add authentication token if available
+    const authToken = localStorage.getItem('auth_token')
+    if (authToken) {
+      headers.set('Authorization', `Bearer ${authToken}`)
+    }
 
     const response = await fetch(buildUrl(path), { ...options, headers })
 

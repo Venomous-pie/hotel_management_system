@@ -74,34 +74,6 @@ export const validateGanttLayout = () => {
   }
 }
 
-export const debugReservationSpanPositioning = (
-  startIndex: number,
-  endIndex: number,
-  checkInStr: string,
-  checkOutStr: string,
-) => {
-  const { ROOM_COLUMN_WIDTH, CELL_WIDTH } = GANTT_LAYOUT
-  const widthCells = endIndex - startIndex + 1
-  const CELL_PADDING = 2
-  const SPAN_INSET = 1
-
-  const left = ROOM_COLUMN_WIDTH + startIndex * CELL_WIDTH + CELL_PADDING + SPAN_INSET
-  const width = widthCells * CELL_WIDTH - 2 * CELL_PADDING - 2 * SPAN_INSET
-
-  return {
-    reservation: { checkIn: checkInStr, checkOut: checkOutStr },
-    indices: { startIndex, endIndex, widthCells },
-    positioning: { left, width },
-    calculations: {
-      roomColumnWidth: ROOM_COLUMN_WIDTH,
-      cellWidth: CELL_WIDTH,
-      cellPadding: CELL_PADDING,
-      spanInset: SPAN_INSET,
-      leftCalculation: `${ROOM_COLUMN_WIDTH} + (${startIndex} * ${CELL_WIDTH}) + ${CELL_PADDING} + ${SPAN_INSET} = ${left}`,
-      widthCalculation: `(${widthCells} * ${CELL_WIDTH}) - (2 * ${CELL_PADDING}) - (2 * ${SPAN_INSET}) = ${width}`,
-    },
-  }
-}
 
 export const normalizeDateString = (dateInput: string | Date): string => {
   try {

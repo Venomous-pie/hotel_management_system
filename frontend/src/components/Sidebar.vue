@@ -6,15 +6,20 @@
     </div>
 
     <div class="flex w-full items-center p-2 rounded-lg pl-5 mr-5 mt-4">
-      <img
-        src="/receptionist.jpg"
-        alt="Profile"
-        class="h-10 w-10 object-cover object-top rounded-full"
-      />
+      <div class="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center">
+        <i class="pi pi-user text-white text-sm"></i>
+      </div>
 
-      <div class="ml-3 leading-tight">
-        <p class="text-sm font-semibold text-black">Grace Hoppers</p>
-        <p class="text-xs text-gray-500">Receptionist</p>
+      <div class="ml-3 leading-tight flex-1">
+        <p class="text-sm font-semibold text-black" v-if="currentUser">
+          {{ currentUser.firstName }} {{ currentUser.lastName }}
+        </p>
+        <p class="text-xs text-gray-500 capitalize" v-if="currentUser">
+          {{ currentUser.role }}
+        </p>
+        <p class="text-xs text-gray-400" v-if="currentUser && currentUser.department">
+          {{ currentUser.department }}
+        </p>
       </div>
     </div>
 
@@ -34,7 +39,7 @@
             Front Desk
           </a>
         </RouterLink>
-        <RouterLink to="/reservations" custom v-slot="{ href, navigate, isActive }">
+        <RouterLink to="/reservations" custom v-slot="{ href, navigate, isActive }" v-if="canViewReservations">
           <a
             :href="href"
             @click="navigate"
@@ -47,7 +52,7 @@
             Reservations
           </a>
         </RouterLink>
-        <RouterLink to="/guests" custom v-slot="{ href, navigate, isActive }">
+        <RouterLink to="/guests" custom v-slot="{ href, navigate, isActive }" v-if="canViewGuests">
           <a
             :href="href"
             @click="navigate"
@@ -60,7 +65,7 @@
             Guests
           </a>
         </RouterLink>
-        <RouterLink to="/housekeeping" custom v-slot="{ href, navigate, isActive }">
+        <RouterLink to="/housekeeping" custom v-slot="{ href, navigate, isActive }" v-if="canViewHousekeeping">
           <a
             :href="href"
             @click="navigate"
@@ -99,7 +104,7 @@
           <i class="pi pi-globe text-sm"></i>
           Online Booking
         </a>
-        <RouterLink to="/accounting" custom v-slot="{ href, navigate, isActive }">
+        <RouterLink to="/accounting" custom v-slot="{ href, navigate, isActive }" v-if="canViewAccounting">
           <a
             :href="href"
             @click="navigate"
@@ -125,7 +130,7 @@
             Cashbooks
           </a>
         </RouterLink>
-        <RouterLink to="/reports" custom v-slot="{ href, navigate, isActive }">
+        <RouterLink to="/reports" custom v-slot="{ href, navigate, isActive }" v-if="canViewReports">
           <a
             :href="href"
             @click="navigate"
@@ -190,3 +195,20 @@
     </div>
   </div>
 </template>
+
+<script setup>
+import { computed } from 'vue'
+import { useAuth } from '../composables/useAuth'
+import { hasPermission, hasRole } from '../utils/permissions'
+
+const { currentUser, logout } = useAuth()
+
+// Role-based visibility
+const canViewReservations = computed(() => hasPermission(currentUser.value?.role, 'RESERVATIONS_VIEW_ALL') || hasPermission(currentUser.value?.role, 'RESERVATIONS_VIEW_OWN'))
+const canViewGuests = computed(() => hasPermission(currentUser.value?.role, 'GUESTS_VIEW_ALL') || hasPermission(currentUser.value?.role, 'GUESTS_VIEW_LIMITED'))
+const canViewHousekeeping = computed(() => hasRole(currentUser.value?.role, 'housekeeping', 'admin', 'manager'))
+const canViewAccounting = computed(() => hasRole(currentUser.value?.role, 'accounting', 'admin', 'manager'))
+const canViewReports = computed(() => hasPermission(currentUser.value?.role, 'REPORTS_VIEW_OCCUPANCY') || hasPermission(currentUser.value?.role, 'REPORTS_LIMITED_OVERVIEW'))
+
+// Logout functionality removed - use header dropdown instead 💯
+</script>

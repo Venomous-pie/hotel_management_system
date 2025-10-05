@@ -11,6 +11,8 @@ import {
 import { seedData } from "./services/seedService.js";
 import { getStatusColor } from "./data/roomData.js";
 import { Op } from "sequelize";
+import { authenticateToken, generateToken, optionalAuth } from "./middleware/auth.js";
+import { requirePermission, requireAnyPermission, requireRole, requireAdmin, requireAdminOrManager } from "./middleware/permissions.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -54,6 +56,413 @@ app.get("/", (req, res) => {
   res.send("DB is correct lol.");
 });
 
+// Authentication endpoints
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        error: "Username and password are required"
+      });
+    }
+
+    // Find user by username or email
+    const user = await User.findByCredentials(username, password);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: "Invalid username or password"
+      });
+    }
+
+    // Update last login
+    await user.update({ lastLogin: new Date() });
+
+    // Generate JWT token
+    const token = generateToken(user);
+
+    res.json({
+      success: true,
+      message: "Login successful",
+      data: {
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          department: user.department,
+          lastLogin: user.lastLogin
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: `Login failed: ${error.message}`
+    });
+  }
+});
+
+app.post("/api/auth/logout", authenticateToken, async (req, res) => {
+  try {
+    // In a production app, you might want to blacklist the token
+    // For now, we'll just send a success response
+    res.json({
+      success: true,
+      message: "Logout successful"
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: `Logout failed: ${error.message}`
+    });
+  }
+});
+
+app.get("/api/auth/me", authenticateToken, async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      data: {
+        user: {
+          id: req.user.id,
+          username: req.user.username,
+          email: req.user.email,
+          firstName: req.user.firstName,
+          lastName: req.user.lastName,
+          role: req.user.role,
+          department: req.user.department,
+          lastLogin: req.user.lastLogin
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: `Failed to fetch user data: ${error.message}`
+    });
+  }
+});
+
+app.post("/api/auth/change-password", authenticateToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        error: "Current password and new password are required"
+      });
+    }
+
+    // Verify current password
+    const user = await User.findByPk(req.user.id);
+    const isValidPassword = await user.validatePassword(currentPassword);
+    
+    if (!isValidPassword) {
+      return res.status(400).json({
+        success: false,
+        error: "Current password is incorrect"
+      });
+    }
+
+    // Update password (will be hashed by the model hook)
+    await user.update({ password: newPassword });
+
+    res.json({
+      success: true,
+      message: "Password changed successfully"
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: `Failed to change password: ${error.message}`
+    });
+  }
+});
+
+// User Management endpoints
+app.get("/api/admin/users", authenticateToken, requireAdminOrManager, async (req, res) => {
+  try {
+    const users = await User.findAll({
+      attributes: { exclude: ['password'] },
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json({
+      success: true,
+      data: users
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: `Failed to fetch users: ${error.message}`
+    });
+  }
+});
+
+app.post("/api/admin/users", authenticateToken, requireAdminOrManager, async (req, res) => {
+  try {
+    const {
+      username,
+      email,
+      password,
+      firstName,
+      lastName,
+      role,
+      phone,
+      department
+    } = req.body;
+
+    if (!username || !email || !password || !firstName || !lastName || !role) {
+      return res.status(400).json({
+        success: false,
+        error: "Required fields: username, email, password, firstName, lastName, role"
+      });
+    }
+
+    // Check if username or email already exists
+    const existingUser = await User.findOne({
+      where: {
+        [Op.or]: [
+          { username },
+          { email }
+        ]
+      }
+    });
+
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        error: "Username or email already exists"
+      });
+    }
+
+    const user = await User.create({
+      username,
+      email,
+      password, // Will be hashed by model hook
+      firstName,
+      lastName,
+      role,
+      phone,
+      department,
+      createdBy: req.user.id
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      data: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        phone: user.phone,
+        department: user.department,
+        isActive: user.isActive
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: `Failed to create user: ${error.message}`
+    });
+  }
+});
+
+app.get("/api/admin/users/:id", authenticateToken, requireAdminOrManager, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id, {
+      attributes: { exclude: ['password'] },
+      include: [
+        {
+          model: User,
+          as: 'Creator',
+          attributes: ['id', 'username', 'firstName', 'lastName']
+        }
+      ]
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: `Failed to fetch user: ${error.message}`
+    });
+  }
+});
+
+app.put("/api/admin/users/:id", authenticateToken, requireAdminOrManager, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      username,
+      email,
+      firstName,
+      lastName,
+      role,
+      phone,
+      department,
+      isActive
+    } = req.body;
+
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found"
+      });
+    }
+
+    // Check if username or email conflicts with another user
+    if (username || email) {
+      const existingUser = await User.findOne({
+        where: {
+          id: { [Op.ne]: id },
+          [Op.or]: [
+            ...(username ? [{ username }] : []),
+            ...(email ? [{ email }] : [])
+          ]
+        }
+      });
+
+      if (existingUser) {
+        return res.status(409).json({
+          success: false,
+          error: "Username or email already exists"
+        });
+      }
+    }
+
+    await user.update({
+      username: username || user.username,
+      email: email || user.email,
+      firstName: firstName || user.firstName,
+      lastName: lastName || user.lastName,
+      role: role || user.role,
+      phone: phone !== undefined ? phone : user.phone,
+      department: department !== undefined ? department : user.department,
+      isActive: isActive !== undefined ? isActive : user.isActive
+    });
+
+    res.json({
+      success: true,
+      message: "User updated successfully",
+      data: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        phone: user.phone,
+        department: user.department,
+        isActive: user.isActive
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: `Failed to update user: ${error.message}`
+    });
+  }
+});
+
+app.delete("/api/admin/users/:id", authenticateToken, requireAdminOrManager, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { permanent = false } = req.query;
+
+    // Prevent users from deleting themselves
+    if (parseInt(id) === req.user.id) {
+      return res.status(400).json({
+        success: false,
+        error: "Cannot delete your own account"
+      });
+    }
+
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found"
+      });
+    }
+
+    if (permanent === "true") {
+      await user.destroy();
+      res.json({
+        success: true,
+        message: "User permanently deleted"
+      });
+    } else {
+      await user.update({ isActive: false });
+      res.json({
+        success: true,
+        message: "User deactivated"
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: `Failed to delete user: ${error.message}`
+    });
+  }
+});
+
+app.post("/api/admin/users/:id/reset-password", authenticateToken, requireAdminOrManager, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: "New password must be at least 6 characters long"
+      });
+    }
+
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found"
+      });
+    }
+
+    await user.update({ password: newPassword }); // Will be hashed by model hook
+
+    res.json({
+      success: true,
+      message: "Password reset successfully"
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: `Failed to reset password: ${error.message}`
+    });
+  }
+});
+
 app.post("/api/seed", async (req, res) => {
   try {
     await seedData();
@@ -77,8 +486,7 @@ app.post("/api/seed", async (req, res) => {
   }
 });
 
-// Reservation routes
-app.post("/api/reserve-room", async (req, res) => {
+app.post("/api/reserve-room", authenticateToken, requirePermission('RESERVATIONS_CREATE'), async (req, res) => {
   let t;
   try {
     const {
@@ -114,7 +522,6 @@ app.post("/api/reserve-room", async (req, res) => {
       return res.status(400).json({ error: "Required fields are missing." });
     }
 
-    // Accept either roomNumber or roomId (both represent the visible room number)
     const selectedRoomNumber = (roomNumber ?? roomId ?? "").toString();
     if (!selectedRoomNumber) {
       return res
@@ -122,7 +529,6 @@ app.post("/api/reserve-room", async (req, res) => {
         .json({ error: "Room identifier (roomNumber or roomId) is required." });
     }
 
-    // Date validation
     const checkInDate = normalizeToStartOfDay(checkIn);
     const checkOutDate = normalizeToStartOfDay(checkOut);
     const today = new Date();
@@ -140,16 +546,13 @@ app.post("/api/reserve-room", async (req, res) => {
         .json({ error: "Check-out date must be after check-in date." });
     }
 
-    // Guest capacity validation
     const guestCount = Number(numGuest);
     if (guestCount < 1 || guestCount > 10) {
       return res
         .status(400)
         .json({ error: "Number of guests must be between 1 and 10." });
     }
-    // Guest record will be created inside transaction after conflict check
 
-    // Find room by roomNumber since frontend sends room.number as ID
     const room = await Room.findOne({
       where: { roomNumber: selectedRoomNumber },
       include: [
@@ -168,14 +571,12 @@ app.post("/api/reserve-room", async (req, res) => {
         });
     }
 
-    // Check room capacity
     if (guestCount > room.RoomType.maxCapacity) {
       return res.status(400).json({
         error: `Room ${selectedRoomNumber} can accommodate maximum ${room.RoomType.maxCapacity} guests. You selected ${guestCount} guests.`,
       });
     }
 
-    // Check for conflicting reservations (exclusive checkout logic)
     const conflictingReservation = await Reservation.findOne({
       where: buildOverlapWhere({
         roomId: room.id,
@@ -194,7 +595,6 @@ app.post("/api/reserve-room", async (req, res) => {
       });
     }
 
-    // Start transaction only for writes
     t = await sequelize.transaction();
 
     const [guest] = await Guest.findOrCreate({
@@ -243,7 +643,7 @@ app.post("/api/reserve-room", async (req, res) => {
   }
 });
 
-app.get("/api/reservations", async (req, res) => {
+app.get("/api/reservations", authenticateToken, requireAnyPermission(['RESERVATIONS_VIEW_ALL', 'RESERVATIONS_VIEW_OWN']), async (req, res) => {
   try {
     const reservations = await Reservation.findAll({
       include: [
@@ -270,7 +670,6 @@ app.get("/api/reservations", async (req, res) => {
       ],
     });
 
-    // Transform data to match frontend expectations
     const transformedReservations = reservations.map((reservation) => ({
       id: reservation.id.toString(),
       room: reservation.Room?.roomNumber?.toString() || "N/A",
@@ -294,8 +693,7 @@ app.get("/api/reservations", async (req, res) => {
   }
 });
 
-// Get single reservation with details
-app.get("/api/reservations/:id", async (req, res) => {
+app.get("/api/reservations/:id", authenticateToken, requireAnyPermission(['RESERVATIONS_VIEW_ALL', 'RESERVATIONS_VIEW_OWN']), async (req, res) => {
   try {
     const { id } = req.params;
     const reservation = await Reservation.findByPk(id, {
@@ -323,7 +721,6 @@ app.get("/api/reservations/:id", async (req, res) => {
       return res.status(404).json({ error: "Reservation not found" });
     }
 
-    // Return raw reservation with relations; frontend can map as needed
     return res.json({
       id: reservation.id.toString(),
       checkIn: toDateOnlyLocal(reservation.checkIn),
@@ -357,8 +754,7 @@ app.get("/api/reservations/:id", async (req, res) => {
   }
 });
 
-// Update reservation
-app.put("/api/reservations/:id", async (req, res) => {
+app.put("/api/reservations/:id", authenticateToken, requirePermission('RESERVATIONS_EDIT'), async (req, res) => {
   const MAX_RETRIES = 3;
   const BASE_DELAY_MS = 300;
 
@@ -379,7 +775,6 @@ app.put("/api/reservations/:id", async (req, res) => {
         return res.status(404).json({ error: "Reservation not found" });
       }
 
-      // Normalize dates (if provided) and validate
       const newCheckIn = checkIn
         ? normalizeToStartOfDay(checkIn)
         : reservation.checkIn;
@@ -393,7 +788,6 @@ app.put("/api/reservations/:id", async (req, res) => {
           .json({ error: "Check-out date must be after check-in date." });
       }
 
-      // Validate guest count range
       const newNumGuest =
         typeof numGuest === "number" ? numGuest : reservation.numGuest;
       if (newNumGuest < 1 || newNumGuest > 10) {
@@ -403,7 +797,6 @@ app.put("/api/reservations/:id", async (req, res) => {
           .json({ error: "Number of guests must be between 1 and 10." });
       }
 
-      // Determine target room (allow changing rooms via roomNumber or roomId)
       const requestedRoomNumber = (
         req.body.roomNumber ??
         req.body.roomId ??
@@ -414,7 +807,6 @@ app.put("/api/reservations/:id", async (req, res) => {
       let targetRoomNumber;
 
       if (requestedRoomNumber) {
-        // Treat roomId same as roomNumber (visible number), consistent with create
         room = await Room.findOne({
           where: { roomNumber: requestedRoomNumber },
           include: [
@@ -433,7 +825,6 @@ app.put("/api/reservations/:id", async (req, res) => {
         roomChanged = room.id !== reservation.RoomId;
         targetRoomNumber = room.roomNumber;
       } else {
-        // No change requested: use current room
         room = await Room.findByPk(reservation.RoomId, {
           include: [
             { model: RoomType, attributes: ["maxCapacity", "basePrice"] },
@@ -449,7 +840,6 @@ app.put("/api/reservations/:id", async (req, res) => {
         targetRoomNumber = room.roomNumber;
       }
 
-      // Capacity check
       if (newNumGuest > (room.RoomType?.maxCapacity || 0)) {
         await t.rollback();
         return res
@@ -459,7 +849,6 @@ app.put("/api/reservations/:id", async (req, res) => {
           });
       }
 
-      // Conflict detection (exclude current reservation) in the target room
       const conflict = await Reservation.findOne({
         where: buildOverlapWhere({
           roomId: room.id,
@@ -480,7 +869,6 @@ app.put("/api/reservations/:id", async (req, res) => {
         });
       }
 
-      // Pricing: recompute if dates or room changed and totalPrice not explicitly provided
       const nights = calculateNights(newCheckIn, newCheckOut);
       const nightlyRate = room.pricePerNight || room.RoomType?.basePrice || 0;
       const datesChanged = Boolean(checkIn) || Boolean(checkOut);
@@ -493,7 +881,6 @@ app.put("/api/reservations/:id", async (req, res) => {
           ? totalPrice
           : reservation.totalPrice;
 
-      // Apply reservation updates (including potential room move)
       await reservation.update(
         {
           status: status ?? reservation.status,
@@ -507,7 +894,6 @@ app.put("/api/reservations/:id", async (req, res) => {
         { transaction: t },
       );
 
-      // Apply guest updates if provided
       if (
         firstName ||
         middleName !== undefined ||
@@ -594,8 +980,7 @@ app.put("/api/reservations/:id", async (req, res) => {
   }
 });
 
-// Delete reservation
-app.delete("/api/reservations/:id", async (req, res) => {
+app.delete("/api/reservations/:id", authenticateToken, requireAnyPermission(['RESERVATIONS_DELETE', 'RESERVATIONS_CANCEL']), async (req, res) => {
   const t = await sequelize.transaction();
   try {
     const { id } = req.params;
@@ -606,7 +991,6 @@ app.delete("/api/reservations/:id", async (req, res) => {
       return res.status(404).json({ error: "Reservation not found" });
     }
 
-    // Support soft delete via query ?soft=true -> mark as cancelled
     if (req.query.soft === "true") {
       await reservation.update({ status: "cancelled" }, { transaction: t });
       await t.commit();
@@ -624,8 +1008,7 @@ app.delete("/api/reservations/:id", async (req, res) => {
   }
 });
 
-// Room routes
-app.get("/api/rooms", async (req, res) => {
+app.get("/api/rooms", authenticateToken, requirePermission('ROOMS_VIEW'), async (req, res) => {
   try {
     const rooms = await Room.findAll({
       include: [
@@ -638,9 +1021,8 @@ app.get("/api/rooms", async (req, res) => {
       order: [["roomNumber", "ASC"]],
     });
 
-    // Transform data to match frontend expectations
     const transformedRooms = rooms.map((room) => ({
-      id: room.roomNumber, // Use room number as ID for frontend compatibility
+      id: room.roomNumber, // might change this later lol
       number: room.roomNumber,
       type: room.RoomType?.typeName || "Standard",
       status: room.status,
@@ -658,8 +1040,7 @@ app.get("/api/rooms", async (req, res) => {
   }
 });
 
-// Admin route to add new room (placeholder for future admin functionality)
-app.post("/api/admin/rooms", async (req, res) => {
+app.post("/api/admin/rooms", authenticateToken, requirePermission('ROOMS_CREATE'), async (req, res) => {
   try {
     const {
       roomNumber,
@@ -679,7 +1060,6 @@ app.post("/api/admin/rooms", async (req, res) => {
         });
     }
 
-    // Check if room number already exists
     const existingRoom = await Room.findOne({ where: { roomNumber } });
     if (existingRoom) {
       return res.status(409).json({ error: "Room number already exists" });
@@ -711,8 +1091,7 @@ app.post("/api/admin/rooms", async (req, res) => {
   }
 });
 
-// Admin route to update room (placeholder for future admin functionality)
-app.put("/api/admin/rooms/:id", async (req, res) => {
+app.put("/api/admin/rooms/:id", authenticateToken, requirePermission('ROOMS_EDIT'), async (req, res) => {
   try {
     const { id } = req.params;
     const { status, pricePerNight, amenities, notes, isActive } = req.body;
@@ -739,8 +1118,7 @@ app.put("/api/admin/rooms/:id", async (req, res) => {
   }
 });
 
-// Admin route to delete/deactivate room (placeholder for future admin functionality)
-app.delete("/api/admin/rooms/:id", async (req, res) => {
+app.delete("/api/admin/rooms/:id", authenticateToken, requirePermission('ROOMS_DELETE'), async (req, res) => {
   try {
     const { id } = req.params;
     const { permanent = false } = req.query;
@@ -764,8 +1142,7 @@ app.delete("/api/admin/rooms/:id", async (req, res) => {
   }
 });
 
-// Room Types
-app.get("/api/room-types", async (req, res) => {
+app.get("/api/room-types", authenticateToken, requirePermission('ROOMS_VIEW'), async (req, res) => {
   try {
     const room_types = await RoomType.findAll();
     return res.send(room_types);
@@ -774,8 +1151,7 @@ app.get("/api/room-types", async (req, res) => {
   }
 });
 
-// Guest routes
-app.get("/api/guests", async (req, res) => {
+app.get("/api/guests", authenticateToken, requireAnyPermission(['GUESTS_VIEW_ALL', 'GUESTS_VIEW_LIMITED']), async (req, res) => {
   try {
     const guest = await Guest.findAll();
     return res.send(guest);
@@ -784,7 +1160,7 @@ app.get("/api/guests", async (req, res) => {
   }
 });
 
-app.post("/api/guests", async (req, res) => {
+app.post("/api/guests", authenticateToken, requirePermission('GUESTS_CREATE'), async (req, res) => {
   try {
     const {
       firstName,
@@ -831,13 +1207,11 @@ const SEED_ON_START = process.env.SEED_ON_START === "true" || FORCE_SYNC;
 sequelize
   .sync({ force: FORCE_SYNC })
   .then(async () => {
-    // Apply SQLite performance/concurrency PRAGMAs
     try {
       await sequelize.query("PRAGMA journal_mode = WAL;");
       await sequelize.query("PRAGMA busy_timeout = 10000;");
     } catch (e) {}
 
-    // Check if database is empty and seed if needed
     const roomCount = await Room.count();
     const roomTypeCount = await RoomType.count();
 

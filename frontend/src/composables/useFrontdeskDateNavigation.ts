@@ -1,76 +1,51 @@
-import { ref, computed } from 'vue'
-import { getTodayAtMidnight } from '@/utils/date'
-import { generateYearRange } from '@/utils/frontdesk'
+// BACKWARDS COMPATIBILITY WRAPPER
+// This file now wraps the Pinia store to maintain existing API compatibility
+// Components can gradually migrate to direct store usage
+
+import { computed } from 'vue'
+import { useDateNavigationStore } from '@/stores/dateNavigation'
 
 export const useFrontdeskDateNavigation = () => {
-  const currentDate = getTodayAtMidnight()
-  const selectedYear = ref<number>(currentDate.getFullYear())
-  const selectedMonth = ref<number>(currentDate.getMonth())
-  const targetDate = ref<Date | null>(null)
+  const store = useDateNavigationStore()
 
-  const years = computed<number[]>(() => generateYearRange(getTodayAtMidnight().getFullYear()))
+  // Maintain the same reactive interface as before
+  const selectedYear = computed({
+    get: () => store.selectedYear,
+    set: (value: number) => store.setYear(value)
+  })
+  
+  const selectedMonth = computed({
+    get: () => store.selectedMonth,
+    set: (value: number) => store.setMonth(value)
+  })
+  
+  const targetDate = computed(() => store.targetDate)
+  const years = computed(() => store.availableYears)
+  const months = computed(() => store.monthNames)
 
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ]
-
+  // Maintain the same function signatures as before
   const emitDateChangeToChart = () => {
-    targetDate.value = new Date(selectedYear.value, selectedMonth.value, 1)
+    store.emitDateChange()
   }
 
   const navigateYear = (direction: number) => {
-    const currentIndex = years.value.indexOf(selectedYear.value)
-    const newIndex = currentIndex + direction
-    if (newIndex >= 0 && newIndex < years.value.length) {
-      selectedYear.value = years.value[newIndex]
-      emitDateChangeToChart()
-    }
+    store.navigateYear(direction)
   }
 
   const navigateMonth = (direction: number) => {
-    let newMonth = selectedMonth.value + direction
-    let newYear = selectedYear.value
-
-    if (newMonth > 11) {
-      newMonth = 0
-      newYear += 1
-    } else if (newMonth < 0) {
-      newMonth = 11
-      newYear -= 1
-    }
-
-    if (years.value.includes(newYear)) {
-      selectedYear.value = newYear
-      selectedMonth.value = newMonth
-      emitDateChangeToChart()
-    }
+    store.navigateMonth(direction)
   }
 
   const selectYear = (year: number) => {
-    selectedYear.value = year
-    emitDateChangeToChart()
+    store.setYear(year)
   }
 
   const selectMonth = (monthIndex: number) => {
-    selectedMonth.value = monthIndex
-    emitDateChangeToChart()
+    store.setMonth(monthIndex)
   }
 
   const handleDateUpdate = ({ year, month }: { year: number; month: number }) => {
-    selectedYear.value = year
-    selectedMonth.value = month
-    emitDateChangeToChart()
+    store.handleDateUpdate({ year, month })
   }
 
   return {
@@ -87,3 +62,6 @@ export const useFrontdeskDateNavigation = () => {
     handleDateUpdate,
   }
 }
+
+// Export store for direct usage in new components
+export { useDateNavigationStore }

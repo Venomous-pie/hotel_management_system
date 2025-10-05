@@ -1,34 +1,32 @@
-import { ref } from 'vue'
-import type { Room, Reservation } from '@/types/hotel'
-import { getRooms } from '@/services/rooms'
-import { getReservations as fetchReservationsService } from '@/services/reservations'
+// BACKWARDS COMPATIBILITY WRAPPER
+// This file now wraps the Pinia store to maintain existing API compatibility
+// Components can gradually migrate to direct store usage
 
-const rooms = ref<Room[]>([])
-const reservations = ref<Reservation[]>([])
-const loading = ref(false)
-const error = ref<string | null>(null)
-
-const fetchRooms = async () => {
-  rooms.value = await getRooms()
-}
-
-const fetchReservations = async () => {
-  reservations.value = await fetchReservationsService()
-}
-
-const refreshAll = async () => {
-  loading.value = true
-  error.value = null
-  try {
-    await Promise.all([fetchRooms(), fetchReservations()])
-  } catch (e) {
-    error.value = 'Failed to load hotel data'
-  } finally {
-    loading.value = false
-  }
-}
+import { computed } from 'vue'
+import { useHotelDataStore } from '@/stores/hotelData'
 
 export const useHotelData = () => {
+  const store = useHotelDataStore()
+
+  // Maintain the same reactive interface as before
+  const rooms = computed(() => store.rooms)
+  const reservations = computed(() => store.reservations)
+  const loading = computed(() => store.loading)
+  const error = computed(() => store.error)
+
+  // Maintain the same function signatures as before
+  const refreshAll = async () => {
+    await store.refreshAll()
+  }
+
+  const fetchRooms = async () => {
+    await store.fetchRooms()
+  }
+
+  const fetchReservations = async () => {
+    await store.fetchReservations()
+  }
+
   return {
     rooms,
     reservations,
@@ -39,3 +37,6 @@ export const useHotelData = () => {
     fetchReservations,
   }
 }
+
+// Export store for direct usage in new components
+export { useHotelDataStore }

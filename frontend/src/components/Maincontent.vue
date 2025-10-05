@@ -39,12 +39,15 @@
             class="flex items-center gap-2 hover:bg-gray-100 rounded-full px-3 py-2 transition-colors cursor-pointer"
             :class="{ 'bg-gray-50': showUserDropdown }"
           >
-            <img
-              src="/receptionist.jpg"
-              alt="Profile"
-              class="w-6 h-6 rounded-full object-cover object-top"
-            />
-            <span class="text-xs font-medium text-gray-700">Grace Hoppers</span>
+            <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+              <i class="pi pi-user text-white text-xs"></i>
+            </div>
+            <span class="text-xs font-medium text-gray-700" v-if="currentUser">
+              {{ currentUser.firstName }} {{ currentUser.lastName }}
+            </span>
+            <span class="text-xs font-medium text-gray-700" v-else>
+              Loading...
+            </span>
             <i
               class="pi pi-chevron-down text-gray-500 text-center transition-transform"
               :class="{ 'rotate-180': showUserDropdown }"
@@ -55,6 +58,17 @@
             v-if="showUserDropdown"
             class="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
           >
+            <!-- User Info Header -->
+            <div class="px-4 py-3 border-b border-gray-200" v-if="currentUser">
+              <p class="text-sm font-medium text-gray-900">
+                {{ currentUser.firstName }} {{ currentUser.lastName }}
+              </p>
+              <p class="text-xs text-gray-500 capitalize">
+                {{ currentUser.role }}
+                <span v-if="currentUser.department"> • {{ currentUser.department }}</span>
+              </p>
+            </div>
+            
             <div class="py-1">
               <button
                 v-for="option in userMenuOptions"
@@ -79,21 +93,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
 import Searchbar from '@/components/Searchbar.vue'
+
+// Authentication
+const { currentUser, logout } = useAuth()
+const router = useRouter()
 
 // State management
 const showUserDropdown = ref(false)
 const notificationCount = ref(3) // Example notification count
 const isRefreshing = ref(false)
 
-// User dropdown options
-const userMenuOptions = [
-  { label: 'Profile', icon: 'pi pi-user', action: 'profile' },
-  { label: 'Settings', icon: 'pi pi-cog', action: 'settings' },
-  { label: 'Help', icon: 'pi pi-question-circle', action: 'help' },
-  { label: 'Sign Out', icon: 'pi pi-sign-out', action: 'signout' },
-]
+// User dropdown options - dynamic based on role bestie 💅
+const userMenuOptions = computed(() => {
+  const baseOptions = [
+    { label: 'Profile', icon: 'pi pi-user', action: 'profile' },
+    { label: 'Settings', icon: 'pi pi-cog', action: 'settings' },
+    { label: 'Help', icon: 'pi pi-question-circle', action: 'help' },
+  ]
+  
+  // Add admin dashboard for admins/managers - no cap fr fr 🔥
+  if (currentUser.value?.role === 'admin' || currentUser.value?.role === 'manager') {
+    baseOptions.splice(1, 0, { label: 'Dashboard', icon: 'pi pi-chart-bar', action: 'dashboard' })
+  }
+  
+  baseOptions.push({ label: 'Sign Out', icon: 'pi pi-sign-out', action: 'signout' })
+  return baseOptions
+})
 
 // Handle search from header
 const handleHeaderSearch = (query: string) => {}
@@ -123,23 +152,38 @@ const handleNotifications = () => {
 }
 
 // Handle user menu actions
-const handleUserMenuAction = (action: string) => {
+const handleUserMenuAction = async (action: string) => {
   showUserDropdown.value = false
 
   switch (action) {
     case 'profile':
+      // Navigate to profile page or show profile modal
+      alert('Profile functionality coming soon!')
+      break
+    case 'dashboard':
+      // Navigate to admin dashboard - slay bestie 💯
+      router.push('/admin/dashboard')
       break
     case 'settings':
+      // Navigate to settings page
+      window.location.href = '/settings'
       break
     case 'help':
+      // Open help documentation or support
+      alert('Help: Contact your system administrator for assistance')
       break
     case 'signout':
       if (confirm('Are you sure you want to sign out?')) {
-        // Clear auth tokens, redirect to login, etc.
-        alert('Signed out successfully')
+        try {
+          await logout()
+        } catch (error) {
+          console.error('Logout failed:', error)
+          alert('Logout failed. Please try again.')
+        }
       }
       break
     default:
+      console.warn('Unknown user menu action:', action)
   }
 }
 

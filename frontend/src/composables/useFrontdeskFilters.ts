@@ -1,50 +1,58 @@
-import { ref, computed } from 'vue'
+// BACKWARDS COMPATIBILITY WRAPPER
+// This file now wraps the Pinia store to maintain existing API compatibility
+// Components can gradually migrate to direct store usage
+
+import { computed } from 'vue'
+import { useFrontdeskFiltersStore } from '@/stores/frontdeskFilters'
 
 export const useFrontdeskFilters = () => {
-  // Filters
-  const searchQuery = ref('')
-  const selectedReservationFilter = ref('All Reservations')
-  const selectedRoomTypeFilter = ref('All Room Types')
-  const selectedBookingFilter = ref('All Booking')
+  const store = useFrontdeskFiltersStore()
 
-  // Dropdown states
-  const showReservationDropdown = ref(false)
-  const showRoomTypeDropdown = ref(false)
-  const showBookingDropdown = ref(false)
-
-  const hasActiveFilters = computed(() => {
-    return (
-      searchQuery.value !== '' ||
-      selectedReservationFilter.value !== 'All Reservations' ||
-      selectedRoomTypeFilter.value !== 'All Room Types' ||
-      selectedBookingFilter.value !== 'All Booking'
-    )
+  // Maintain the same reactive interface as before
+  const searchQuery = computed({
+    get: () => store.searchQuery,
+    set: (value: string) => store.setSearchQuery(value)
   })
+  
+  const selectedReservationFilter = computed({
+    get: () => store.selectedReservationFilter,
+    set: (value: string) => store.setReservationFilter(value)
+  })
+  
+  const selectedRoomTypeFilter = computed({
+    get: () => store.selectedRoomTypeFilter,
+    set: (value: string) => store.setRoomTypeFilter(value)
+  })
+  
+  const selectedBookingFilter = computed({
+    get: () => store.selectedBookingFilter,
+    set: (value: string) => store.setBookingFilter(value)
+  })
+  
+  const showReservationDropdown = computed(() => store.showReservationDropdown)
+  const showRoomTypeDropdown = computed(() => store.showRoomTypeDropdown)
+  const showBookingDropdown = computed(() => store.showBookingDropdown)
+  const hasActiveFilters = computed(() => store.hasActiveFilters)
 
+  // Maintain the same function signatures as before
   const clearAllFilters = () => {
-    searchQuery.value = ''
-    selectedReservationFilter.value = 'All Reservations'
-    selectedRoomTypeFilter.value = 'All Room Types'
-    selectedBookingFilter.value = 'All Booking'
-    closeDropdowns()
+    store.clearAllFilters()
   }
 
   const toggleReservationDropdown = () => {
-    showReservationDropdown.value = !showReservationDropdown.value
+    store.toggleReservationDropdown()
   }
 
   const toggleRoomTypeDropdown = () => {
-    showRoomTypeDropdown.value = !showRoomTypeDropdown.value
+    store.toggleRoomTypeDropdown()
   }
 
   const toggleBookingDropdown = () => {
-    showBookingDropdown.value = !showBookingDropdown.value
+    store.toggleBookingDropdown()
   }
 
   const closeDropdowns = () => {
-    showReservationDropdown.value = false
-    showRoomTypeDropdown.value = false
-    showBookingDropdown.value = false
+    store.closeAllDropdowns()
   }
 
   return {
@@ -65,3 +73,6 @@ export const useFrontdeskFilters = () => {
     closeDropdowns,
   }
 }
+
+// Export store for direct usage in new components
+export { useFrontdeskFiltersStore }

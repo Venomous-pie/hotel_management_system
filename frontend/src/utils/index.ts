@@ -35,7 +35,6 @@ export {
   findDateRangeIndices,
   generateDateRange,
   validateGanttLayout,
-  debugReservationSpanPositioning,
   normalizeDateString,
   validateReservationVisibility,
   GANTT_LAYOUT,

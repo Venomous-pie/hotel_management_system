@@ -6,7 +6,6 @@ import {
   getAvailableRoomCount,
 } from '@/utils/reservations'
 import {
-  debugReservationSpanPositioning,
   normalizeDateString,
   validateReservationVisibility,
 } from '@/utils/gantt'

@@ -1,4 +1,4 @@
-import { Room, RoomType } from "../models/index.js";
+import { Room, RoomType } from '../models/index.js';
 import {
   roomTypesData,
   roomsData,

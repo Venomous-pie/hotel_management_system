@@ -8,6 +8,15 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
+import { useAuth } from '../composables/useAuth'
 import SideBar from '../components/Sidebar.vue'
 import Content from '../components/Maincontent.vue'
+
+const { checkAuthStatus } = useAuth()
+
+// Verify authentication status when component mounts
+onMounted(async () => {
+  await checkAuthStatus()
+})
 </script>
