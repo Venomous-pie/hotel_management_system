@@ -1,31 +1,39 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex overflow-y-hidden">
-    <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 relative overflow-hidden">
+    <!-- Left Side - Branding -->
+    <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-green-600 via-green-700 to-green-800 relative overflow-hidden">
       <div class="absolute inset-0">
-        <div class="absolute top-20 left-20 w-32 h-32 bg-white/10 rounded-lg transform rotate-12"></div>
-        <div class="absolute top-40 right-32 w-24 h-24 bg-white/5 rounded-full"></div>
-        <div class="absolute bottom-32 left-40 w-20 h-20 bg-white/10 rounded-lg transform -rotate-12"></div>
-        <div class="absolute bottom-20 right-20 w-28 h-28 bg-white/5 rounded-full"></div>
+        <div class="absolute top-20 left-20 w-24 h-24 bg-white/10 rounded-lg transform rotate-12"></div>
+        <div class="absolute top-40 right-32 w-20 h-20 bg-white/5 rounded-full"></div>
+        <div class="absolute bottom-32 left-40 w-16 h-16 bg-white/10 rounded-lg transform -rotate-12"></div>
+        <div class="absolute bottom-20 right-20 w-24 h-24 bg-white/5 rounded-full"></div>
       </div>
 
       <div class="relative z-10 flex flex-col justify-center items-center text-white p-12 h-full w-full">
         <div class="text-center flex flex-col items-center justify-center">
-          <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-6 backdrop-blur-sm">
-            <img src="/logo.png" alt="Hotel Logo" class="w-full h-full object-contain filter brightness-0 invert">
+          <div class="flex items-center gap-3 mb-8">
+            <img src="/logo.png" alt="Hotel Logo" class="h-16 object-contain">
+            <div class="text-left">
+              <h1 class="text-3xl font-bold text-white">Grand Resort</h1>
+              <p class="text-green-100 text-sm">Admin Portal</p>
+            </div>
           </div>
-          <h1 class="text-4xl font-bold mb-4">Admin Portal</h1>
-          <p class="text-xl text-green-100 mb-8">Hotel Management System</p>
+          <h2 class="text-2xl font-semibold mb-4">Hotel Management System</h2>
+          <p class="text-green-100 text-center max-w-sm">
+            Secure administrative access to manage hotel operations, reservations, and analytics.
+          </p>
         </div>
       </div>
     </div>
 
-    <div class="flex-1 flex items-center justify-center p-4 overflow-y-auto">
-      <div class="w-full max-w-md my-auto">
-        <div class="text-center mb-6">
-          <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="pi pi-shield text-2xl text-white"></i>
+    <!-- Right Side - Login Form -->
+    <div class="flex-1 flex items-center justify-center p-6 overflow-y-auto">
+      <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+          <div class="w-12 h-12 bg-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <i class="pi pi-shield text-xl text-white"></i>
           </div>
-          <h2 class="text-2xl font-bold text-gray-900 mb-2">Admin Login</h2>
+          <h2 class="text-2xl font-bold text-gray-700 mb-2">Admin Login</h2>
           <p class="text-gray-600 text-sm">Access administrative dashboard</p>
         </div>
 
@@ -41,7 +49,7 @@
           </div>
         </div>
 
-        <form @submit.prevent="handleLogin" class="space-y-4">
+        <form @submit.prevent="handleLogin" class="space-y-5">
           <div>
             <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
               <i class="pi pi-user text-gray-400 mr-2"></i>
@@ -52,7 +60,7 @@
               v-model="credentials.username"
               type="text"
               required
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-sm"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-sm bg-white"
               placeholder="Enter your username"
               :disabled="isLoading"
             />
@@ -69,7 +77,7 @@
                 v-model="credentials.password"
                 :type="showPassword ? 'text' : 'password'"
                 required
-                class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-sm"
+                class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-sm bg-white"
                 placeholder="Enter your password"
                 :disabled="isLoading"
               />
@@ -84,7 +92,7 @@
             </div>
           </div>
 
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between pt-2">
             <label class="flex items-center">
               <input
                 v-model="rememberMe"
@@ -103,25 +111,27 @@
             </button>
           </div>
 
-          <Custombutton
-            type="submit"
-            :label="isLoading ? 'Signing in...' : 'Sign In'"
-            bg-color="bg-green-600"
-            hover-bg-color="hover:bg-green-700"
-            text-color="text-white"
-            width="100%"
-            height="3rem"
-            :disabled="isLoading || !credentials.username || !credentials.password"
-            :hover="true"
-            @click="handleLogin"
-            class="rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
-          >
-            <div class="flex items-center justify-center gap-2">
-              <i v-if="isLoading" class="pi pi-spin pi-spinner"></i>
-              <i v-else class="pi pi-sign-in"></i>
-              <span>{{ isLoading ? 'Signing in...' : 'Sign In' }}</span>
-            </div>
-          </Custombutton>
+          <div class="pt-2">
+            <Custombutton
+              type="submit"
+              :label="isLoading ? 'Signing in...' : 'Sign In'"
+              bg-color="bg-green-600"
+              hover-bg-color="hover:bg-green-700"
+              text-color="text-white"
+              width="100%"
+              height="3rem"
+              :disabled="isLoading || !credentials.username || !credentials.password"
+              :hover="true"
+              @click="handleLogin"
+              class="rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+            >
+              <div class="flex items-center justify-center gap-2">
+                <i v-if="isLoading" class="pi pi-spin pi-spinner"></i>
+                <i v-else class="pi pi-sign-in"></i>
+                <span>{{ isLoading ? 'Signing in...' : 'Sign In' }}</span>
+              </div>
+            </Custombutton>
+          </div>
         </form>
 
         <!-- Demo Credentials -->

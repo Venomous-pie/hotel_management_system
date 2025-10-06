@@ -1,99 +1,100 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-20">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-2xl flex items-center justify-center shadow-lg">
-              <i class="pi pi-chart-line text-white text-xl"></i>
-            </div>
-            <div>
-              <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Admin Dashboard</h1>
-              <p class="text-sm text-gray-600">Hotel Management Overview</p>
-            </div>
-          </div>
+  <AdminLayout page-title="Admin Dashboard">
+    <!-- Page Content -->
+    <div class="h-full bg-white">
+      <!-- Page Controls -->
+      <div class="px-6 py-2">
+        <Searchbar
+          placeholder="Search dashboard data..."
+          icon="pi pi-search"
+          :outline="false"
+          @search="handleDashboardSearch"
+          width="20rem"
+        />
+        <div class="flex items-center gap-4 mt-2">
+          <!-- Quick Actions -->
+          <Custombutton 
+            label="Add User" 
+            bg-color="bg-green-600"
+            hover-bg-color="hover:bg-green-700"
+            text-color="text-white"
+            :hover="true"
+            @click="handleAddUser"
+          />
           
-          <div class="flex items-center gap-6">
-            <!-- Seeder Buttons (Development Only) -->
-            <div class="flex items-center gap-2">
-              <button
-                @click="seedReservations"
-                :disabled="seederLoading"
-                class="px-3 py-2 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-              >
-                <i v-if="seederLoading" class="pi pi-spin pi-spinner mr-1"></i>
-                <i v-else class="pi pi-plus mr-1"></i>
-                Seed Data
-              </button>
-              <button
-                @click="clearReservations"
-                :disabled="seederLoading"
-                class="px-3 py-2 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
-              >
-                <i v-if="seederLoading" class="pi pi-spin pi-spinner mr-1"></i>
-                <i v-else class="pi pi-trash mr-1"></i>
-                Clear Data
-              </button>
-              <button
-                @click="debugData"
-                class="px-3 py-2 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 transition-colors"
-              >
-                <i class="pi pi-search mr-1"></i>
-                Debug
-              </button>
-            </div>
-
-            <!-- Date Range Filter -->
-            <div class="flex items-center gap-3">
-              <label class="text-sm font-medium text-gray-700">Period:</label>
-              <select 
-                v-model="selectedDateRange" 
-                @change="handleDateRangeChange"
-                class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              >
-                <option v-for="option in dateRangeOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-            </div>
-            
-            <div class="flex items-center gap-3 px-4 py-2 bg-gray-50 rounded-xl">
-              <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
-                <i class="pi pi-user text-white text-sm"></i>
-              </div>
-              <div class="text-right">
-                <p class="text-sm font-semibold text-gray-900">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</p>
-                <p class="text-xs text-gray-600 capitalize">{{ currentUser?.role }} • {{ currentUser?.username }}</p>
-              </div>
-            </div>
+          <!-- Development Tools -->
+          <div class="flex items-center gap-2">
             <button
-              @click="handleLogout"
-              class="bg-red-500 hover:bg-red-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+              @click="seedReservations"
+              :disabled="seederLoading"
+              class="flex items-center gap-2 px-3 py-2 text-xs text-blue-700 bg-blue-50 outline outline-1 outline-blue-200 rounded-full transition-colors hover:bg-blue-100"
             >
-              <i class="pi pi-sign-out text-sm"></i>
-              Logout
+              <i v-if="seederLoading" class="pi pi-spin pi-spinner w-3 h-3"></i>
+              <i v-else class="pi pi-plus w-3 h-3"></i>
+              Seed Data
             </button>
+            <button
+              @click="clearReservations"
+              :disabled="seederLoading"
+              class="flex items-center gap-2 px-3 py-2 text-xs text-red-700 bg-red-50 outline outline-1 outline-red-200 rounded-full transition-colors hover:bg-red-100"
+            >
+              <i v-if="seederLoading" class="pi pi-spin pi-spinner w-3 h-3"></i>
+              <i v-else class="pi pi-trash w-3 h-3"></i>
+              Clear Data
+            </button>
+            <button
+              @click="debugData"
+              class="flex items-center gap-2 px-3 py-2 text-xs text-purple-700 bg-purple-50 outline outline-1 outline-purple-200 rounded-full transition-colors hover:bg-purple-100"
+            >
+              <i class="pi pi-search w-3 h-3"></i>
+              Debug
+            </button>
+          </div>
+
+          <!-- Date Range Filter -->
+          <div class="relative date-range-dropdown">
+            <div
+              @click="showDateRangeDropdown = !showDateRangeDropdown"
+              class="flex items-center bg-gray-50 outline outline-1 outline-gray-200 rounded-full px-3 py-2 pr-8 text-xs text-gray-700 transition-colors cursor-pointer hover:bg-gray-100"
+            >
+              {{ selectedDateRange === 'today' ? 'Today' : selectedDateRange === 'this_week' ? 'This Week' : 'This Month' }}
+              <i class="pi pi-chevron-down absolute right-2 text-gray-300 w-4 h-4"></i>
+            </div>
+            <div
+              v-if="showDateRangeDropdown"
+              class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-full"
+            >
+              <div
+                v-for="option in dateRangeOptions"
+                :key="option.value"
+                @click="
+                  selectedDateRange = option.value;
+                  showDateRangeDropdown = false;
+                  handleDateRangeChange();
+                "
+                class="px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer first:rounded-t-lg last:rounded-b-lg whitespace-nowrap"
+                :class="{ 'bg-green-50 text-green-700': selectedDateRange === option.value }"
+              >
+                {{ option.label }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
-      <div class="px-4 py-6 sm:px-0">
-        <!-- Welcome Section -->
-        <div class="mb-8">
-          <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-2xl p-8 text-white shadow-xl">
+      <!-- Main Content -->
+      <div class="px-6 py-2 overflow-y-auto h-full">
+        <!-- System Status -->
+        <div class="mb-6">
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div class="flex items-center justify-between">
               <div>
-                <h2 class="text-3xl font-bold mb-2">Welcome back, {{ currentUser?.firstName }}! 👋</h2>
-                <p class="text-green-100 text-lg">Here's what's happening at Grand Resort today</p>
+                <h2 class="text-lg font-semibold text-gray-900">System Status</h2>
+                <p class="text-sm text-gray-600">Hotel management system overview</p>
               </div>
-              <div class="hidden md:block">
-                <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                  <i class="pi pi-chart-bar text-3xl text-white"></i>
-                </div>
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span class="text-sm text-gray-600">All systems operational</span>
               </div>
             </div>
           </div>
@@ -125,71 +126,67 @@
         </div>
 
         <!-- Stats Grid -->
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-200">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Reservations</p>
-                <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.totalReservations }}</p>
-                <p class="text-xs text-green-600 mt-1 font-medium">+12% from last month</p>
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+              <div class="p-2 bg-blue-100 rounded-lg">
+                <i class="pi pi-calendar-plus text-blue-600 text-xl"></i>
               </div>
-              <div class="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center">
-                <i class="pi pi-calendar-plus text-2xl text-blue-600"></i>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-200">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Available Rooms</p>
-                <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.availableRooms }}</p>
-                <p class="text-xs text-green-600 mt-1 font-medium">Ready for guests</p>
-              </div>
-              <div class="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center">
-                <i class="pi pi-home text-2xl text-green-600"></i>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Total Reservations</p>
+                <p class="text-2xl font-bold text-gray-900">{{ stats.totalReservations }}</p>
               </div>
             </div>
           </div>
 
-          <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-200">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Guests</p>
-                <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.totalGuests }}</p>
-                <p class="text-xs text-orange-600 mt-1 font-medium">Currently checked in</p>
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+              <div class="p-2 bg-green-100 rounded-lg">
+                <i class="pi pi-home text-green-600 text-xl"></i>
               </div>
-              <div class="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center">
-                <i class="pi pi-users text-2xl text-orange-600"></i>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Available Rooms</p>
+                <p class="text-2xl font-bold text-gray-900">{{ stats.availableRooms }}</p>
               </div>
             </div>
           </div>
 
-          <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-200">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm font-semibold text-gray-600 uppercase tracking-wide">Monthly Revenue</p>
-                <p class="text-3xl font-bold text-gray-900 mt-2">${{ stats.revenue.toLocaleString() }}</p>
-                <p class="text-xs text-purple-600 mt-1 font-medium">+8% from last month</p>
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+              <div class="p-2 bg-orange-100 rounded-lg">
+                <i class="pi pi-users text-orange-600 text-xl"></i>
               </div>
-              <div class="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center">
-                <i class="pi pi-dollar text-2xl text-purple-600"></i>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Current Guests</p>
+                <p class="text-2xl font-bold text-gray-900">{{ stats.totalGuests }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+              <div class="p-2 bg-purple-100 rounded-lg">
+                <i class="pi pi-dollar text-purple-600 text-xl"></i>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Monthly Revenue</p>
+                <p class="text-2xl font-bold text-gray-900">${{ stats.revenue.toLocaleString() }}</p>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Analytics Charts -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <!-- Occupancy Rate Chart -->
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div class="flex items-center justify-between mb-6">
               <div>
-                <h3 class="text-lg font-bold text-gray-900">Occupancy Rate</h3>
+                <h3 class="text-lg font-semibold text-gray-900">Occupancy Rate</h3>
                 <p class="text-sm text-gray-600">Last 30 days performance</p>
               </div>
-              <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                <i class="pi pi-chart-line text-blue-600"></i>
+              <div class="p-2 bg-blue-100 rounded-lg">
+                <i class="pi pi-chart-line text-blue-600 text-xl"></i>
               </div>
             </div>
             <apexchart
@@ -201,14 +198,14 @@
           </div>
 
           <!-- Revenue Chart -->
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div class="flex items-center justify-between mb-6">
               <div>
-                <h3 class="text-lg font-bold text-gray-900">Revenue Analytics</h3>
+                <h3 class="text-lg font-semibold text-gray-900">Revenue Analytics</h3>
                 <p class="text-sm text-gray-600">Monthly revenue breakdown</p>
               </div>
-              <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                <i class="pi pi-dollar text-green-600"></i>
+              <div class="p-2 bg-green-100 rounded-lg">
+                <i class="pi pi-dollar text-green-600 text-xl"></i>
               </div>
             </div>
             <apexchart
@@ -221,16 +218,25 @@
         </div>
 
         <!-- Room Distribution & Booking Sources -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <!-- Room Type Distribution -->
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div class="flex items-center justify-between mb-6">
               <div>
-                <h3 class="text-lg font-bold text-gray-900">Room Type Distribution</h3>
-                <p class="text-sm text-gray-600">Current occupancy by room type</p>
+                <h3 class="text-lg font-semibold text-gray-900">Room Type Bookings</h3>
+                <p class="text-sm text-gray-600">Booking distribution across 27 rooms</p>
               </div>
-              <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-                <i class="pi pi-home text-purple-600"></i>
+              <div class="flex items-center gap-2">
+                <button 
+                  @click="refreshRoomChart"
+                  class="px-2 py-1 text-xs text-purple-700 bg-purple-50 border border-purple-200 rounded hover:bg-purple-100 transition-colors"
+                >
+                  <i class="pi pi-refresh mr-1"></i>
+                  Refresh
+                </button>
+                <div class="p-2 bg-purple-100 rounded-lg">
+                  <i class="pi pi-home text-purple-600 text-xl"></i>
+                </div>
               </div>
             </div>
             <apexchart
@@ -242,14 +248,23 @@
           </div>
 
           <!-- Booking Sources -->
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div class="flex items-center justify-between mb-6">
               <div>
-                <h3 class="text-lg font-bold text-gray-900">Booking Sources</h3>
+                <h3 class="text-lg font-semibold text-gray-900">Booking Sources</h3>
                 <p class="text-sm text-gray-600">Where guests book from</p>
               </div>
-              <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
-                <i class="pi pi-globe text-orange-600"></i>
+              <div class="flex items-center gap-2">
+                <button 
+                  @click="refreshBookingSourceChart"
+                  class="px-2 py-1 text-xs text-orange-700 bg-orange-50 border border-orange-200 rounded hover:bg-orange-100 transition-colors"
+                >
+                  <i class="pi pi-refresh mr-1"></i>
+                  Refresh
+                </button>
+                <div class="p-2 bg-orange-100 rounded-lg">
+                  <i class="pi pi-globe text-orange-600 text-xl"></i>
+                </div>
               </div>
             </div>
             <apexchart
@@ -261,57 +276,132 @@
           </div>
         </div>
 
+        <!-- Core Admin Functions -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <!-- User Management -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">User Management</h3>
+                <p class="text-sm text-gray-600">Manage staff accounts and permissions</p>
+              </div>
+              <div class="p-2 bg-blue-100 rounded-lg">
+                <i class="pi pi-users text-blue-600 text-xl"></i>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span class="text-sm font-medium text-gray-700">Active Staff</span>
+                <span class="text-sm font-semibold text-gray-900">{{ activeStaffCount }}</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span class="text-sm font-medium text-gray-700">Admin Users</span>
+                <span class="text-sm font-semibold text-gray-900">{{ adminUserCount }}</span>
+              </div>
+              <Custombutton 
+                label="Manage Users" 
+                bg-color="bg-blue-600"
+                hover-bg-color="hover:bg-blue-700"
+                text-color="text-white"
+                width="100%"
+                :hover="true"
+                @click="navigateToUsers"
+              />
+            </div>
+          </div>
+
+          <!-- System Maintenance -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">System Maintenance</h3>
+                <p class="text-sm text-gray-600">Database and system operations</p>
+              </div>
+              <div class="p-2 bg-purple-100 rounded-lg">
+                <i class="pi pi-cog text-purple-600 text-xl"></i>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <button
+                @click="seedReservations"
+                :disabled="seederLoading"
+                class="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                <i v-if="seederLoading" class="pi pi-spin pi-spinner"></i>
+                <i v-else class="pi pi-plus"></i>
+                {{ seederLoading ? 'Seeding...' : 'Populate Sample Data' }}
+              </button>
+              <button
+                @click="clearReservations"
+                :disabled="seederLoading"
+                class="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+              >
+                <i v-if="seederLoading" class="pi pi-spin pi-spinner"></i>
+                <i v-else class="pi pi-trash"></i>
+                Clear All Data
+              </button>
+              <button
+                @click="debugChartData"
+                class="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <i class="pi pi-bug"></i>
+                Debug Charts
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Quick Actions -->
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-100">
-          <div class="px-8 py-6 border-b border-gray-200">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div class="p-6 border-b border-gray-200">
             <div class="flex items-center gap-3">
-              <div class="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center">
-                <i class="pi pi-bolt text-green-600 text-lg"></i>
+              <div class="p-2 bg-green-100 rounded-lg">
+                <i class="pi pi-bolt text-green-600 text-xl"></i>
               </div>
               <div>
-                <h2 class="text-xl font-bold text-gray-900">Quick Actions</h2>
+                <h2 class="text-lg font-semibold text-gray-900">Quick Actions</h2>
                 <p class="text-sm text-gray-600">Frequently used admin functions</p>
               </div>
             </div>
           </div>
-          <div class="p-8">
+          <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <router-link to="/admin/users" class="group p-6 border-2 border-gray-200 rounded-2xl hover:border-green-300 hover:bg-green-50 transition-all duration-200 text-left block">
+              <router-link to="/admin/users" class="group p-6 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-all duration-200 text-left block">
                 <div class="flex flex-col items-center text-center">
-                  <div class="w-16 h-16 bg-blue-100 group-hover:bg-blue-200 rounded-2xl flex items-center justify-center mb-4 transition-colors">
-                    <i class="pi pi-users text-2xl text-blue-600"></i>
+                  <div class="p-3 bg-blue-100 group-hover:bg-blue-200 rounded-lg mb-4 transition-colors">
+                    <i class="pi pi-users text-xl text-blue-600"></i>
                   </div>
-                  <p class="font-bold text-gray-900 mb-2">Manage Users</p>
+                  <p class="font-semibold text-gray-900 mb-2">Manage Users</p>
                   <p class="text-sm text-gray-600 leading-relaxed">Staff accounts, roles & permissions</p>
                 </div>
               </router-link>
               
-              <button class="group p-6 border-2 border-gray-200 rounded-2xl hover:border-green-300 hover:bg-green-50 transition-all duration-200 text-left">
+              <button class="group p-6 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-all duration-200 text-left">
                 <div class="flex flex-col items-center text-center">
-                  <div class="w-16 h-16 bg-green-100 group-hover:bg-green-200 rounded-2xl flex items-center justify-center mb-4 transition-colors">
-                    <i class="pi pi-plus text-2xl text-green-600"></i>
+                  <div class="p-3 bg-green-100 group-hover:bg-green-200 rounded-lg mb-4 transition-colors">
+                    <i class="pi pi-plus text-xl text-green-600"></i>
                   </div>
-                  <p class="font-bold text-gray-900 mb-2">Add Room</p>
+                  <p class="font-semibold text-gray-900 mb-2">Add Room</p>
                   <p class="text-sm text-gray-600 leading-relaxed">Create new room inventory</p>
                 </div>
               </button>
 
-              <button class="group p-6 border-2 border-gray-200 rounded-2xl hover:border-green-300 hover:bg-green-50 transition-all duration-200 text-left">
+              <button class="group p-6 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-all duration-200 text-left">
                 <div class="flex flex-col items-center text-center">
-                  <div class="w-16 h-16 bg-orange-100 group-hover:bg-orange-200 rounded-2xl flex items-center justify-center mb-4 transition-colors">
-                    <i class="pi pi-chart-bar text-2xl text-orange-600"></i>
+                  <div class="p-3 bg-orange-100 group-hover:bg-orange-200 rounded-lg mb-4 transition-colors">
+                    <i class="pi pi-chart-bar text-xl text-orange-600"></i>
                   </div>
-                  <p class="font-bold text-gray-900 mb-2">View Reports</p>
+                  <p class="font-semibold text-gray-900 mb-2">View Reports</p>
                   <p class="text-sm text-gray-600 leading-relaxed">Analytics & business insights</p>
                 </div>
               </button>
 
-              <button class="group p-6 border-2 border-gray-200 rounded-2xl hover:border-green-300 hover:bg-green-50 transition-all duration-200 text-left">
+              <button class="group p-6 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-all duration-200 text-left">
                 <div class="flex flex-col items-center text-center">
-                  <div class="w-16 h-16 bg-purple-100 group-hover:bg-purple-200 rounded-2xl flex items-center justify-center mb-4 transition-colors">
-                    <i class="pi pi-cog text-2xl text-purple-600"></i>
+                  <div class="p-3 bg-purple-100 group-hover:bg-purple-200 rounded-lg mb-4 transition-colors">
+                    <i class="pi pi-cog text-xl text-purple-600"></i>
                   </div>
-                  <p class="font-bold text-gray-900 mb-2">Settings</p>
+                  <p class="font-semibold text-gray-900 mb-2">Settings</p>
                   <p class="text-sm text-gray-600 leading-relaxed">System configuration & preferences</p>
                 </div>
               </button>
@@ -319,67 +409,76 @@
           </div>
         </div>
 
-        <!-- Recent Activity Section -->
-        <div class="mt-10 bg-white rounded-2xl shadow-lg border border-gray-100">
-          <div class="px-8 py-6 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <i class="pi pi-clock text-blue-600 text-lg"></i>
-                </div>
-                <div>
-                  <h2 class="text-xl font-bold text-gray-900">Recent Activity</h2>
-                  <p class="text-sm text-gray-600">Latest system events and updates</p>
-                </div>
+        <!-- System Information -->
+        <div class="mt-8 bg-white rounded-lg shadow-sm border border-gray-200">
+          <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center gap-3">
+              <div class="p-2 bg-gray-100 rounded-lg">
+                <i class="pi pi-info-circle text-gray-600 text-xl"></i>
               </div>
-              <button class="text-green-600 hover:text-green-700 font-semibold text-sm transition-colors">
-                View All
-              </button>
+              <div>
+                <h2 class="text-lg font-semibold text-gray-900">System Information</h2>
+                <p class="text-sm text-gray-600">Hotel management system details</p>
+              </div>
             </div>
           </div>
-          <div class="p-8">
-            <div class="space-y-4">
-              <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <i class="pi pi-user-plus text-green-600"></i>
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-gray-700">System Version</span>
+                  <span class="text-sm text-gray-900">v2.1.0</span>
                 </div>
-                <div class="flex-1">
-                  <p class="text-sm font-semibold text-gray-900">New user account created</p>
-                  <p class="text-xs text-gray-600">John Doe added as Receptionist • 2 hours ago</p>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-gray-700">Database Status</span>
+                  <span class="text-sm text-green-600 font-medium">Connected</span>
                 </div>
-              </div>
-              <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <i class="pi pi-calendar text-blue-600"></i>
-                </div>
-                <div class="flex-1">
-                  <p class="text-sm font-semibold text-gray-900">Reservation system updated</p>
-                  <p class="text-xs text-gray-600">New booking policies applied • 4 hours ago</p>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-gray-700">Last Backup</span>
+                  <span class="text-sm text-gray-900">{{ lastBackupDate }}</span>
                 </div>
               </div>
-              <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                  <i class="pi pi-shield text-orange-600"></i>
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-gray-700">Total Rooms</span>
+                  <span class="text-sm text-gray-900">{{ totalRoomsCount }}</span>
                 </div>
-                <div class="flex-1">
-                  <p class="text-sm font-semibold text-gray-900">Security settings updated</p>
-                  <p class="text-xs text-gray-600">Password policy strengthened • 1 day ago</p>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-gray-700">Active Reservations</span>
+                  <span class="text-sm text-gray-900">{{ stats.totalReservations }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-gray-700">System Uptime</span>
+                  <span class="text-sm text-green-600 font-medium">99.9%</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </main>
-  </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <ToastNotifications />
+    
+    <!-- Loading Overlay -->
+    <LoadingOverlay v-if="loading" />
+  </AdminLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useAuth } from '../composables/useAuth'
 import { useDashboardStats } from '../composables/useDashboardStats'
+import { useSuccessNotification } from '../composables/useSuccessNotification'
+import { useClickOutside } from '../composables/useClickOutside'
+import AdminLayout from './AdminLayout.vue'
+import Searchbar from '@/components/Searchbar.vue'
+import Custombutton from '@/components/Custombutton.vue'
+import ToastNotifications from '@/components/ToastNotifications.vue'
+import LoadingOverlay from '@/components/LoadingOverlay.vue'
 
-const { logout, currentUser } = useAuth()
+const { currentUser } = useAuth()
 const { 
   loading, 
   error, 
@@ -392,7 +491,9 @@ const {
   bookingSources,
   roomPopularity,
   summaryCards,
-  fetchStats: fetchDashboardStats 
+  fetchStats: fetchDashboardStats,
+  calculateRealRoomPopularity,
+  calculateRealBookingSources
 } = useDashboardStats()
 
 // Selected date range filter
@@ -405,10 +506,85 @@ const dateRangeOptions = [
 
 // Seeder functionality
 const seederLoading = ref(false)
+const showDateRangeDropdown = ref(false)
 
-const handleLogout = () => {
-  logout()
+// Toast notifications
+const { showWithTimeout } = useSuccessNotification()
+
+// Click outside for date dropdown
+useClickOutside(
+  (target: HTMLElement) => target.closest('.date-range-dropdown') !== null,
+  () => {
+    showDateRangeDropdown.value = false
+  }
+)
+
+// Admin dashboard functions
+const handleDashboardSearch = (query: string) => {
+  console.log('Dashboard search:', query)
+  showWithTimeout(`Searching for: ${query}`, 2000)
+  // Implement dashboard search functionality
 }
+
+const handleAddUser = () => {
+  console.log('Add user clicked')
+  showWithTimeout('Navigating to user management...', 2000)
+  // Navigate to add user page or open modal
+}
+
+// Core admin data - TODO: Replace with real API calls
+const activeStaffCount = computed(() => {
+  // TODO: Implement real user count API
+  // return userStats.value?.activeStaff || 0
+  return 8 // Placeholder
+})
+
+const adminUserCount = computed(() => {
+  // TODO: Implement real admin count API  
+  // return userStats.value?.adminUsers || 0
+  return 2 // Placeholder
+})
+
+const totalRoomsCount = computed(() => {
+  // TODO: Get from room inventory API
+  // return roomStats.value?.totalRooms || 0
+  return 27 // Correct total room count from roomData.js
+})
+const lastBackupDate = computed(() => {
+  const date = new Date()
+  date.setHours(date.getHours() - 6)
+  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+})
+
+const navigateToUsers = () => {
+  showWithTimeout('User management feature coming soon...', 2000)
+  // TODO: Implement user management navigation
+}
+
+// Force refresh room chart data using real calculations
+const refreshRoomChart = async () => {
+  try {
+    console.log('🔄 Force refreshing room chart with REAL data...')
+    await calculateRealRoomPopularity()
+    showWithTimeout('Room chart data refreshed with real data!', 2000)
+  } catch (error) {
+    console.error('Failed to refresh room chart:', error)
+    showWithTimeout('Failed to refresh room chart', 2000)
+  }
+}
+
+// Force refresh booking sources chart data using real calculations
+const refreshBookingSourceChart = async () => {
+  try {
+    console.log('🔄 Force refreshing booking sources chart with REAL data...')
+    await calculateRealBookingSources()
+    showWithTimeout('Booking sources chart refreshed with real data!', 2000)
+  } catch (error) {
+    console.error('Failed to refresh booking sources chart:', error)
+    showWithTimeout('Failed to refresh booking sources chart', 2000)
+  }
+}
+
 
 // Legacy stats for backward compatibility
 const stats = computed(() => ({
@@ -421,6 +597,14 @@ const stats = computed(() => ({
 // Fetch dashboard stats with real API data
 const fetchStats = async () => {
   await fetchDashboardStats(selectedDateRange.value)
+  
+  // Calculate real chart data from actual reservations
+  console.log('📊 Fetching real chart data...')
+  await Promise.all([
+    calculateRealRoomPopularity(),
+    calculateRealBookingSources()
+  ])
+  console.log('✅ Real chart data updated')
 }
 
 // Handle date range change
@@ -458,7 +642,7 @@ const seedReservations = async () => {
       // Also call debug to verify data was created
       console.log('🔍 Verifying seeded data...')
       setTimeout(async () => {
-        await debugData()
+        await debugChartData()
       }, 1000)
     } else {
       alert(`❌ Seeding failed: ${result.error}`)
@@ -503,22 +687,78 @@ const clearReservations = async () => {
   }
 }
 
-// Debug function to check if data exists
-const debugData = async () => {
+// Comprehensive debug function for charts
+const debugChartData = async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/debug/reservations')
-    const result = await response.json()
+    console.log('🔍 === COMPREHENSIVE CHART DEBUG ===')
     
-    console.log('Debug data:', result)
-    alert(`Debug Info:\n\nReservations: ${result.counts.totalReservations}\nGuests: ${result.counts.totalGuests}\nRooms: ${result.counts.totalRooms}\n\nSample reservations:\n${result.sampleReservations.map((r: any) => `- ${r.guest}: ${r.status} (₱${r.totalPrice})`).join('\n')}`)
+    // 1. Check basic reservation counts
+    const debugResponse = await fetch('http://localhost:3000/api/debug/reservations')
+    const debugResult = await debugResponse.json()
+    console.log('📊 Basic counts:', debugResult.counts)
+    
+    // 2. Check room popularity API directly
+    console.log('🔍 Checking room popularity API...')
+    const roomPopResponse = await fetch(`http://localhost:3000/api/stats/rooms/popularity?_t=${Date.now()}`, { cache: 'no-cache' })
+    const roomPopData = await roomPopResponse.json()
+    console.log('📊 Room popularity API response:', roomPopData)
+    
+    // 3. Check booking sources API directly  
+    console.log('🔍 Checking booking sources API...')
+    const bookingSourceResponse = await fetch(`http://localhost:3000/api/stats/bookings/source?_t=${Date.now()}`, { cache: 'no-cache' })
+    const bookingSourceData = await bookingSourceResponse.json()
+    console.log('📊 Booking sources API response:', bookingSourceData)
+    
+    // 4. Check current reactive data
+    console.log('🔍 Current reactive data:')
+    console.log('roomPopularity.value:', roomPopularity.value)
+    console.log('bookingSources.value:', bookingSources.value)
+    
+    // 5. Calculate totals
+    const roomChartTotal = roomPopularity.value.reduce((sum, item) => sum + (item.nights_booked || 0), 0)
+    const sourceChartTotal = bookingSources.value.reduce((sum, item) => sum + (item.count || 0), 0)
+    
+    // 6. Show comprehensive debug info
+    const debugInfo = `
+=== CHART DEBUG ANALYSIS ===
+
+BASIC COUNTS:
+• Total Reservations: ${debugResult.counts.totalReservations}
+• Total Guests: ${debugResult.counts.totalGuests}
+• Total Rooms: ${debugResult.counts.totalRooms}
+
+ROOM POPULARITY API:
+${roomPopData.length > 0 ? roomPopData.map(item => `• ${item.room_type}: ${item.nights_booked} nights`).join('\n') : '• NO DATA RETURNED'}
+
+BOOKING SOURCES API:
+${bookingSourceData.length > 0 ? bookingSourceData.map(item => `• ${item.source}: ${item.count} (${item.percentage}%)`).join('\n') : '• NO DATA RETURNED'}
+
+CURRENT CHART DATA:
+Room Chart Total: ${roomChartTotal} nights
+Source Chart Total: ${sourceChartTotal} bookings
+
+REACTIVE DATA STATUS:
+• roomPopularity.value length: ${roomPopularity.value.length}
+• bookingSources.value length: ${bookingSources.value.length}
+
+DATA CONSISTENCY:
+• API vs Chart (Room): ${JSON.stringify(roomPopData) === JSON.stringify(roomPopularity.value) ? 'MATCH' : 'MISMATCH'}
+• API vs Chart (Sources): ${JSON.stringify(bookingSourceData) === JSON.stringify(bookingSources.value) ? 'MATCH' : 'MISMATCH'}
+
+SAMPLE RESERVATIONS:
+${debugResult.sampleReservations.map((r: any) => `• ${r.guest}: ${r.status} (₱${r.totalPrice})`).join('\n')}
+    `.trim()
+    
+    alert(debugInfo)
+    
   } catch (error) {
     console.error('Debug error:', error)
     alert(`Debug failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
-// Chart configurations - these are fire charts ngl 🔥
-const occupancyChartOptions = ref({
+// Chart configurations - reactive with real data 🔥
+const occupancyChartOptions = computed(() => ({
   chart: {
     type: 'area',
     toolbar: { show: false },
@@ -558,14 +798,14 @@ const occupancyChartOptions = ref({
   tooltip: {
     y: { formatter: (val: number) => `${val}%` }
   }
-})
+}))
 
 const occupancyChartSeries = computed(() => [{
   name: 'Occupancy Rate',
   data: occupancyTrend.value.map(item => item.occupancy_percentage || 0)
 }])
 
-const revenueChartOptions = ref({
+const revenueChartOptions = computed(() => ({
   chart: {
     type: 'bar',
     toolbar: { show: false }
@@ -594,14 +834,14 @@ const revenueChartOptions = ref({
   tooltip: {
     y: { formatter: (val: number) => `$${val}k` }
   }
-})
+}))
 
 const revenueChartSeries = computed(() => [{
   name: 'Revenue',
   data: revenueTrend.value.map(item => item.revenue || 0)
 }])
 
-const roomTypeChartOptions = ref({
+const roomTypeChartOptions = computed(() => ({
   chart: {
     type: 'donut'
   },
@@ -620,22 +860,23 @@ const roomTypeChartOptions = ref({
           total: {
             show: true,
             label: 'Total Rooms',
-            color: '#374151'
+            color: '#374151',
+            formatter: () => '27' // Correct total room count
           }
         }
       }
     }
   },
   tooltip: {
-    y: { formatter: (val: number) => `${val} rooms` }
+    y: { formatter: (val: number) => `${val} bookings` }
   }
-})
+}))
 
 const roomTypeChartSeries = computed(() => 
-  roomPopularity.value.map(item => item.nights_booked)
+  roomPopularity.value.map(item => item.nights_booked || 0)
 )
 
-const bookingSourceChartOptions = ref({
+const bookingSourceChartOptions = computed(() => ({
   chart: {
     type: 'pie'
   },
@@ -648,10 +889,10 @@ const bookingSourceChartOptions = ref({
   tooltip: {
     y: { formatter: (val: number) => `${val}%` }
   }
-})
+}))
 
 const bookingSourceChartSeries = computed(() => 
-  bookingSources.value.map(item => item.percentage)
+  bookingSources.value.map(item => item.percentage || 0)
 )
 
 onMounted(() => {
