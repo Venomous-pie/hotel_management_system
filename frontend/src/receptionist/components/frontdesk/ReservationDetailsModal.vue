@@ -246,7 +246,7 @@
 <script setup lang="ts">
 import { computed, defineEmits, defineProps, onMounted, onUnmounted } from 'vue'
 import type { Reservation, Room } from '@/types/hotel'
-import Custombutton from './Custombutton.vue'
+import Custombutton from '@/components/Custombutton.vue'
 import { getReservationStatusColor } from '@/utils/colors'
 import { formatReservationDateRange } from '@/utils/reservations'
 import { useCheckout } from '@/composables/useCheckout'

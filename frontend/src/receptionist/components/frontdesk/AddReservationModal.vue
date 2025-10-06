@@ -425,7 +425,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import Custombutton from './Custombutton.vue'
+import Custombutton from '@/components/Custombutton.vue'
 import { getTodayAsString } from '@/utils'
 import { useHotelData } from '@/composables/useHotelData'
 import { useReservationForm } from '@/composables/useReservationForm'

@@ -197,7 +197,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useCancellationPolicy } from '@/composables/useCancellationPolicy'
-import Custombutton from './Custombutton.vue'
+import Custombutton from '@/components/Custombutton.vue'
 import type { Reservation } from '@/types/hotel'
 
 // Define emits

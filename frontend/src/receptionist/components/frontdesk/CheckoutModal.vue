@@ -275,7 +275,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import Custombutton from './Custombutton.vue'
+import Custombutton from '@/components/Custombutton.vue'
 import { useCheckout } from '@/composables/useCheckout'
 import type { ExtraCharge } from '@/composables/useCheckout'
 
