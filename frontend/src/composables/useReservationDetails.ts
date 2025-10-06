@@ -38,9 +38,11 @@ export const useReservationDetails = () => {
   }
 
   const closeModal = () => {
+    console.log('🔄 Closing reservation modal...') // Debug log
     isModalOpen.value = false
     setTimeout(() => {
       selectedReservation.value = null
+      console.log('✅ Modal closed and reservation cleared') // Debug log
     }, 300)
   }
 

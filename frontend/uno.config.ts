@@ -16,6 +16,10 @@ export default defineConfig({
         },
         cursive: 'Italianno',
       },
+      // Add timeout and fallback configuration
+      timeout: 5000, // 5 second timeout
+      inlineImports: false, // Don't inline to avoid blocking
+      themeKey: 'fontFamily',
     }),
     presetIcons({
       scale: 1.2,

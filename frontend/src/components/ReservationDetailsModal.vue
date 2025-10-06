@@ -2,6 +2,7 @@
   <div
     v-if="isOpen"
     class="fixed inset-0 backdrop-blur-sm bg-white/10 flex items-center justify-center z-50"
+    data-modal="reservation-details"
     @click="handleBackdropClick"
   >
     <div
@@ -16,7 +17,11 @@
             {{ reservation?.status?.toUpperCase() }}
           </span>
         </div>
-        <button @click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors">
+        <button 
+          @click.stop="closeModal" 
+          class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+          type="button"
+        >
           <i class="pi pi-times w-5 h-5"></i>
         </button>
       </div>
@@ -201,7 +206,31 @@
           :hover="true"
           @click="closeModal"
         />
+        
+        <!-- Cancellation Button -->
         <Custombutton
+          v-if="canCancel"
+          label="Cancel Reservation"
+          bg-color="bg-red-600"
+          hover-bg-color="hover:bg-red-700"
+          text-color="white"
+          :hover="true"
+          @click="handleCancellation"
+        />
+        
+        <!-- Checkout Button -->
+        <Custombutton
+          v-if="canCheckout"
+          label="Check Out"
+          bg-color="bg-green-600"
+          hover-bg-color="hover:bg-green-700"
+          text-color="white"
+          :hover="true"
+          @click="handleCheckout"
+        />
+        
+        <Custombutton
+          v-if="canUpdate"
           label="Update Reservation"
           bg-color="bg-blue-600"
           hover-bg-color="hover:bg-blue-700"
@@ -215,11 +244,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, defineEmits, defineProps, onMounted, onUnmounted } from 'vue'
+import type { Reservation, Room } from '@/types/hotel'
 import Custombutton from './Custombutton.vue'
 import { getReservationStatusColor } from '@/utils/colors'
 import { formatReservationDateRange } from '@/utils/reservations'
-import type { Reservation, Room } from '@/types/hotel'
+import { useCheckout } from '@/composables/useCheckout'
+import { useCancellationPolicy } from '@/composables/useCancellationPolicy'
 
 interface Props {
   isOpen: boolean
@@ -232,7 +263,13 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   close: []
   edit: [reservation: Reservation]
+  checkout: [reservation: Reservation]
+  cancel: [reservation: Reservation]
 }>()
+
+// Composables for checkout and cancellation
+const { openCheckoutModal } = useCheckout()
+const { calculateCancellation } = useCancellationPolicy()
 
 // Computed properties for display
 const guestFullName = computed(() => {
@@ -280,6 +317,21 @@ const nightsCount = computed(() => {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 })
 
+// Button visibility logic
+const canCheckout = computed(() => {
+  return props.reservation?.status === 'checkedIn'
+})
+
+const canCancel = computed(() => {
+  const status = props.reservation?.status
+  return status === 'confirmed' || status === 'pending'
+})
+
+const canUpdate = computed(() => {
+  const status = props.reservation?.status
+  return status !== 'checkedOut' && status !== 'cancelled'
+})
+
 // Helper functions
 const formatDate = (date: string | Date | undefined) => {
   if (!date) return 'N/A'
@@ -300,7 +352,22 @@ const formatDate = (date: string | Date | undefined) => {
 }
 
 const closeModal = () => {
-  emit('close')
+  console.log('🔄 ReservationDetailsModal: Close button clicked') // Debug log
+  
+  // Force close with multiple approaches
+  try {
+    emit('close')
+    
+    // Fallback: directly manipulate DOM if emit fails
+    setTimeout(() => {
+      const modal = document.querySelector('[data-modal="reservation-details"]')
+      if (modal) {
+        modal.style.display = 'none'
+      }
+    }, 100)
+  } catch (error) {
+    console.error('❌ Error closing modal:', error)
+  }
 }
 
 const handleUpdateReservation = () => {
@@ -310,9 +377,40 @@ const handleUpdateReservation = () => {
   }
 }
 
+const handleCheckout = () => {
+  if (props.reservation) {
+    openCheckoutModal(props.reservation)
+    emit('checkout', props.reservation)
+  }
+}
+
+const handleCancellation = () => {
+  if (props.reservation) {
+    emit('cancel', props.reservation)
+  }
+}
+
 const handleBackdropClick = (event: MouseEvent) => {
+  console.log('🔄 Backdrop clicked', event.target === event.currentTarget) // Debug log
   if (event.target === event.currentTarget) {
     closeModal()
   }
 }
+
+// ESC key handler
+const handleEscKey = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && props.isOpen) {
+    console.log('🔄 ESC key pressed - closing modal')
+    closeModal()
+  }
+}
+
+// Add/remove ESC key listener
+onMounted(() => {
+  document.addEventListener('keydown', handleEscKey)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleEscKey)
+})
 </script>

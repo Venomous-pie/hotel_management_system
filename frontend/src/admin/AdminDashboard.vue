@@ -15,6 +15,49 @@
           </div>
           
           <div class="flex items-center gap-6">
+            <!-- Seeder Buttons (Development Only) -->
+            <div class="flex items-center gap-2">
+              <button
+                @click="seedReservations"
+                :disabled="seederLoading"
+                class="px-3 py-2 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                <i v-if="seederLoading" class="pi pi-spin pi-spinner mr-1"></i>
+                <i v-else class="pi pi-plus mr-1"></i>
+                Seed Data
+              </button>
+              <button
+                @click="clearReservations"
+                :disabled="seederLoading"
+                class="px-3 py-2 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+              >
+                <i v-if="seederLoading" class="pi pi-spin pi-spinner mr-1"></i>
+                <i v-else class="pi pi-trash mr-1"></i>
+                Clear Data
+              </button>
+              <button
+                @click="debugData"
+                class="px-3 py-2 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                <i class="pi pi-search mr-1"></i>
+                Debug
+              </button>
+            </div>
+
+            <!-- Date Range Filter -->
+            <div class="flex items-center gap-3">
+              <label class="text-sm font-medium text-gray-700">Period:</label>
+              <select 
+                v-model="selectedDateRange" 
+                @change="handleDateRangeChange"
+                class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              >
+                <option v-for="option in dateRangeOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+            
             <div class="flex items-center gap-3 px-4 py-2 bg-gray-50 rounded-xl">
               <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
                 <i class="pi pi-user text-white text-sm"></i>
@@ -56,8 +99,33 @@
           </div>
         </div>
 
+        <!-- Loading State -->
+        <div v-if="loading" class="flex items-center justify-center py-12">
+          <div class="flex items-center gap-3">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+            <span class="text-gray-600">Loading dashboard data...</span>
+          </div>
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
+          <div class="flex items-center gap-3">
+            <i class="pi pi-exclamation-triangle text-red-600 text-xl"></i>
+            <div>
+              <h3 class="text-red-800 font-semibold">Failed to load dashboard data</h3>
+              <p class="text-red-600 text-sm">{{ error }}</p>
+              <button 
+                @click="fetchStats" 
+                class="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-200">
             <div class="flex items-center justify-between">
               <div>
@@ -108,6 +176,88 @@
                 <i class="pi pi-dollar text-2xl text-purple-600"></i>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Analytics Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+          <!-- Occupancy Rate Chart -->
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h3 class="text-lg font-bold text-gray-900">Occupancy Rate</h3>
+                <p class="text-sm text-gray-600">Last 30 days performance</p>
+              </div>
+              <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                <i class="pi pi-chart-line text-blue-600"></i>
+              </div>
+            </div>
+            <apexchart
+              type="area"
+              height="300"
+              :options="occupancyChartOptions"
+              :series="occupancyChartSeries"
+            />
+          </div>
+
+          <!-- Revenue Chart -->
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h3 class="text-lg font-bold text-gray-900">Revenue Analytics</h3>
+                <p class="text-sm text-gray-600">Monthly revenue breakdown</p>
+              </div>
+              <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                <i class="pi pi-dollar text-green-600"></i>
+              </div>
+            </div>
+            <apexchart
+              type="bar"
+              height="300"
+              :options="revenueChartOptions"
+              :series="revenueChartSeries"
+            />
+          </div>
+        </div>
+
+        <!-- Room Distribution & Booking Sources -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+          <!-- Room Type Distribution -->
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h3 class="text-lg font-bold text-gray-900">Room Type Distribution</h3>
+                <p class="text-sm text-gray-600">Current occupancy by room type</p>
+              </div>
+              <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                <i class="pi pi-home text-purple-600"></i>
+              </div>
+            </div>
+            <apexchart
+              type="donut"
+              height="300"
+              :options="roomTypeChartOptions"
+              :series="roomTypeChartSeries"
+            />
+          </div>
+
+          <!-- Booking Sources -->
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h3 class="text-lg font-bold text-gray-900">Booking Sources</h3>
+                <p class="text-sm text-gray-600">Where guests book from</p>
+              </div>
+              <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+                <i class="pi pi-globe text-orange-600"></i>
+              </div>
+            </div>
+            <apexchart
+              type="pie"
+              height="300"
+              :options="bookingSourceChartOptions"
+              :series="bookingSourceChartSeries"
+            />
           </div>
         </div>
 
@@ -225,37 +375,284 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useAuth } from '../composables/useAuth'
+import { useDashboardStats } from '../composables/useDashboardStats'
 
 const { logout, currentUser } = useAuth()
+const { 
+  loading, 
+  error, 
+  occupancyStats, 
+  bookingStats, 
+  revenueStats, 
+  cancellationStats,
+  occupancyTrend,
+  revenueTrend,
+  bookingSources,
+  roomPopularity,
+  summaryCards,
+  fetchStats: fetchDashboardStats 
+} = useDashboardStats()
 
-const stats = ref({
-  totalReservations: 0,
-  availableRooms: 0,
-  totalGuests: 0,
-  revenue: 0
-})
+// Selected date range filter
+const selectedDateRange = ref('this_month')
+const dateRangeOptions = [
+  { label: 'Today', value: 'today' },
+  { label: 'This Week', value: 'this_week' },
+  { label: 'This Month', value: 'this_month' }
+]
+
+// Seeder functionality
+const seederLoading = ref(false)
 
 const handleLogout = () => {
   logout()
 }
 
-// Fetch dashboard stats - this is where the magic happens fr 🔥
+// Legacy stats for backward compatibility
+const stats = computed(() => ({
+  totalReservations: bookingStats.value?.totalBookings || 0,
+  availableRooms: occupancyStats.value?.availableRooms || 0,
+  totalGuests: occupancyStats.value?.occupiedRooms || 0,
+  revenue: revenueStats.value?.totalRevenue || 0
+}))
+
+// Fetch dashboard stats with real API data
 const fetchStats = async () => {
+  await fetchDashboardStats(selectedDateRange.value)
+}
+
+// Handle date range change
+const handleDateRangeChange = async () => {
+  await fetchStats()
+}
+
+// Seeder functions - for development only, real fire 🔥
+const seedReservations = async () => {
+  console.log('🌱 Seed button clicked!')
+  seederLoading.value = true
+  
   try {
-    // Mock data - replace with actual API calls when backend is ready
-    stats.value = {
-      totalReservations: 156,
-      availableRooms: 24,
-      totalGuests: 89,
-      revenue: 45280
+    console.log('📡 Calling seeder API...')
+    const response = await fetch('http://localhost:3000/api/admin/seed-reservations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    console.log('📡 Seeder API response status:', response.status)
+    
+    const result = await response.json()
+    console.log('📡 Seeder API result:', result)
+    console.log('📊 Seeder data details:', result.data)
+    
+    if (result.success) {
+      // Show success message - you can replace with a toast notification
+      alert(`✅ Seeding successful!\n\nCreated:\n- ${result.data?.guestsCreated || 0} guests\n- ${result.data?.reservationsCreated || 0} reservations\n\nOccupancy Rate: ${result.data?.occupancyRate || 0}%`)
+      
+      // Refresh dashboard data
+      await fetchStats()
+      
+      // Also call debug to verify data was created
+      console.log('🔍 Verifying seeded data...')
+      setTimeout(async () => {
+        await debugData()
+      }, 1000)
+    } else {
+      alert(`❌ Seeding failed: ${result.error}`)
     }
   } catch (error) {
-    console.error('Failed to fetch stats:', error)
-    // Handle error gracefully - maybe show a toast notification
+    console.error('Seeder error:', error)
+    alert(`❌ Seeding failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  } finally {
+    seederLoading.value = false
   }
 }
+
+const clearReservations = async () => {
+  if (!confirm('⚠️ Are you sure you want to clear ALL reservations and guests? This cannot be undone!')) {
+    return
+  }
+  
+  seederLoading.value = true
+  try {
+    const response = await fetch('http://localhost:3000/api/admin/clear-reservations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      alert('✅ All reservations and guests cleared successfully!')
+      
+      // Refresh dashboard data
+      await fetchStats()
+    } else {
+      alert(`❌ Clear failed: ${result.error}`)
+    }
+  } catch (error) {
+    console.error('Clear error:', error)
+    alert(`❌ Clear failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  } finally {
+    seederLoading.value = false
+  }
+}
+
+// Debug function to check if data exists
+const debugData = async () => {
+  try {
+    const response = await fetch('http://localhost:3000/api/debug/reservations')
+    const result = await response.json()
+    
+    console.log('Debug data:', result)
+    alert(`Debug Info:\n\nReservations: ${result.counts.totalReservations}\nGuests: ${result.counts.totalGuests}\nRooms: ${result.counts.totalRooms}\n\nSample reservations:\n${result.sampleReservations.map((r: any) => `- ${r.guest}: ${r.status} (₱${r.totalPrice})`).join('\n')}`)
+  } catch (error) {
+    console.error('Debug error:', error)
+    alert(`Debug failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
+
+// Chart configurations - these are fire charts ngl 🔥
+const occupancyChartOptions = ref({
+  chart: {
+    type: 'area',
+    toolbar: { show: false },
+    sparkline: { enabled: false }
+  },
+  colors: ['#3B82F6'],
+  fill: {
+    type: 'gradient',
+    gradient: {
+      shadeIntensity: 1,
+      opacityFrom: 0.7,
+      opacityTo: 0.3,
+      stops: [0, 90, 100]
+    }
+  },
+  stroke: {
+    curve: 'smooth',
+    width: 3
+  },
+  xaxis: {
+    categories: occupancyTrend.value.map(item => {
+      const date = new Date(item.date)
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    }),
+    labels: { style: { colors: '#6B7280' } }
+  },
+  yaxis: {
+    labels: { 
+      style: { colors: '#6B7280' },
+      formatter: (val: number) => `${val}%`
+    }
+  },
+  grid: {
+    borderColor: '#F3F4F6',
+    strokeDashArray: 3
+  },
+  tooltip: {
+    y: { formatter: (val: number) => `${val}%` }
+  }
+})
+
+const occupancyChartSeries = computed(() => [{
+  name: 'Occupancy Rate',
+  data: occupancyTrend.value.map(item => item.occupancy_percentage || 0)
+}])
+
+const revenueChartOptions = ref({
+  chart: {
+    type: 'bar',
+    toolbar: { show: false }
+  },
+  colors: ['#10B981'],
+  plotOptions: {
+    bar: {
+      borderRadius: 8,
+      columnWidth: '60%'
+    }
+  },
+  xaxis: {
+    categories: revenueTrend.value.map(item => item.date),
+    labels: { style: { colors: '#6B7280' } }
+  },
+  yaxis: {
+    labels: { 
+      style: { colors: '#6B7280' },
+      formatter: (val: number) => `$${val}k`
+    }
+  },
+  grid: {
+    borderColor: '#F3F4F6',
+    strokeDashArray: 3
+  },
+  tooltip: {
+    y: { formatter: (val: number) => `$${val}k` }
+  }
+})
+
+const revenueChartSeries = computed(() => [{
+  name: 'Revenue',
+  data: revenueTrend.value.map(item => item.revenue || 0)
+}])
+
+const roomTypeChartOptions = ref({
+  chart: {
+    type: 'donut'
+  },
+  colors: ['#8B5CF6', '#F59E0B', '#EF4444', '#06B6D4'],
+  labels: roomPopularity.value.map(item => item.room_type),
+  legend: {
+    position: 'bottom',
+    labels: { colors: '#6B7280' }
+  },
+  plotOptions: {
+    pie: {
+      donut: {
+        size: '70%',
+        labels: {
+          show: true,
+          total: {
+            show: true,
+            label: 'Total Rooms',
+            color: '#374151'
+          }
+        }
+      }
+    }
+  },
+  tooltip: {
+    y: { formatter: (val: number) => `${val} rooms` }
+  }
+})
+
+const roomTypeChartSeries = computed(() => 
+  roomPopularity.value.map(item => item.nights_booked)
+)
+
+const bookingSourceChartOptions = ref({
+  chart: {
+    type: 'pie'
+  },
+  colors: ['#F97316', '#3B82F6', '#10B981', '#8B5CF6'],
+  labels: bookingSources.value.map(item => item.source),
+  legend: {
+    position: 'bottom',
+    labels: { colors: '#6B7280' }
+  },
+  tooltip: {
+    y: { formatter: (val: number) => `${val}%` }
+  }
+})
+
+const bookingSourceChartSeries = computed(() => 
+  bookingSources.value.map(item => item.percentage)
+)
 
 onMounted(() => {
   fetchStats()

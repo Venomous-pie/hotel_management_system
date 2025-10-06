@@ -30,3 +30,17 @@ export async function updateReservation(
 export async function getReservationById(id: string): Promise<any> {
   return apiFetch<any>(`/reservations/${id}`)
 }
+
+export async function cancelReservation(
+  id: string,
+  payload: {
+    reason: string
+    cancellationFee: number
+    refundAmount: number
+  }
+): Promise<any> {
+  return apiFetch<any>(`/reservations/${id}/cancel`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}

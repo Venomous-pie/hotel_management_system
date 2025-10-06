@@ -171,6 +171,11 @@ export const useReservationManagement = (
     const roomReservations = getRoomReservations(roomNumber)
 
     for (const reservation of roomReservations) {
+      // Skip cancelled reservations - they should not appear in Gantt chart
+      if (reservation.status === 'cancelled') {
+        continue
+      }
+
       const checkInRaw = reservation.checkIn || reservation.checkInDate || ''
       const checkOutRaw = reservation.checkOut || reservation.checkOutDate || ''
 

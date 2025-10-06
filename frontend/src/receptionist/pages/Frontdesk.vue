@@ -176,6 +176,7 @@
     </div>
     <div class="px-6 py-2">
       <Ganttchart
+        ref="ganttchartRef"
         :selected-year="selectedYear"
         :selected-month="selectedMonth"
         :search-query="searchQuery"
@@ -221,6 +222,7 @@
       :mode="currentMode"
       @close="handleModalClose"
       @success="handleReservationSuccess"
+      @backToDetails="handleBackToDetailsFromEdit"
     />
   </div>
 </template>
@@ -335,6 +337,7 @@ const handleOpenReservationModal = ({
       roomNumber,
       checkInDate,
     }
+    currentMode.value = 'new' // 🔧 Fix: Always set to 'new' mode for cell clicks
     showAddReservationModal.value = true
   }
 }
@@ -363,6 +366,18 @@ const handleReservationSuccess = async (payload: { reservation: any; roomNumber:
   }
   showWithTimeout(msg, 3000)
   showAddReservationModal.value = false
+}
+
+const ganttchartRef = ref()
+
+const handleBackToDetailsFromEdit = (reservation: any) => {
+  // Close the AddReservationModal
+  showAddReservationModal.value = false
+  
+  // Trigger the Ganttchart to reopen ReservationDetailsModal
+  if (ganttchartRef.value && reservation) {
+    ganttchartRef.value.handleBackToDetails(reservation)
+  }
 }
 
 onMounted(async () => {

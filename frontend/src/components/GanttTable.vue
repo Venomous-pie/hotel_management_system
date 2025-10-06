@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative overflow-x-auto overflow-hidden rounded-lg outline outline-1 outline-gray-200 bg-white shadow-sm"
+    class="relative overflow-x-hidden overflow-hidden rounded-lg outline outline-1 outline-gray-200 bg-white shadow-sm"
     ref="containerEl"
   >
     <table class="w-full table-fixed border-collapse min-w-1254px">

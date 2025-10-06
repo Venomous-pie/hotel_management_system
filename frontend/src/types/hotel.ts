@@ -159,3 +159,39 @@ export interface PrefilledReservationData {
   status?: 'confirmed' | 'pending' | 'checkedIn'
   roomNumber?: string
 }
+
+// Housekeeping and service types
+export interface HousekeepingStatus {
+  roomNumber: string
+  status: 'clean' | 'dirty' | 'in_progress' | 'maintenance' | 'out_of_order'
+  lastCleaned?: string
+  assignedTo?: string
+  notes?: string
+}
+
+export interface ServiceCharge {
+  id: string
+  reservationId: string
+  description: string
+  amount: number
+  category: 'minibar' | 'room_service' | 'laundry' | 'phone' | 'damage' | 'late_checkout' | 'other'
+  chargedAt: string
+  status: 'pending' | 'confirmed' | 'disputed' | 'refunded'
+}
+
+export interface PaymentRecord {
+  id: string
+  reservationId: string
+  amount: number
+  method: 'cash' | 'credit_card' | 'debit_card' | 'bank_transfer' | 'check'
+  reference?: string
+  processedAt: string
+  status: 'completed' | 'pending' | 'failed' | 'refunded'
+}
+
+export interface CancellationPolicy {
+  hoursBeforeCheckIn: number
+  cancellationFeePercentage: number
+  refundPercentage: number
+  description: string
+}

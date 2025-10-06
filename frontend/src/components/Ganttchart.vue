@@ -33,7 +33,15 @@
       :room-details="selectedRoomDetails"
       @close="closeModal"
       @edit="handleReservationEdit"
+      @checkout="handleReservationCheckout"
+      @cancel="handleReservationCancel"
     />
+
+    <!-- Checkout Modal -->
+    <CheckoutModal @backToDetails="handleBackToDetails" />
+
+    <!-- Cancellation Modal -->
+    <CancellationModal ref="cancellationModalRef" @backToDetails="handleBackToDetails" />
 
     <RoomInfoModal
       :is-open="isRoomInfoModalOpen"
@@ -53,6 +61,8 @@ import GanttHeader from './GanttHeader.vue'
 import GanttTable from './GanttTable.vue'
 import ReservationDetailsModal from './ReservationDetailsModal.vue'
 import RoomInfoModal from './RoomInfoModal.vue'
+import CheckoutModal from './CheckoutModal.vue'
+import CancellationModal from './CancellationModal.vue'
 
 const props = defineProps<{
   selectedYear: number
@@ -166,6 +176,32 @@ const handleReservationEdit = async (reservation: any) => {
   } catch (e) {}
 }
 
+// Checkout handler - opens checkout modal
+const handleReservationCheckout = (reservation: any) => {
+  // Checkout modal is already handled by useCheckout composable in ReservationDetailsModal
+  closeModal()
+  console.log('Processing checkout for reservation:', reservation.id)
+}
+
+// Cancellation handler - opens cancellation modal
+const cancellationModalRef = ref()
+const handleReservationCancel = (reservation: any) => {
+  closeModal()
+  // Open cancellation modal
+  if (cancellationModalRef.value) {
+    cancellationModalRef.value.openCancellationModal(reservation)
+  }
+}
+
+// Handle back to details from modals
+const handleBackToDetails = (reservation: any) => {
+  // Set the reservation and reopen the modal
+  if (reservation) {
+    selectedReservation.value = reservation
+    isModalOpen.value = true
+  }
+}
+
 // Watch for changes in reservations data and refresh selected reservation if modal is open
 watch(
   () => props.reservations,
@@ -177,4 +213,9 @@ watch(
   },
   { deep: true }
 )
+
+// Expose methods for parent component
+defineExpose({
+  handleBackToDetails
+})
 </script>

@@ -60,6 +60,15 @@ export const findDateRangeIndices = (
   checkInStr: string,
   checkOutStr: string,
 ): { startIndex: number; endIndex: number } | null => {
+  // First check if check-in date is visible in the current date range
+  const firstVisible = dateRange[0]?.date.split('T')[0]
+  const lastVisible = dateRange[dateRange.length - 1]?.date.split('T')[0]
+  
+  // Hide reservations if check-in date is not within visible range
+  if (checkInStr < firstVisible || checkInStr > lastVisible) {
+    return null
+  }
+
   let startIndex = -1
   let endIndex = -1
 

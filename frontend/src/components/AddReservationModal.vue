@@ -10,6 +10,15 @@
     >
       <div class="flex items-center justify-between p-6 border-b border-gray-200">
         <div class="flex items-center gap-3">
+          <Custombutton
+            v-if="isEditing"
+            label="← Back"
+            bg-color="bg-gray-50"
+            hover-bg-color="hover:bg-gray-100"
+            text-color="text-gray-600"
+            :hover="true"
+            @click="goBackToDetails"
+          />
           <h2 class="text-lg font-medium text-gray-900">
             {{ isEditing ? 'Update Reservation' : 'Add New Reservation' }}
           </h2>
@@ -39,7 +48,11 @@
             </button>
           </div>
         </div>
-        <button @click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors">
+        <button 
+          @click.stop="closeModal" 
+          class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+          type="button"
+        >
           <i class="pi pi-times w-5 h-5"></i>
         </button>
       </div>
@@ -411,7 +424,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import Custombutton from './Custombutton.vue'
 import { getTodayAsString } from '@/utils'
 import { useHotelData } from '@/composables/useHotelData'
@@ -493,6 +506,7 @@ interface Props {
 interface Emits {
   (e: 'close'): void
   (e: 'success', payload: { reservation: any; roomNumber: string }): void
+  (e: 'backToDetails', reservation: any): void
 }
 
 const props = defineProps<Props>()
@@ -658,11 +672,19 @@ const handleNumGuestChange = () => {
 }
 
 const closeModal = () => {
+  console.log('🔄 AddReservationModal: Closing modal...') // Debug log
   modalState.value.error = null
   modalState.value.success = false
   modalState.value.isLoading = false
-
+  
+  // Actually close the modal by emitting to parent
   emit('close')
+}
+
+const goBackToDetails = () => {
+  const reservation = props.prefilledData
+  closeModal()
+  emit('backToDetails', reservation)
 }
 
 const discardDraft = () => {
@@ -680,10 +702,28 @@ const discardDraft = () => {
 }
 
 const handleBackdropClick = (event: MouseEvent) => {
+  console.log('🔄 AddReservationModal: Backdrop clicked', event.target === event.currentTarget) // Debug log
   if (event.target === event.currentTarget) {
     closeModal()
   }
 }
+
+// ESC key handler
+const handleEscKey = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && props.isOpen) {
+    console.log('🔄 AddReservationModal: ESC key pressed - closing modal')
+    closeModal()
+  }
+}
+
+// Add/remove ESC key listener
+onMounted(() => {
+  document.addEventListener('keydown', handleEscKey)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleEscKey)
+})
 
 let lastMode: 'new' | 'edit' | null = null
 

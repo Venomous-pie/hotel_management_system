@@ -7,6 +7,8 @@ import {
   Room,
   RoomType,
   User,
+  Payment,
+  Invoice,
 } from "./models/index.js";
 import { seedData } from "./services/seedService.js";
 import { getStatusColor } from "./data/roomData.js";
@@ -19,20 +21,32 @@ import {
   requestIdMiddleware, 
   asyncHandler, 
   createError, 
-  createSuccessResponse,
   validateRequired,
   validateEmail,
   validateDateRange
 } from "./middleware/errorHandler.js";
+import dashboardRouter from "./routes/dashboard.js";
+import { seedReservations, clearReservations } from "./seeders/reservationSeeder.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
-app.use(cors());
-
 // Request tracking middleware
 app.use(requestIdMiddleware);
+
+// Middleware setup
+app.use(cors());
+app.use(express.json());
+
+// Dashboard routes
+app.use('/api', dashboardRouter);
+
+// Helper function for consistent API responses
+const createSuccessResponse = (data, message = 'Success') => ({
+  success: true,
+  message,
+  data
+});
 
 const normalizeToStartOfDay = (dateInput) => {
   if (typeof dateInput === "string" && dateInput.match(/^\d{4}-\d{2}-\d{2}$/)) {
@@ -68,6 +82,40 @@ const buildOverlapWhere = ({ roomId, startDate, endDate, excludeId }) => ({
 
 app.get("/", (req, res) => {
   res.send("DB is correct lol.");
+});
+
+// Seeder endpoints for development
+app.post("/api/admin/seed-reservations", async (req, res) => {
+  try {
+    console.log('📡 Seeder endpoint called');
+    console.log('🔄 Starting reservation seeding process...');
+    
+    const result = await seedReservations();
+    
+    console.log('✅ Seeder completed successfully:', result);
+    res.json(result);
+  } catch (error) {
+    console.error('❌ Seeder error:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({
+      success: false,
+      error: `Failed to seed reservations: ${error.message}`,
+      details: error.stack
+    });
+  }
+});
+
+app.post("/api/admin/clear-reservations", async (req, res) => {
+  try {
+    const result = await clearReservations();
+    res.json(result);
+  } catch (error) {
+    console.error('Clear error:', error);
+    res.status(500).json({
+      success: false,
+      error: `Failed to clear reservations: ${error.message}`
+    });
+  }
 });
 
 // Authentication endpoints
@@ -994,6 +1042,259 @@ app.delete("/api/reservations/:id", authenticateToken, requireAnyPermission(['RE
     return res
       .status(500)
       .json({ error: `Error deleting reservation: ${error.message}` });
+  }
+});
+
+// Checkout endpoint - process guest checkout
+app.post("/api/reservations/:id/checkout", authenticateToken, requireAnyPermission(['RESERVATIONS_UPDATE']), async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const { id } = req.params;
+    const { paymentAmount, paymentMethod, extraCharges, notes } = req.body;
+
+    const reservation = await Reservation.findByPk(id, {
+      include: [Guest, Room],
+      transaction: t
+    });
+
+    if (!reservation) {
+      await t.rollback();
+      return res.status(404).json({ error: "Reservation not found" });
+    }
+
+    if (reservation.status === 'checkedOut') {
+      await t.rollback();
+      return res.status(400).json({ error: "Reservation already checked out" });
+    }
+
+    // Calculate total with extra charges
+    let totalAmount = reservation.totalPrice;
+    if (extraCharges && extraCharges.length > 0) {
+      const extraTotal = extraCharges.reduce((sum, charge) => sum + charge.amount, 0);
+      totalAmount += extraTotal;
+    }
+
+    // Add taxes (12%)
+    const taxAmount = totalAmount * 0.12;
+    const finalTotal = totalAmount + taxAmount;
+
+    // Create invoice if doesn't exist
+    let invoice = await Invoice.findOne({
+      where: { reservationId: id },
+      transaction: t
+    });
+
+    if (!invoice) {
+      invoice = await Invoice.create({
+        reservationId: id,
+        guestId: reservation.GuestId,
+        subtotal: totalAmount,
+        taxAmount: taxAmount,
+        totalAmount: finalTotal,
+        status: 'sent'
+      }, { transaction: t });
+    }
+
+    // Process payment if amount provided
+    if (paymentAmount && paymentAmount > 0) {
+      await Payment.create({
+        invoiceId: invoice.id,
+        reservationId: id,
+        guestId: reservation.GuestId,
+        amount: paymentAmount,
+        paymentMethod: paymentMethod || 'cash',
+        status: 'completed',
+        notes: notes
+      }, { transaction: t });
+
+      // Update invoice paid amount
+      await invoice.update({
+        paidAmount: (invoice.paidAmount || 0) + paymentAmount
+      }, { transaction: t });
+    }
+
+    // Update reservation status
+    await reservation.update({
+      status: 'checkedOut',
+      notes: notes ? `${reservation.notes || ''}\nCheckout: ${notes}`.trim() : reservation.notes
+    }, { transaction: t });
+
+    // Update room status to dirty (needs housekeeping)
+    if (reservation.Room) {
+      await reservation.Room.update({
+        status: 'maintenance' // Will be changed to available after housekeeping
+      }, { transaction: t });
+    }
+
+    await t.commit();
+
+    res.json({
+      message: "Checkout completed successfully",
+      reservation: {
+        id: reservation.id,
+        status: 'checkedOut',
+        totalAmount: finalTotal,
+        paidAmount: invoice.paidAmount || 0,
+        balanceAmount: finalTotal - (invoice.paidAmount || 0)
+      }
+    });
+
+  } catch (error) {
+    await t.rollback();
+    res.status(500).json({ error: `Checkout failed: ${error.message}` });
+  }
+});
+
+// Cancellation endpoint with policy calculation
+app.post("/api/reservations/:id/cancel", authenticateToken, requireAnyPermission(['RESERVATIONS_CANCEL']), async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const { id } = req.params;
+    const { reason, cancellationFee, refundAmount } = req.body;
+
+    const reservation = await Reservation.findByPk(id, {
+      include: [Guest, Room],
+      transaction: t
+    });
+
+    if (!reservation) {
+      await t.rollback();
+      return res.status(404).json({ error: "Reservation not found" });
+    }
+
+    if (reservation.status === 'cancelled') {
+      await t.rollback();
+      return res.status(400).json({ error: "Reservation already cancelled" });
+    }
+
+    if (reservation.status === 'checkedIn') {
+      await t.rollback();
+      return res.status(400).json({ error: "Cannot cancel after check-in" });
+    }
+
+    // Update reservation status
+    await reservation.update({
+      status: 'cancelled',
+      notes: `${reservation.notes || ''}\nCancelled: ${reason}`.trim()
+    }, { transaction: t });
+
+    // Process refund if applicable
+    if (refundAmount && refundAmount > 0) {
+      // Find existing payments
+      const payments = await Payment.findAll({
+        where: { reservationId: id },
+        transaction: t
+      });
+
+      if (payments.length > 0) {
+        // Create refund record
+        const payment = payments[0]; // Use first payment for refund
+        await payment.processRefund(refundAmount, `Cancellation refund: ${reason}`, req.user?.id);
+      }
+    }
+
+    // Update room availability
+    if (reservation.Room) {
+      await reservation.Room.update({
+        status: 'available'
+      }, { transaction: t });
+    }
+
+    // Remove guest association from cancelled reservation but keep guest record
+    if (reservation.Guest) {
+      console.log(`Removing guest association from reservation ${id} - keeping guest record for history`);
+      
+      // Clear the guest association from this reservation
+      await reservation.update({
+        GuestId: null
+      }, { transaction: t });
+    }
+
+    await t.commit();
+
+    res.json({
+      message: "Reservation cancelled successfully",
+      reservation: {
+        id: reservation.id,
+        status: 'cancelled',
+        cancellationFee: cancellationFee || 0,
+        refundAmount: refundAmount || 0
+      }
+    });
+
+  } catch (error) {
+    await t.rollback();
+    res.status(500).json({ error: `Cancellation failed: ${error.message}` });
+  }
+});
+
+// Get billing summary for checkout
+app.get("/api/billing/generate/:reservationId", authenticateToken, async (req, res) => {
+  try {
+    const { reservationId } = req.params;
+
+    const reservation = await Reservation.findByPk(reservationId, {
+      include: [Guest, Room]
+    });
+
+    if (!reservation) {
+      return res.status(404).json({ error: "Reservation not found" });
+    }
+
+    // Calculate nights
+    const checkIn = new Date(reservation.checkIn);
+    const checkOut = new Date(reservation.checkOut);
+    const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+
+    // Get existing payments
+    const payments = await Payment.findAll({
+      where: { reservationId },
+      order: [['createdAt', 'DESC']]
+    });
+
+    const paidAmount = payments.reduce((sum, payment) => {
+      return payment.status === 'completed' ? sum + parseFloat(payment.amount) : sum;
+    }, 0);
+
+    // Basic calculation (can be enhanced with extra charges)
+    const roomRate = reservation.totalPrice / nights;
+    const subtotal = reservation.totalPrice;
+    const taxAmount = subtotal * 0.12;
+    const totalAmount = subtotal + taxAmount;
+    const balanceAmount = totalAmount - paidAmount;
+
+    const billingSummary = {
+      reservationId: reservation.id,
+      guestName: `${reservation.Guest.firstName} ${reservation.Guest.lastName}`,
+      roomNumber: reservation.Room.number,
+      checkInDate: reservation.checkIn,
+      checkOutDate: reservation.checkOut,
+      nights,
+      roomRate,
+      roomSubtotal: subtotal,
+      serviceCharges: [], // TODO: Implement service charges
+      servicesSubtotal: 0,
+      taxRate: 0.12,
+      taxAmount,
+      serviceFee: 0,
+      subtotal,
+      totalAmount,
+      paidAmount,
+      balanceAmount,
+      payments: payments.map(p => ({
+        id: p.id,
+        amount: parseFloat(p.amount),
+        method: p.paymentMethod,
+        reference: p.referenceNumber,
+        processedAt: p.createdAt,
+        status: p.status
+      }))
+    };
+
+    res.json(billingSummary);
+
+  } catch (error) {
+    res.status(500).json({ error: `Failed to generate bill: ${error.message}` });
   }
 });
 
