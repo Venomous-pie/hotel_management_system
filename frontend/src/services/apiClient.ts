@@ -17,6 +17,26 @@ function buildUrl(path: string): string {
   return `${API_BASE}${normalizedPath}`
 }
 
+// Global auto logout handler - set by useAutoLogout composable
+let globalUnauthorizedHandler: (reason: string) => Promise<void> = async () => {}
+let lastUnauthorizedCall = 0
+const UNAUTHORIZED_DEBOUNCE_MS = 1000 // Prevent duplicate calls within 1 second
+
+export function setUnauthorizedHandler(handler: (reason: string) => Promise<void>) {
+  globalUnauthorizedHandler = async (reason) => {
+    const now = Date.now()
+    if (now - lastUnauthorizedCall < UNAUTHORIZED_DEBOUNCE_MS) {
+      return // Skip duplicate calls
+    }
+    lastUnauthorizedCall = now
+    await handler(reason)
+  }
+}
+
+export function clearUnauthorizedHandler() {
+  globalUnauthorizedHandler = async () => {}
+}
+
 export async function apiFetch<T = any>(
   path: string,
   options: RequestInit = {},
@@ -56,7 +76,28 @@ export async function apiFetch<T = any>(
 
     if (!response.ok) {
       const message: string =
-        (payload && (payload.error || payload.message)) || `API request failed (${response.status})`
+        (payload && (payload.error?.message || payload.error || payload.message)) || `API request failed (${response.status})`
+
+      // Handle unauthorized responses - trigger auto logout if handler is set
+      if ((response.status === 401 || response.status === 403) && globalUnauthorizedHandler) {
+        // Use the actual error message from the server to help identify the issue
+        const serverMessage = payload?.error?.message || payload?.error || payload?.message || ''
+        let reason = response.status === 401 ? 'Session expired' : 'Access denied'
+        
+        // More specific reasons based on server response
+        if (serverMessage.includes('User not found') || serverMessage.includes('inactive')) {
+          reason = 'Account deactivated or inactive'
+        } else if (serverMessage.includes('permission') || serverMessage.includes('Insufficient')) {
+          reason = 'Access denied - insufficient permissions'
+        } else if (serverMessage.includes('Token expired')) {
+          reason = 'Session expired'
+        } else if (serverMessage.includes('Invalid token')) {
+          reason = 'Invalid session'
+        }
+        
+        // Don't await to avoid blocking the error throw
+        globalUnauthorizedHandler(`${reason}: ${serverMessage}`).catch(console.error)
+      }
 
       const isTransientSqlite = /SQLITE_BUSY|database is locked/i.test(message)
       if (method === 'GET' && isTransientSqlite && attempt < retries) {

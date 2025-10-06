@@ -13,12 +13,26 @@ import { getStatusColor } from "./data/roomData.js";
 import { Op } from "sequelize";
 import { authenticateToken, generateToken, optionalAuth } from "./middleware/auth.js";
 import { requirePermission, requireAnyPermission, requireRole, requireAdmin, requireAdminOrManager } from "./middleware/permissions.js";
+import { 
+  errorHandler, 
+  notFoundHandler, 
+  requestIdMiddleware, 
+  asyncHandler, 
+  createError, 
+  createSuccessResponse,
+  validateRequired,
+  validateEmail,
+  validateDateRange
+} from "./middleware/errorHandler.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(cors());
+
+// Request tracking middleware
+app.use(requestIdMiddleware);
 
 const normalizeToStartOfDay = (dateInput) => {
   if (typeof dateInput === "string" && dateInput.match(/^\d{4}-\d{2}-\d{2}$/)) {
@@ -57,56 +71,40 @@ app.get("/", (req, res) => {
 });
 
 // Authentication endpoints
-app.post("/api/auth/login", async (req, res) => {
-  try {
-    const { username, password } = req.body;
+app.post("/api/auth/login", asyncHandler(async (req, res) => {
+  const { username, password } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({
-        success: false,
-        error: "Username and password are required"
-      });
-    }
+  // Validate required fields
+  validateRequired(['username', 'password'], req.body);
 
-    // Find user by username or email
-    const user = await User.findByCredentials(username, password);
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        error: "Invalid username or password"
-      });
-    }
-
-    // Update last login
-    await user.update({ lastLogin: new Date() });
-
-    // Generate JWT token
-    const token = generateToken(user);
-
-    res.json({
-      success: true,
-      message: "Login successful",
-      data: {
-        token,
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-          department: user.department,
-          lastLogin: user.lastLogin
-        }
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: `Login failed: ${error.message}`
-    });
+  // Find user by username or email
+  const user = await User.findByCredentials(username, password);
+  if (!user) {
+    throw createError.invalidCredentials();
   }
-});
+
+  // Update last login
+  await user.update({ lastLogin: new Date() });
+
+  // Generate JWT token
+  const token = generateToken(user);
+
+  const response = createSuccessResponse({
+    token,
+    user: {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      department: user.department,
+      lastLogin: user.lastLogin
+    }
+  }, "Login successful");
+
+  res.json(response);
+}));
 
 app.post("/api/auth/logout", authenticateToken, async (req, res) => {
   try {
@@ -486,117 +484,97 @@ app.post("/api/seed", async (req, res) => {
   }
 });
 
-app.post("/api/reserve-room", authenticateToken, requirePermission('RESERVATIONS_CREATE'), async (req, res) => {
-  let t;
+app.post("/api/reserve-room", authenticateToken, requirePermission('RESERVATIONS_CREATE'), asyncHandler(async (req, res) => {
+  const {
+    firstName,
+    middleName,
+    lastName,
+    email,
+    phone,
+    address,
+    idDocument,
+    numGuest,
+    checkIn,
+    checkOut,
+    specialRequest,
+    status,
+    totalPrice,
+    roomNumber,
+    roomId,
+  } = req.body;
+
+  // Validate required fields using helper
+  validateRequired([
+    'firstName', 'lastName', 'email', 'phone', 'address', 
+    'idDocument', 'numGuest', 'checkIn', 'checkOut', 'status'
+  ], req.body);
+
+  const selectedRoomNumber = (roomNumber ?? roomId ?? "").toString();
+  if (!selectedRoomNumber) {
+    throw createError.requiredField('roomNumber or roomId');
+  }
+
+  // Validate email format
+  validateEmail(email);
+
+  // Validate and parse dates
+  const checkInDate = normalizeToStartOfDay(checkIn);
+  const checkOutDate = normalizeToStartOfDay(checkOut);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (checkInDate < today) {
+    throw createError.invalidDate('Check-in date cannot be in the past');
+  }
+
+  if (checkOutDate <= checkInDate) {
+    throw createError.invalidDateRange('Check-out date must be after check-in date');
+  }
+
+  const guestCount = Number(numGuest);
+  if (guestCount < 1 || guestCount > 10) {
+    throw createError.validation(
+      'Number of guests must be between 1 and 10', 
+      { field: 'numGuest', min: 1, max: 10, provided: guestCount }
+    );
+  }
+
+  const room = await Room.findOne({
+    where: { roomNumber: selectedRoomNumber },
+    include: [
+      {
+        model: RoomType,
+        attributes: ["maxCapacity", "basePrice"],
+      },
+    ],
+  });
+
+  if (!room) {
+    throw createError.notFound('Room', selectedRoomNumber);
+  }
+
+  if (guestCount > room.RoomType.maxCapacity) {
+    throw createError.capacityExceeded(selectedRoomNumber, room.RoomType.maxCapacity, guestCount);
+  }
+
+  const conflictingReservation = await Reservation.findOne({
+    where: buildOverlapWhere({
+      roomId: room.id,
+      startDate: checkInDate,
+      endDate: checkOutDate,
+    }),
+  });
+
+  if (conflictingReservation) {
+    throw createError.reservationConflict(selectedRoomNumber, {
+      checkIn: conflictingReservation.checkIn,
+      checkOut: conflictingReservation.checkOut,
+    });
+  }
+
+  const t = await sequelize.transaction();
+
   try {
-    const {
-      firstName,
-      middleName,
-      lastName,
-      email,
-      phone,
-      address,
-      idDocument,
-      numGuest,
-      checkIn,
-      checkOut,
-      specialRequest,
-      status,
-      totalPrice,
-      roomNumber,
-      roomId,
-    } = req.body;
-
-    if (
-      !firstName ||
-      !lastName ||
-      !email ||
-      !phone ||
-      !address ||
-      !idDocument ||
-      !numGuest ||
-      !checkIn ||
-      !checkOut ||
-      !status
-    ) {
-      return res.status(400).json({ error: "Required fields are missing." });
-    }
-
-    const selectedRoomNumber = (roomNumber ?? roomId ?? "").toString();
-    if (!selectedRoomNumber) {
-      return res
-        .status(400)
-        .json({ error: "Room identifier (roomNumber or roomId) is required." });
-    }
-
-    const checkInDate = normalizeToStartOfDay(checkIn);
-    const checkOutDate = normalizeToStartOfDay(checkOut);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (checkInDate < today) {
-      return res
-        .status(400)
-        .json({ error: "Check-in date cannot be in the past." });
-    }
-
-    if (checkOutDate <= checkInDate) {
-      return res
-        .status(400)
-        .json({ error: "Check-out date must be after check-in date." });
-    }
-
-    const guestCount = Number(numGuest);
-    if (guestCount < 1 || guestCount > 10) {
-      return res
-        .status(400)
-        .json({ error: "Number of guests must be between 1 and 10." });
-    }
-
-    const room = await Room.findOne({
-      where: { roomNumber: selectedRoomNumber },
-      include: [
-        {
-          model: RoomType,
-          attributes: ["maxCapacity", "basePrice"],
-        },
-      ],
-    });
-
-    if (!room) {
-      return res
-        .status(404)
-        .json({
-          error: `Room with number: ${selectedRoomNumber} doesn't exist.`,
-        });
-    }
-
-    if (guestCount > room.RoomType.maxCapacity) {
-      return res.status(400).json({
-        error: `Room ${selectedRoomNumber} can accommodate maximum ${room.RoomType.maxCapacity} guests. You selected ${guestCount} guests.`,
-      });
-    }
-
-    const conflictingReservation = await Reservation.findOne({
-      where: buildOverlapWhere({
-        roomId: room.id,
-        startDate: checkInDate,
-        endDate: checkOutDate,
-      }),
-    });
-
-    if (conflictingReservation) {
-      return res.status(409).json({
-        error: `Room ${selectedRoomNumber} is already booked for the selected dates.`,
-        conflictingReservation: {
-          checkIn: conflictingReservation.checkIn,
-          checkOut: conflictingReservation.checkOut,
-        },
-      });
-    }
-
-    t = await sequelize.transaction();
-
     const [guest] = await Guest.findOrCreate({
       where: { idDocument, email },
       defaults: {
@@ -634,14 +612,25 @@ app.post("/api/reserve-room", authenticateToken, requirePermission('RESERVATIONS
 
     await t.commit();
 
-    res.status(201).json({ reservation });
+    const response = createSuccessResponse({
+      reservation: {
+        id: reservation.id,
+        roomNumber: selectedRoomNumber,
+        guestName: `${firstName} ${lastName}`,
+        checkIn: checkInDate,
+        checkOut: checkOutDate,
+        status: status,
+        totalPrice: finalTotalPrice,
+        numGuest: guestCount
+      }
+    }, 'Reservation created successfully');
+
+    res.status(201).json(response);
   } catch (error) {
-    if (t) await t.rollback();
-    return res
-      .status(500)
-      .json({ error: `Error message: ${error.message || error}` });
+    await t.rollback();
+    throw error; // Let asyncHandler deal with it
   }
-});
+}));
 
 app.get("/api/reservations", authenticateToken, requireAnyPermission(['RESERVATIONS_VIEW_ALL', 'RESERVATIONS_VIEW_OWN']), async (req, res) => {
   try {
@@ -1200,6 +1189,10 @@ app.post("/api/guests", authenticateToken, requirePermission('GUESTS_CREATE'), a
       .json({ error: `Error creating guest: ${error.message}` });
   }
 });
+
+// Error handling middleware (must be last)
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 const FORCE_SYNC = process.env.FORCE_SYNC === "true";
 const SEED_ON_START = process.env.SEED_ON_START === "true" || FORCE_SYNC;

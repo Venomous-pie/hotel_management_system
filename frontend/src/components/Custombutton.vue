@@ -1,5 +1,6 @@
 <template>
   <button
+    :type="type"
     :class="[
       'transition-colors font-medium',
       rounded ? 'rounded-full' : 'rounded-lg',
@@ -16,7 +17,7 @@
       height,
     }"
     :disabled="disabled"
-    @click="$emit('click')"
+    @click="handleClick"
   >
     <slot>{{ label }}</slot>
   </button>
@@ -25,6 +26,7 @@
 <script setup lang="ts">
 interface Props {
   label?: string
+  type?: 'button' | 'submit' | 'reset'
   bgColor?: string // e.g. "bg-green-600"
   hoverBgColor?: string // e.g. "hover:bg-green-800"
   textColor?: string
@@ -40,6 +42,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   label: 'Button',
+  type: 'button',
   bgColor: 'bg-green-600',
   hoverBgColor: 'hover:bg-green-800',
   textColor: 'white',
@@ -52,4 +55,16 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   hover: true,
 })
+
+const emit = defineEmits<{
+  click: []
+}>()
+
+const handleClick = () => {
+  // Only emit click event for non-submit buttons
+  // Submit buttons should rely on form submission instead
+  if (props.type !== 'submit') {
+    emit('click')
+  }
+}
 </script>

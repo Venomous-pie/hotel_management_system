@@ -17,9 +17,6 @@
         <p class="text-xs text-gray-500 capitalize" v-if="currentUser">
           {{ currentUser.role }}
         </p>
-        <p class="text-xs text-gray-400" v-if="currentUser && currentUser.department">
-          {{ currentUser.department }}
-        </p>
       </div>
     </div>
 

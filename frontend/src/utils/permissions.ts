@@ -74,7 +74,7 @@ export type Role = 'admin' | 'manager' | 'receptionist' | 'housekeeping' | 'acco
 export const hasPermission = (userRole: Role | null | undefined, permission: Permission): boolean => {
   if (!userRole || !permission) return false
   
-  const allowedRoles = PERMISSIONS[permission]
+  const allowedRoles = PERMISSIONS[permission] as ReadonlyArray<Role>
   if (!allowedRoles) return false
   
   return allowedRoles.includes(userRole)

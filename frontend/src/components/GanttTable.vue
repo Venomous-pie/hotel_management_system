@@ -15,6 +15,7 @@
           <th
             v-for="day in dateRange"
             :key="day.date"
+            data-gantt-date-cell
             class="px-1 py-2 text-center outline outline-1 outline-gray-100 transition-colors w-61.5px min-w-61.5px max-w-61.5px overflow-hidden h-48px"
             :class="{ 'bg-green-50': hoveredColumn === day.date }"
             @mouseenter="$emit('columnHover', day.date)"
@@ -88,6 +89,7 @@
             <td
               v-for="day in dateRange"
               :key="`${category.name}-${day.date}`"
+              data-gantt-date-cell
               class="px-0.5 py-2 outline outline-1 outline-gray-100 transition-colors text-center w-61.5px min-w-61.5px max-w-61.5px overflow-hidden h-48px"
               :class="{ 'bg-green-50': hoveredColumn === day.date }"
               @mouseenter="$emit('columnHover', day.date)"

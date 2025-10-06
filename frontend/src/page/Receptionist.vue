@@ -17,6 +17,7 @@ const { checkAuthStatus } = useAuth()
 
 // Verify authentication status when component mounts
 onMounted(async () => {
+  // checkAuthStatus now handles redirects gracefully, no need for error handling
   await checkAuthStatus()
 })
 </script>

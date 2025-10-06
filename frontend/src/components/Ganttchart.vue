@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useGanttOrchestrator } from '@/composables/useGanttOrchestrator'
 import { useReservationDetails } from '@/composables/useReservationDetails'
 import GanttHeader from './GanttHeader.vue'
@@ -92,7 +92,7 @@ const {
 } = useGanttOrchestrator(props, emit)
 
 // Reservation details modal functionality
-const { isModalOpen, selectedReservation, selectedRoomDetails, openModal, closeModal } =
+const { isModalOpen, selectedReservation, selectedRoomDetails, openModal, closeModal, refreshSelectedReservation } =
   useReservationDetails()
 
 // Room info modal functionality
@@ -165,4 +165,16 @@ const handleReservationEdit = async (reservation: any) => {
     emit('openReservationEditor', prefilled)
   } catch (e) {}
 }
+
+// Watch for changes in reservations data and refresh selected reservation if modal is open
+watch(
+  () => props.reservations,
+  async () => {
+    // If the modal is open and we have a selected reservation, refresh it
+    if (isModalOpen.value && selectedReservation.value) {
+      await refreshSelectedReservation()
+    }
+  },
+  { deep: true }
+)
 </script>

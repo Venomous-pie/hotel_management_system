@@ -32,7 +32,12 @@
         <div v-if="error" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
           <div class="flex items-center gap-2">
             <i class="pi pi-exclamation-triangle text-red-500"></i>
-            <p class="text-red-700 text-sm font-medium">{{ error }}</p>
+            <div>
+              <p class="text-red-700 text-sm font-medium">{{ error }}</p>
+              <p v-if="showRetryHint" class="text-red-600 text-xs mt-1">
+                Please check your credentials and try again
+              </p>
+            </div>
           </div>
         </div>
 
@@ -49,12 +54,17 @@
               required
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
               :class="{
-                'border-gray-300': !error,
-                'border-red-300 focus:ring-red-500 focus:border-red-500': error
+                'border-gray-300': !shouldShowError('username'),
+                'border-red-300 focus:ring-red-500 focus:border-red-500': shouldShowError('username')
               }"
               placeholder="Enter your username"
               :disabled="isLoading"
+              @blur="handleFieldBlur('username')"
             />
+            <!-- Field Error -->
+            <div v-if="shouldShowError('username')" class="mt-1 text-sm text-red-600">
+              {{ getFieldError('username') }}
+            </div>
           </div>
 
           <div>
@@ -70,11 +80,12 @@
                 required
                 class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
                 :class="{
-                  'border-gray-300': !error,
-                  'border-red-300 focus:ring-red-500 focus:border-red-500': error
+                  'border-gray-300': !shouldShowError('password'),
+                  'border-red-300 focus:ring-red-500 focus:border-red-500': shouldShowError('password')
                 }"
                 placeholder="Enter your password"
                 :disabled="isLoading"
+                @blur="handleFieldBlur('password')"
               />
               <button
                 type="button"
@@ -85,26 +96,12 @@
                 <i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
               </button>
             </div>
+            <!-- Field Error -->
+            <div v-if="shouldShowError('password')" class="mt-1 text-sm text-red-600">
+              {{ getFieldError('password') }}
+            </div>
           </div>
 
-          <div>
-            <label for="department" class="block text-sm font-medium text-gray-700 mb-2">
-              <i class="pi pi-building text-gray-400 mr-2"></i>
-              Department
-            </label>
-            <select
-              id="department"
-              v-model="selectedDepartment"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-              :disabled="isLoading"
-            >
-              <option value="">Select your department</option>
-              <option value="front-desk">Front Desk</option>
-              <option value="housekeeping">Housekeeping</option>
-              <option value="accounting">Accounting</option>
-              <option value="maintenance">Maintenance</option>
-            </select>
-          </div>
 
           <div class="flex items-center justify-between">
             <label class="flex items-center">
@@ -126,6 +123,7 @@
           </div>
 
           <Custombutton
+            type="submit"
             :label="isLoading ? 'Signing in...' : 'Sign In'"
             bg-color="bg-blue-600"
             hover-bg-color="hover:bg-blue-700"
@@ -136,9 +134,8 @@
             height="3rem"
             :rounded="false"
             text-class="font-semibold"
-            :disabled="isLoading || !credentials.username || !credentials.password"
+            :disabled="isLoading || !isFormValid"
             :hover="true"
-            @click="handleLogin"
           >
             <div class="flex items-center justify-center gap-2">
               <i v-if="isLoading" class="pi pi-spin pi-spinner"></i>
@@ -179,24 +176,81 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, reactive } from 'vue'
 import { useAuth } from '../composables/useAuth'
+import { useFormValidation, commonRules } from '../composables/useFormValidation'
 import Custombutton from '../components/Custombutton.vue'
 
 const { login, isLoading, error, clearError, checkAuthStatus } = useAuth()
 
-const credentials = ref({
+// Form data
+const credentials = reactive({
   username: '',
   password: ''
 })
 
+// Form validation
+const formConfig = {
+  fields: {
+    username: {
+      required: true,
+      rules: [
+        commonRules.minLength(3, 'Username must be at least 3 characters')
+      ]
+    },
+    password: {
+      required: true,
+      rules: [
+        commonRules.minLength(4, 'Password must be at least 4 characters')
+      ]
+    }
+  }
+}
+
+const {
+  isValid,
+  shouldShowError,
+  getFieldError,
+  handleFieldBlur,
+  handleSubmit,
+  reset: resetValidation
+} = useFormValidation(credentials, formConfig)
+
 const showPassword = ref(false)
 const rememberMe = ref(false)
-const selectedDepartment = ref('')
+const loginAttempts = ref(0)
+
+// Form validation computed
+const isFormValid = computed(() => {
+  return isValid.value && credentials.username.trim().length >= 3 && 
+         credentials.password.length >= 4
+})
+
+const showRetryHint = computed(() => {
+  return error.value && loginAttempts.value > 0
+})
+
+// Clear error when user starts typing - smooth UX bestie ✨
+watch([() => credentials.username, () => credentials.password], () => {
+  if (error.value) {
+    clearError()
+  }
+})
 
 const handleLogin = async () => {
-  clearError()
-  await login(credentials.value)
+  if (!isFormValid.value) return
+  
+  const success = await handleSubmit(async () => {
+    clearError()
+    loginAttempts.value++
+    
+    await login(credentials)
+    // Reset attempts on successful login
+    loginAttempts.value = 0
+  })
+  
+  // No need to log anything here - useAuth composable handles error display
+  // The success variable indicates whether the login was successful
 }
 
 onMounted(async () => {

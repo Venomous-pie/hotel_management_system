@@ -1,4 +1,5 @@
 import { ref, nextTick, type Ref, type ComponentPublicInstance } from 'vue'
+import { setMeasuredCellWidth } from '@/utils/gantt'
 
 export const useGanttPositioning = (
   roomCategories: Ref<any[]>,
@@ -49,6 +50,25 @@ export const useGanttPositioning = (
     rowTops.value = tops
   }
 
+  const measureCellWidth = (): void => {
+    const container = containerEl.value
+    if (!container) return
+
+    // Prefer header date cell; fallback to any body date cell
+    const headerCell = container.querySelector('thead th[data-gantt-date-cell]') as HTMLElement | null
+    const bodyCell = !headerCell
+      ? (container.querySelector('tbody td[data-gantt-date-cell]') as HTMLElement | null)
+      : null
+
+    const el = headerCell || bodyCell
+    if (el) {
+      const rect = el.getBoundingClientRect()
+      if (rect.width && isFinite(rect.width)) {
+        setMeasuredCellWidth(rect.width)
+      }
+    }
+  }
+
   const getFallbackPosition = (roomNumber: string): number => {
     let fallbackTop = 0
 
@@ -90,6 +110,7 @@ export const useGanttPositioning = (
     if (el) {
       nextTick(() => {
         computeRowTops()
+        measureCellWidth()
       })
     }
   }
@@ -116,6 +137,7 @@ export const useGanttPositioning = (
     await nextTick()
     rowTops.value = {}
     computeRowTops()
+    measureCellWidth()
   }
 
   const updateRoomPositions = async (roomNumbers: string[]): Promise<void> => {

@@ -6,6 +6,14 @@ export const useGanttLifecycle = (
   recomputePositions: () => void,
   validatePositioning: () => void,
 ) => {
+  let resizeTimeout: ReturnType<typeof setTimeout> | null = null
+  const onResize = () => {
+    if (resizeTimeout) clearTimeout(resizeTimeout)
+    resizeTimeout = setTimeout(() => {
+      recomputePositions()
+    }, 150)
+  }
+
   const setupComponent = async () => {
     initializeViewDate()
 
@@ -24,11 +32,15 @@ export const useGanttLifecycle = (
       }
     }, 100)
 
-    window.addEventListener('resize', recomputePositions)
+    window.addEventListener('resize', onResize)
   }
 
   const cleanupComponent = () => {
-    window.removeEventListener('resize', recomputePositions)
+    window.removeEventListener('resize', onResize)
+    if (resizeTimeout) {
+      clearTimeout(resizeTimeout)
+      resizeTimeout = null
+    }
   }
 
   onMounted(setupComponent)

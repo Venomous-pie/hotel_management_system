@@ -5,12 +5,26 @@ export const GANTT_LAYOUT = {
   RESERVATION_HEIGHT: 24,
 } as const
 
+// Runtime-measured cell width (falls back to GANTT_LAYOUT.CELL_WIDTH)
+let measuredCellWidth: number | null = null
+
+export function setMeasuredCellWidth(width: number) {
+  if (Number.isFinite(width) && width > 0) {
+    measuredCellWidth = width
+  }
+}
+
+export function getCellWidth(): number {
+  return measuredCellWidth ?? GANTT_LAYOUT.CELL_WIDTH
+}
+
 export const calculateReservationSpanStyle = (
   startIndex: number,
   endIndex: number,
   rowTop: number,
 ): { left: string; width: string; top: string; height: string } => {
-  const { ROOM_COLUMN_WIDTH, CELL_WIDTH } = GANTT_LAYOUT
+  const { ROOM_COLUMN_WIDTH } = GANTT_LAYOUT
+  const CELL_WIDTH = getCellWidth()
 
   const widthCells = endIndex - startIndex + 1
 

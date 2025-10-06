@@ -366,19 +366,18 @@ const handleReservationSuccess = async (payload: { reservation: any; roomNumber:
 }
 
 onMounted(async () => {
-  // First verify authentication
-  await checkAuthStatus()
+  // First verify authentication - checkAuthStatus now handles redirects gracefully
+  const isValid = await checkAuthStatus()
   
   // Only fetch data if authenticated
-  if (isAuthenticated.value) {
+  if (isValid && isAuthenticated.value) {
     try {
       await refreshAll()
     } catch (error) {
       console.error('Failed to fetch hotel data:', error)
     }
-  } else {
-    console.warn('Not authenticated, skipping data fetch')
   }
+  // No need for else block - checkAuthStatus handles redirects automatically
 })
 
 useClickOutside(
