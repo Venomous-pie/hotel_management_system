@@ -485,16 +485,19 @@ export async function seedReservations() {
 // Helper function to clear existing reservations (for testing)
 export async function clearReservations() {
   try {
-    console.log('🧹 Clearing existing reservations and guests...');
-    
-    await Reservation.destroy({ where: {} });
+    console.log('🧹 Clearing existing invoice items, payments, invoices, reservations, and guests...');
+    const { Payment, Invoice } = await import('../models/index.js');
+  // Skipping InvoiceItems deletion (table does not exist)
+  // Then delete Payments and Invoices
+  await Payment.destroy({ where: {}, force: true });
+  await Invoice.destroy({ where: {}, force: true });
+  // Then Reservations and Guests
+  await Reservation.destroy({ where: {}, force: true });
     await Guest.destroy({ where: {} });
-    
-    console.log('✅ Cleared all reservations and guests');
-    
+    console.log('✅ Cleared all invoice items, payments, invoices, reservations, and guests');
     return {
       success: true,
-      message: 'All reservations and guests cleared successfully'
+      message: 'All invoice items, payments, invoices, reservations, and guests cleared successfully'
     };
   } catch (error) {
     console.error('❌ Error clearing reservations:', error);
