@@ -39,7 +39,6 @@ export const useHousekeeping = () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  // Default checklist templates - para consistent ang cleaning standards
   const checklistTemplates = {
     checkout_cleaning: [
       { id: '1', description: 'Strip and remake beds with fresh linens', completed: false },
@@ -86,7 +85,6 @@ export const useHousekeeping = () => {
     ]
   }
 
-  // Create housekeeping task - usually triggered after checkout
   const createTask = (
     roomNumber: string,
     taskType: HousekeepingTask['taskType'],
@@ -109,19 +107,17 @@ export const useHousekeeping = () => {
     return task
   }
 
-  // Get estimated duration based on task type - realistic timing lang
   const getEstimatedDuration = (taskType: HousekeepingTask['taskType']): number => {
     const durations = {
-      checkout_cleaning: 45, // 45 minutes standard cleaning
-      maintenance: 30,       // 30 minutes for basic maintenance check
-      deep_clean: 90,        // 1.5 hours for deep cleaning
-      inspection: 15,        // 15 minutes for inspection
-      restock: 10,           // 10 minutes for restocking
+      checkout_cleaning: 45,
+      maintenance: 30,
+      deep_clean: 90,
+      inspection: 15,
+      restock: 10
     }
     return durations[taskType] || 30
   }
 
-  // Assign task to staff member
   const assignTask = (taskId: string, staffId: string): boolean => {
     const task = tasks.value.find(t => t.id === taskId)
     const staffMember = staff.value.find(s => s.id === staffId)
@@ -141,7 +137,6 @@ export const useHousekeeping = () => {
     return true
   }
 
-  // Start task - when staff begins working
   const startTask = (taskId: string): boolean => {
     const task = tasks.value.find(t => t.id === taskId)
     
@@ -160,7 +155,6 @@ export const useHousekeeping = () => {
     return true
   }
 
-  // Complete checklist item
   const completeChecklistItem = (taskId: string, itemId: string, notes?: string): boolean => {
     const task = tasks.value.find(t => t.id === taskId)
     
@@ -181,7 +175,6 @@ export const useHousekeeping = () => {
     return true
   }
 
-  // Complete entire task - when all work is done
   const completeTask = (taskId: string, notes?: string): boolean => {
     const task = tasks.value.find(t => t.id === taskId)
     
@@ -190,7 +183,6 @@ export const useHousekeeping = () => {
       return false
     }
 
-    // Check if all checklist items are completed
     const incompleteItems = task.checklistItems.filter(item => !item.completed)
     if (incompleteItems.length > 0) {
       error.value = `Cannot complete task. ${incompleteItems.length} checklist items remaining.`
@@ -201,14 +193,12 @@ export const useHousekeeping = () => {
     task.completedAt = new Date().toISOString()
     if (notes) task.notes = notes
 
-    // Calculate actual duration
     if (task.startedAt) {
       const start = new Date(task.startedAt)
       const end = new Date()
       task.actualDuration = Math.round((end.getTime() - start.getTime()) / (1000 * 60))
     }
 
-    // Remove from staff's current tasks
     if (task.assignedTo) {
       const staffMember = staff.value.find(s => s.id === task.assignedTo)
       if (staffMember) {
@@ -219,22 +209,18 @@ export const useHousekeeping = () => {
     return true
   }
 
-  // Get tasks by room number
   const getTasksByRoom = (roomNumber: string) => {
     return tasks.value.filter(task => task.roomNumber === roomNumber)
   }
 
-  // Get tasks by status
   const getTasksByStatus = (status: HousekeepingTask['status']) => {
     return tasks.value.filter(task => task.status === status)
   }
 
-  // Get tasks assigned to staff member
   const getTasksByStaff = (staffId: string) => {
     return tasks.value.filter(task => task.assignedTo === staffId)
   }
 
-  // Check if room is ready for guest - all tasks completed
   const isRoomReady = (roomNumber: string): boolean => {
     const roomTasks = getTasksByRoom(roomNumber)
     const pendingTasks = roomTasks.filter(task => 
@@ -243,7 +229,6 @@ export const useHousekeeping = () => {
     return pendingTasks.length === 0
   }
 
-  // Get room cleaning status
   const getRoomStatus = (roomNumber: string): 'clean' | 'dirty' | 'in_progress' | 'maintenance' => {
     const roomTasks = getTasksByRoom(roomNumber)
     
@@ -262,7 +247,6 @@ export const useHousekeeping = () => {
     return 'clean'
   }
 
-  // Computed properties for dashboard
   const taskStats = computed(() => {
     const total = tasks.value.length
     const byStatus = tasks.value.reduce((acc, task) => {

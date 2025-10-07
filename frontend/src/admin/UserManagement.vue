@@ -1,43 +1,38 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-20">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
-              <i class="pi pi-users text-white text-xl"></i>
-            </div>
-            <div>
-              <h1 class="text-2xl font-bold text-gray-900 tracking-tight">User Management</h1>
-              <p class="text-sm text-gray-600">Manage staff accounts and permissions</p>
-            </div>
-          </div>
-          
-          <div class="flex items-center gap-4">
-            <button
-              @click="showCreateModal = true"
-              class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
-            >
-              <i class="pi pi-plus text-lg"></i>
-              Add User
-            </button>
-            <button
-              @click="refreshUsers"
-              :disabled="loading"
-              class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 disabled:opacity-50"
-            >
-              <i class="pi pi-refresh text-lg" :class="{ 'pi-spin': loading }"></i>
-              Refresh
-            </button>
-          </div>
+  <AdminLayout page-title="User Management">
+    <!-- Page Controls -->
+    <div class="px-6 py-2">
+      <div class="flex items-center justify-between">
+        <Searchbar
+          placeholder="Search users..."
+          icon="pi pi-search"
+          :outline="false"
+          @search="handleUserSearch"
+          width="20rem"
+        />
+        <div class="flex items-center gap-4">
+          <Custombutton 
+            label="Add User" 
+            bg-color="bg-green-600"
+            hover-bg-color="hover:bg-green-700"
+            text-color="text-white"
+            :hover="true"
+            @click="showCreateModal = true"
+          />
+          <button
+            @click="refreshUsers"
+            :disabled="loading"
+            class="flex items-center gap-2 px-3 py-2 text-xs text-blue-700 bg-blue-50 outline outline-1 outline-blue-200 rounded-full transition-colors hover:bg-blue-100 disabled:opacity-50"
+          >
+            <i class="pi pi-refresh w-3 h-3" :class="{ 'pi-spin': loading }"></i>
+            Refresh
+          </button>
         </div>
       </div>
-    </header>
+    </div>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <div class="px-4 py-6 sm:px-0">
+    <div class="px-6 py-2 overflow-y-auto h-full">
         
         <!-- Error Alert -->
         <div v-if="error" class="mb-8 p-5 bg-red-50 border border-red-200 rounded-2xl shadow-sm">
@@ -179,7 +174,6 @@
           </div>
         </div>
       </div>
-    </main>
 
     <!-- Create User Modal -->
     <div v-if="showCreateModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -277,11 +271,14 @@
         </form>
       </div>
     </div>
-  </div>
+  </AdminLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import AdminLayout from './AdminLayout.vue'
+import Searchbar from '@/components/Searchbar.vue'
+import Custombutton from '@/components/Custombutton.vue'
 import { api } from '../utils/api'
 import { useAuth } from '../composables/useAuth'
 
@@ -303,6 +300,11 @@ const newUser = ref({
   department: '',
   phone: ''
 })
+
+const handleUserSearch = (query: string) => {
+  // TODO: Implement user search functionality
+  console.log('Searching users:', query)
+}
 
 const refreshUsers = async () => {
   loading.value = true

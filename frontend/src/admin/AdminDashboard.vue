@@ -86,7 +86,7 @@
       <div class="px-6 py-2 overflow-y-auto h-full">
         <!-- System Status -->
         <div class="mb-6">
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-lg font-semibold text-gray-900">System Status</h2>
@@ -100,11 +100,24 @@
           </div>
         </div>
 
-        <!-- Loading State -->
-        <div v-if="loading" class="flex items-center justify-center py-12">
-          <div class="flex items-center gap-3">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-            <span class="text-gray-600">Loading dashboard data...</span>
+        <!-- Loading State (skeletons) -->
+        <div v-if="loading" class="space-y-6">
+          <!-- Skeleton stats -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div v-for="n in 4" :key="n" class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-pulse">
+              <div class="flex items-center">
+                <div class="w-12 h-12 bg-gray-100 rounded-xl"></div>
+                <div class="ml-4 w-full">
+                  <div class="h-4 bg-gray-100 rounded w-24 mb-2"></div>
+                  <div class="h-6 bg-gray-100 rounded w-32"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Skeleton charts/cards -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="h-80 bg-white rounded-2xl shadow-lg border border-gray-100 animate-pulse"></div>
+            <div class="h-80 bg-white rounded-2xl shadow-lg border border-gray-100 animate-pulse"></div>
           </div>
         </div>
 
@@ -127,59 +140,20 @@
 
         <!-- Stats Grid -->
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div class="flex items-center">
-              <div class="p-2 bg-blue-100 rounded-lg">
-                <i class="pi pi-calendar-plus text-blue-600 text-xl"></i>
-              </div>
-              <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Total Reservations</p>
-                <p class="text-2xl font-bold text-gray-900">{{ stats.totalReservations }}</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div class="flex items-center">
-              <div class="p-2 bg-green-100 rounded-lg">
-                <i class="pi pi-home text-green-600 text-xl"></i>
-              </div>
-              <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Available Rooms</p>
-                <p class="text-2xl font-bold text-gray-900">{{ stats.availableRooms }}</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div class="flex items-center">
-              <div class="p-2 bg-orange-100 rounded-lg">
-                <i class="pi pi-users text-orange-600 text-xl"></i>
-              </div>
-              <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Current Guests</p>
-                <p class="text-2xl font-bold text-gray-900">{{ stats.totalGuests }}</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div class="flex items-center">
-              <div class="p-2 bg-purple-100 rounded-lg">
-                <i class="pi pi-dollar text-purple-600 text-xl"></i>
-              </div>
-              <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Monthly Revenue</p>
-                <p class="text-2xl font-bold text-gray-900">${{ stats.revenue.toLocaleString() }}</p>
-              </div>
-            </div>
-          </div>
+          <StatCard title="Total Reservations" :value="stats.totalReservations" icon="pi pi-calendar-plus text-blue-600" iconBg="bg-blue-100" />
+          <StatCard title="Available Rooms" :value="stats.availableRooms" icon="pi pi-home text-green-600" iconBg="bg-green-100" />
+          <StatCard title="Current Guests" :value="stats.totalGuests" icon="pi pi-users text-orange-600" iconBg="bg-orange-100" />
+          <StatCard title="Monthly Revenue" :value="stats.revenue.toLocaleString()" icon="pi pi-dollar text-purple-600" iconBg="bg-purple-100">
+            <template #value>
+              ₱{{ stats.revenue.toLocaleString() }}
+            </template>
+          </StatCard>
         </div>
 
         <!-- Analytics Charts -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <!-- Occupancy Rate Chart -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
             <div class="flex items-center justify-between mb-6">
               <div>
                 <h3 class="text-lg font-semibold text-gray-900">Occupancy Rate</h3>
@@ -198,7 +172,7 @@
           </div>
 
           <!-- Revenue Chart -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
             <div class="flex items-center justify-between mb-6">
               <div>
                 <h3 class="text-lg font-semibold text-gray-900">Revenue Analytics</h3>
@@ -224,7 +198,7 @@
             <div class="flex items-center justify-between mb-6">
               <div>
                 <h3 class="text-lg font-semibold text-gray-900">Room Type Bookings</h3>
-                <p class="text-sm text-gray-600">Booking distribution across 27 rooms</p>
+                <p class="text-sm text-gray-600">Booking distribution across {{ totalRoomsCount }} rooms</p>
               </div>
               <div class="flex items-center gap-2">
                 <button 
@@ -248,7 +222,8 @@
           </div>
 
           <!-- Booking Sources -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+
             <div class="flex items-center justify-between mb-6">
               <div>
                 <h3 class="text-lg font-semibold text-gray-900">Booking Sources</h3>
@@ -352,7 +327,7 @@
         </div>
 
         <!-- Quick Actions -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100">
           <div class="p-6 border-b border-gray-200">
             <div class="flex items-center gap-3">
               <div class="p-2 bg-green-100 rounded-lg">
@@ -376,7 +351,7 @@
                 </div>
               </router-link>
               
-              <button class="group p-6 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-all duration-200 text-left">
+              <button @click="navigateToRooms" class="group p-6 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-all duration-200 text-left">
                 <div class="flex flex-col items-center text-center">
                   <div class="p-3 bg-green-100 group-hover:bg-green-200 rounded-lg mb-4 transition-colors">
                     <i class="pi pi-plus text-xl text-green-600"></i>
@@ -386,7 +361,7 @@
                 </div>
               </button>
 
-              <button class="group p-6 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-all duration-200 text-left">
+              <button @click="navigateToReports" class="group p-6 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-all duration-200 text-left">
                 <div class="flex flex-col items-center text-center">
                   <div class="p-3 bg-orange-100 group-hover:bg-orange-200 rounded-lg mb-4 transition-colors">
                     <i class="pi pi-chart-bar text-xl text-orange-600"></i>
@@ -396,7 +371,7 @@
                 </div>
               </button>
 
-              <button class="group p-6 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-all duration-200 text-left">
+              <button @click="navigateToSettings" class="group p-6 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-all duration-200 text-left">
                 <div class="flex flex-col items-center text-center">
                   <div class="p-3 bg-purple-100 group-hover:bg-purple-200 rounded-lg mb-4 transition-colors">
                     <i class="pi pi-cog text-xl text-purple-600"></i>
@@ -410,7 +385,7 @@
         </div>
 
         <!-- System Information -->
-        <div class="mt-8 bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="mt-8 bg-white rounded-2xl shadow-lg border border-gray-100">
           <div class="p-6 border-b border-gray-200">
             <div class="flex items-center gap-3">
               <div class="p-2 bg-gray-100 rounded-lg">
@@ -477,6 +452,9 @@ import Searchbar from '@/components/Searchbar.vue'
 import Custombutton from '@/components/Custombutton.vue'
 import ToastNotifications from '@/components/ToastNotifications.vue'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
+import StatCard from '@/components/StatCard.vue'
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
 
 const { currentUser } = useAuth()
 const { 
@@ -532,23 +510,20 @@ const handleAddUser = () => {
   // Navigate to add user page or open modal
 }
 
-// Core admin data - TODO: Replace with real API calls
+// User statistics data
+const userStats = ref(null)
+
+// Core admin data - NOW WITH REAL API CALLS!
 const activeStaffCount = computed(() => {
-  // TODO: Implement real user count API
-  // return userStats.value?.activeStaff || 0
-  return 8 // Placeholder
+  return userStats.value?.activeUsers || 0
 })
 
 const adminUserCount = computed(() => {
-  // TODO: Implement real admin count API  
-  // return userStats.value?.adminUsers || 0
-  return 2 // Placeholder
+  return userStats.value?.adminUsers || 0
 })
 
 const totalRoomsCount = computed(() => {
-  // TODO: Get from room inventory API
-  // return roomStats.value?.totalRooms || 0
-  return 27 // Correct total room count from roomData.js
+  return occupancyStats.value?.totalRooms || 27
 })
 const lastBackupDate = computed(() => {
   const date = new Date()
@@ -557,8 +532,27 @@ const lastBackupDate = computed(() => {
 })
 
 const navigateToUsers = () => {
-  showWithTimeout('User management feature coming soon...', 2000)
-  // TODO: Implement user management navigation
+  // Navigate to user management page
+  console.log('Navigating to user management...')
+  window.location.href = '/admin/users'
+}
+
+const navigateToRooms = () => {
+  // Navigate to room management page
+  console.log('Navigating to room management...')
+  window.location.href = '/admin/rooms'
+}
+
+const navigateToReports = () => {
+  // Navigate to reports page
+  console.log('Navigating to reports...')
+  window.location.href = '/admin/reports'
+}
+
+const navigateToSettings = () => {
+  // Navigate to settings page
+  console.log('Navigating to settings...')
+  window.location.href = '/admin/settings'
 }
 
 // Force refresh room chart data using real calculations
@@ -594,9 +588,34 @@ const stats = computed(() => ({
   revenue: revenueStats.value?.totalRevenue || 0
 }))
 
+// Fetch user statistics
+const fetchUserStats = async () => {
+  try {
+    const token = localStorage.getItem('auth_token')
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    
+    const response = await fetch(`${API_BASE_URL}/stats/users`, { 
+      cache: 'no-cache', 
+      headers 
+    })
+    
+    if (response.ok) {
+      userStats.value = await response.json()
+      console.log('✅ User stats loaded:', userStats.value)
+    } else {
+      console.warn('Failed to fetch user stats')
+    }
+  } catch (error) {
+    console.error('Error fetching user stats:', error)
+  }
+}
+
 // Fetch dashboard stats with real API data
 const fetchStats = async () => {
   await fetchDashboardStats(selectedDateRange.value)
+  
+  // Fetch user statistics
+  await fetchUserStats()
   
   // Calculate real chart data from actual reservations
   console.log('📊 Fetching real chart data...')
@@ -633,8 +652,11 @@ const seedReservations = async () => {
     console.log('📊 Seeder data details:', result.data)
     
     if (result.success) {
-      // Show success message - you can replace with a toast notification
-      alert(`✅ Seeding successful!\n\nCreated:\n- ${result.data?.guestsCreated || 0} guests\n- ${result.data?.reservationsCreated || 0} reservations\n\nOccupancy Rate: ${result.data?.occupancyRate || 0}%`)
+      // Success toast
+      const guestsCreated = result.data?.guestsCreated || 0
+      const reservationsCreated = result.data?.reservationsCreated || 0
+      const occ = result.data?.occupancyRate || 0
+      showWithTimeout(`Seeding successful: ${guestsCreated} guests, ${reservationsCreated} reservations • Occupancy ${occ}%`, 3000)
       
       // Refresh dashboard data
       await fetchStats()
@@ -645,11 +667,12 @@ const seedReservations = async () => {
         await debugChartData()
       }, 1000)
     } else {
-      alert(`❌ Seeding failed: ${result.error}`)
+      showWithTimeout(`Seeding failed: ${result.error}`, 3000)
     }
   } catch (error) {
     console.error('Seeder error:', error)
-    alert(`❌ Seeding failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    const msg = error instanceof Error ? error.message : 'Unknown error'
+    showWithTimeout(`Seeding failed: ${msg}`, 3000)
   } finally {
     seederLoading.value = false
   }
@@ -672,16 +695,17 @@ const clearReservations = async () => {
     const result = await response.json()
     
     if (result.success) {
-      alert('✅ All reservations and guests cleared successfully!')
+      showWithTimeout('All reservations and guests cleared successfully', 2500)
       
       // Refresh dashboard data
       await fetchStats()
     } else {
-      alert(`❌ Clear failed: ${result.error}`)
+      showWithTimeout(`Clear failed: ${result.error}` , 3000)
     }
   } catch (error) {
     console.error('Clear error:', error)
-    alert(`❌ Clear failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    const msg = error instanceof Error ? error.message : 'Unknown error'
+    showWithTimeout(`Clear failed: ${msg}`, 3000)
   } finally {
     seederLoading.value = false
   }
@@ -691,21 +715,24 @@ const clearReservations = async () => {
 const debugChartData = async () => {
   try {
     console.log('🔍 === COMPREHENSIVE CHART DEBUG ===')
+
+    const token = localStorage.getItem('auth_token')
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
     
     // 1. Check basic reservation counts
-    const debugResponse = await fetch('http://localhost:3000/api/debug/reservations')
+    const debugResponse = await fetch(`${API_BASE_URL}/debug/reservations`, { headers })
     const debugResult = await debugResponse.json()
     console.log('📊 Basic counts:', debugResult.counts)
     
     // 2. Check room popularity API directly
     console.log('🔍 Checking room popularity API...')
-    const roomPopResponse = await fetch(`http://localhost:3000/api/stats/rooms/popularity?_t=${Date.now()}`, { cache: 'no-cache' })
+    const roomPopResponse = await fetch(`${API_BASE_URL}/stats/rooms/popularity?_t=${Date.now()}`, { cache: 'no-cache', headers })
     const roomPopData = await roomPopResponse.json()
     console.log('📊 Room popularity API response:', roomPopData)
     
     // 3. Check booking sources API directly  
     console.log('🔍 Checking booking sources API...')
-    const bookingSourceResponse = await fetch(`http://localhost:3000/api/stats/bookings/source?_t=${Date.now()}`, { cache: 'no-cache' })
+    const bookingSourceResponse = await fetch(`${API_BASE_URL}/stats/bookings/source?_t=${Date.now()}`, { cache: 'no-cache', headers })
     const bookingSourceData = await bookingSourceResponse.json()
     console.log('📊 Booking sources API response:', bookingSourceData)
     
@@ -718,7 +745,7 @@ const debugChartData = async () => {
     const roomChartTotal = roomPopularity.value.reduce((sum, item) => sum + (item.nights_booked || 0), 0)
     const sourceChartTotal = bookingSources.value.reduce((sum, item) => sum + (item.count || 0), 0)
     
-    // 6. Show comprehensive debug info
+    // 6. Log comprehensive debug info
     const debugInfo = `
 === CHART DEBUG ANALYSIS ===
 
@@ -748,12 +775,14 @@ DATA CONSISTENCY:
 SAMPLE RESERVATIONS:
 ${debugResult.sampleReservations.map((r: any) => `• ${r.guest}: ${r.status} (₱${r.totalPrice})`).join('\n')}
     `.trim()
-    
-    alert(debugInfo)
+
+    console.log(debugInfo)
+    showWithTimeout('Chart debug summary printed to console', 2500)
     
   } catch (error) {
     console.error('Debug error:', error)
-    alert(`Debug failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    const msg = error instanceof Error ? error.message : 'Unknown error'
+    showWithTimeout(`Debug failed: ${msg}`, 3000)
   }
 }
 
@@ -824,7 +853,7 @@ const revenueChartOptions = computed(() => ({
   yaxis: {
     labels: { 
       style: { colors: '#6B7280' },
-      formatter: (val: number) => `$${val}k`
+      formatter: (val: number) => `₱${val}k`
     }
   },
   grid: {
@@ -832,7 +861,7 @@ const revenueChartOptions = computed(() => ({
     strokeDashArray: 3
   },
   tooltip: {
-    y: { formatter: (val: number) => `$${val}k` }
+    y: { formatter: (val: number) => `₱${val}k` }
   }
 }))
 
@@ -861,19 +890,19 @@ const roomTypeChartOptions = computed(() => ({
             show: true,
             label: 'Total Rooms',
             color: '#374151',
-            formatter: () => '27' // Correct total room count
+            formatter: () => String(occupancyStats.value?.totalRooms || 27)
           }
         }
       }
     }
   },
   tooltip: {
-    y: { formatter: (val: number) => `${val} bookings` }
+    y: { formatter: (val: number) => `${val} reservations` }
   }
 }))
 
 const roomTypeChartSeries = computed(() => 
-  roomPopularity.value.map(item => item.nights_booked || 0)
+  roomPopularity.value.map(item => item.bookings_count || 0)
 )
 
 const bookingSourceChartOptions = computed(() => ({

@@ -26,7 +26,6 @@ export interface FormConfig {
   stopOnFirstError?: boolean
 }
 
-// Common validation rules
 export const commonRules = {
   required: (message: string = 'This field is required'): ValidationRule => ({
     validator: (value: any) => {
@@ -40,7 +39,7 @@ export const commonRules = {
 
   email: (message: string = 'Please enter a valid email address'): ValidationRule => ({
     validator: (value: string) => {
-      if (!value) return true // Let required rule handle empty values
+      if (!value) return true
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       return emailRegex.test(value)
     },
@@ -78,7 +77,6 @@ export const commonRules = {
   phone: (message: string = 'Please enter a valid phone number'): ValidationRule => ({
     validator: (value: string) => {
       if (!value) return true
-      // Basic phone validation - can be enhanced based on requirements
       const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/
       return phoneRegex.test(value.replace(/[\s\-\(\)]/g, ''))
     },
@@ -166,12 +164,10 @@ export const commonRules = {
   })
 }
 
-// Hotel-specific validation rules
 export const hotelRules = {
   roomNumber: (message: string = 'Please enter a valid room number'): ValidationRule => ({
     validator: (value: string) => {
       if (!value) return true
-      // Room numbers should be alphanumeric, 2-5 characters
       const roomRegex = /^[A-Za-z0-9]{2,5}$/
       return roomRegex.test(value)
     },
@@ -218,7 +214,6 @@ export function useFormValidation(formData: any, config: FormConfig) {
   const touched = ref<Record<string, boolean>>({})
   const submitted = ref(false)
 
-  // Computed properties
   const isValid = computed(() => errors.value.length === 0)
   const hasErrors = computed(() => errors.value.length > 0)
   
@@ -249,7 +244,6 @@ export function useFormValidation(formData: any, config: FormConfig) {
     return (touched.value[field] || submitted.value) && !isFieldValid.value(field)
   })
 
-  // Debounced validation
   const debounceTimers: Record<string, NodeJS.Timeout> = {}
 
   const clearFieldErrors = (field: string) => {
@@ -267,7 +261,6 @@ export function useFormValidation(formData: any, config: FormConfig) {
     const fieldConfig = config.fields[field]
     if (!fieldConfig) return true
 
-    // Clear existing errors for this field
     clearFieldErrors(field)
     
     const value = formData[field]
@@ -276,7 +269,6 @@ export function useFormValidation(formData: any, config: FormConfig) {
     validating.value[field] = true
 
     try {
-      // Handle required validation first
       if (fieldConfig.required) {
         const requiredRule = commonRules.required()
         if (!requiredRule.validator(value, formData)) {
@@ -288,7 +280,6 @@ export function useFormValidation(formData: any, config: FormConfig) {
         }
       }
 
-      // Run other validation rules
       if (fieldConfig.rules) {
         for (const rule of fieldConfig.rules) {
           if (rule.trigger && rule.trigger !== trigger && trigger !== 'submit') {
@@ -322,12 +313,10 @@ export function useFormValidation(formData: any, config: FormConfig) {
     const fieldConfig = config.fields[field]
     const delay = fieldConfig?.debounce || 300
 
-    // Clear existing timer
     if (debounceTimers[field]) {
       clearTimeout(debounceTimers[field])
     }
 
-    // Set new timer
     debounceTimers[field] = setTimeout(() => {
       validateField(field, trigger)
     }, delay)
@@ -362,7 +351,6 @@ export function useFormValidation(formData: any, config: FormConfig) {
   const handleSubmit = async (callback?: (data: any) => Promise<void> | void) => {
     submitted.value = true
     
-    // Mark all fields as touched
     Object.keys(config.fields).forEach(field => {
       touched.value[field] = true
     })
@@ -393,7 +381,6 @@ export function useFormValidation(formData: any, config: FormConfig) {
     submitted.value = false
     validating.value = {}
     
-    // Clear debounce timers
     Object.values(debounceTimers).forEach(timer => clearTimeout(timer))
   }
 
@@ -414,7 +401,6 @@ export function useFormValidation(formData: any, config: FormConfig) {
     errors.value = []
   }
 
-  // Watch for form data changes
   Object.keys(config.fields).forEach(field => {
     watch(() => formData[field], () => {
       handleFieldChange(field)

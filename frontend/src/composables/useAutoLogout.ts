@@ -40,8 +40,6 @@ export function useAutoLogout(options: AutoLogoutOptions = {}) {
       return
     }
     
-    console.warn(`Auto logout triggered: ${reason}`)
-    
     // Check if this is due to account deactivation or permission changes
     const isAccountIssue = reason.includes('User not found') || 
                           reason.includes('inactive') || 
@@ -54,9 +52,6 @@ export function useAutoLogout(options: AutoLogoutOptions = {}) {
     if (isAccountIssue) {
       // Set flag to prevent duplicate logout attempts
       logoutInProgress = true
-      
-      // Log only once for account issues
-      console.warn('Account deactivated or permissions changed - immediate logout')
       
       // Show notification about account issue (only once)
       notifications.error(

@@ -13,5 +13,6 @@ export default (sequelize) => {
     specialRequest: { type: DataTypes.STRING, allowNull: true },
     status: { type: DataTypes.STRING, allowNull: false },
     totalPrice: { type: DataTypes.FLOAT, allowNull: false },
+    bookingSource: { type: DataTypes.STRING, allowNull: true, defaultValue: 'Direct Booking' },
   });
 };

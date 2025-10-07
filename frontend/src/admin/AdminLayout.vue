@@ -7,6 +7,23 @@
         <p class="text-2xl font-bold text-gray-700 font-cursive">Grand Resort</p>
       </div>
 
+      <!-- User Information Section - just like frontdesk vibes fr fr -->
+      <div class="flex w-full items-center p-2 rounded-lg pl-5 mr-5 mt-4">
+        <div class="h-10 w-10 bg-green-600 rounded-full flex items-center justify-center">
+          <i class="pi pi-shield text-white text-sm"></i>
+        </div>
+
+        <div class="ml-3 leading-tight flex-1">
+          <p class="text-sm font-semibold text-black" v-if="currentUser">
+            {{ currentUser.firstName }} {{ currentUser.lastName }}
+          </p>
+          <p class="text-xs text-gray-500 capitalize" v-if="currentUser">
+            {{ currentUser.role }}
+            <span v-if="currentUser.department"> • {{ currentUser.department }}</span>
+          </p>
+        </div>
+      </div>
+
       <!-- Navigation -->
       <div class="w-full p-3 space-y-2 bg-gray-50 mt-4">
         <p class="text-xs pl-4 font-bold text-gray-700">Administration</p>
@@ -22,6 +39,20 @@
             >
               <i class="pi pi-chart-line text-sm"></i>
               Dashboard
+            </a>
+          </RouterLink>
+          
+          <RouterLink to="/frontdesk" custom v-slot="{ href, navigate, isActive }">
+            <a
+              :href="href"
+              @click="navigate"
+              :class="[
+                'flex items-center gap-2 px-4 py-1.5 rounded-full hover:bg-gray-200 text-xs transition-colors no-underline',
+                isActive ? 'bg-gray-100 text-green-900' : 'text-black hover:text-gray-900',
+              ]"
+            >
+              <i class="pi pi-user text-sm"></i>
+              Front Desk
             </a>
           </RouterLink>
           

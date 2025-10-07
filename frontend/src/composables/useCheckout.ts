@@ -61,43 +61,60 @@ export const useCheckout = () => {
 
   // Generate bill for the reservation - this is where the magic happens bestie
   const generateBill = async (reservation: Reservation): Promise<CheckoutBill> => {
-    const nights = calculateNights(
-      reservation.checkIn.toString(),
-      reservation.checkOut.toString()
-    )
-    
-    // Base room charges
-    const roomRate = reservation.totalPrice / nights
-    const subtotal = reservation.totalPrice
-    
-    // Calculate extra charges total
-    const extraChargesTotal = checkoutForm.value.extraCharges.reduce(
-      (sum, charge) => sum + charge.amount,
-      0
-    )
-    
-    // Tax calculation (assuming 12% tax rate - adjust as needed)
-    const taxRate = 0.12
-    const taxes = (subtotal + extraChargesTotal) * taxRate
-    
-    const totalAmount = subtotal + extraChargesTotal + taxes
-    const paidAmount = 0 // Will be updated from payment records
-    const balanceAmount = totalAmount - paidAmount
+    try {
+      console.log('🔍 Generating bill for reservation:', reservation)
+      
+      // Safely get dates
+      const checkInStr = reservation.checkIn?.toString() || reservation.checkInDate?.toString() || ''
+      const checkOutStr = reservation.checkOut?.toString() || reservation.checkOutDate?.toString() || ''
+      
+      if (!checkInStr || !checkOutStr) {
+        throw new Error('Missing check-in or check-out dates')
+      }
+      
+      const nights = calculateNights(checkInStr, checkOutStr)
+      console.log('📅 Calculated nights:', nights)
+      
+      // Base room charges - handle missing totalPrice
+      const totalPrice = reservation.totalPrice || reservation.amount || 0
+      const roomRate = nights > 0 ? totalPrice / nights : totalPrice
+      const subtotal = totalPrice
+      
+      // Calculate extra charges total
+      const extraChargesTotal = checkoutForm.value.extraCharges.reduce(
+        (sum, charge) => sum + charge.amount,
+        0
+      )
+      
+      // Tax calculation (assuming 12% tax rate - adjust as needed)
+      const taxRate = 0.12
+      const taxes = (subtotal + extraChargesTotal) * taxRate
+      
+      const totalAmount = subtotal + extraChargesTotal + taxes
+      const paidAmount = 0 // Will be updated from payment records
+      const balanceAmount = totalAmount - paidAmount
 
-    return {
-      reservationId: reservation.id?.toString() || '',
-      guestName: reservation.guestName || reservation.guest || '',
-      roomNumber: reservation.roomNumber || reservation.room,
-      checkInDate: reservation.checkIn.toString(),
-      checkOutDate: reservation.checkOut.toString(),
-      nights,
-      roomRate,
-      subtotal,
-      extraCharges: checkoutForm.value.extraCharges,
-      taxes,
-      totalAmount,
-      paidAmount,
-      balanceAmount,
+      const bill = {
+        reservationId: reservation.id?.toString() || '',
+        guestName: reservation.guestName || reservation.guest || 'Unknown Guest',
+        roomNumber: reservation.roomNumber || reservation.room || '',
+        checkInDate: checkInStr,
+        checkOutDate: checkOutStr,
+        nights,
+        roomRate,
+        subtotal,
+        extraCharges: checkoutForm.value.extraCharges,
+        taxes,
+        totalAmount,
+        paidAmount,
+        balanceAmount,
+      }
+      
+      console.log('💰 Generated bill:', bill)
+      return bill
+    } catch (error) {
+      console.error('❌ Error generating bill:', error)
+      throw error
     }
   }
 
@@ -136,7 +153,16 @@ export const useCheckout = () => {
   // Open checkout modal - time to settle the bill bestie
   const openCheckoutModal = async (reservation: Reservation) => {
     try {
+      if (!reservation || !reservation.id) {
+        throw new Error('Invalid reservation')
+      }
+      
+      console.log('🔄 Opening checkout modal for reservation:', reservation.id)
+      
+      // Set state first
+      isCheckoutModalOpen.value = true
       selectedReservation.value = reservation
+      error.value = null
       
       // Reset form
       checkoutForm.value = {
@@ -148,15 +174,21 @@ export const useCheckout = () => {
       }
       
       // Generate initial bill
+      console.log('💰 Generating bill...')
       const bill = await generateBill(reservation)
+      console.log('✅ Bill generated:', bill)
       checkoutBill.value = bill
       checkoutForm.value.paymentAmount = bill.balanceAmount
       
-      isCheckoutModalOpen.value = true
-      error.value = null
+      console.log('✅ Checkout modal opened successfully')
+      
+      // Return true to indicate success
+      return true
     } catch (err) {
       error.value = 'Failed to generate checkout bill. Pakyu naman!'
-      console.error('Checkout error:', err)
+      console.error('❌ Checkout error:', err)
+      isCheckoutModalOpen.value = false
+      return false
     }
   }
 
@@ -179,47 +211,41 @@ export const useCheckout = () => {
     error.value = null
 
     try {
-      // 1. Create invoice record
-      const invoiceData = {
-        reservationId: selectedReservation.value.id,
-        subtotal: checkoutBill.value.subtotal + checkoutBill.value.extraCharges.reduce((sum, c) => sum + c.amount, 0),
-        taxAmount: checkoutBill.value.taxes,
-        totalAmount: checkoutBill.value.totalAmount,
-        status: 'sent',
+      // Prepare checkout data for API
+      const checkoutData = {
+        paymentAmount: checkoutForm.value.paymentAmount,
+        paymentMethod: checkoutForm.value.paymentMethod,
+        extraCharges: checkoutForm.value.extraCharges,
         notes: checkoutForm.value.notes,
+        damageAssessment: checkoutForm.value.damageAssessment,
+        damageDescription: checkoutForm.value.damageDescription,
+        damageAmount: checkoutForm.value.damageAmount,
       }
 
-      // 2. Process payment if amount > 0
-      if (checkoutForm.value.paymentAmount > 0) {
-        const paymentData = {
-          amount: checkoutForm.value.paymentAmount,
-          paymentMethod: checkoutForm.value.paymentMethod,
-          status: 'completed',
-          notes: checkoutForm.value.notes,
-        }
-        
-        // TODO: Call payment API
-        console.log('Processing payment:', paymentData)
+      // Call checkout API endpoint
+      const response = await fetch(`http://localhost:3000/api/reservations/${selectedReservation.value.id}/checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: JSON.stringify(checkoutData),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Checkout failed')
       }
 
-      // 3. Update reservation status to checked out
-      const updateData = {
-        status: 'checkedOut',
-        notes: checkoutForm.value.notes,
-      }
-
-      // TODO: Call reservation update API
-      console.log('Updating reservation:', updateData)
-
-      // 4. Update room status to needs housekeeping
-      // TODO: Call room status update API
+      const result = await response.json()
+      console.log('✅ Checkout completed successfully:', result)
 
       // Success! Time to celebrate 🎉
       closeCheckoutModal()
       return true
 
-    } catch (err) {
-      error.value = 'Checkout failed. Gago naman ang system!'
+    } catch (err: any) {
+      error.value = err.message || 'Checkout failed. Gago naman ang system!'
       console.error('Checkout processing error:', err)
       return false
     } finally {

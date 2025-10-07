@@ -36,7 +36,7 @@
       <div v-if="cancellationCalculation && selectedReservation" class="p-6">
         <!-- Reservation Summary -->
         <div class="bg-gray-50 rounded-lg p-4 mb-6">
-          <h3 class="font-semibold text-md mb-3">Reservation Details</h3>
+          <h3 class="font-semibold text-sm mb-3">Reservation Details</h3>
           <div class="space-y-2 text-sm">
             <div class="flex justify-between">
               <span class="text-gray-600">Check-in:</span>
@@ -63,7 +63,7 @@
 
         <!-- Cancellation Policy Info -->
         <div v-if="cancellationCalculation.canCancel" class="mb-6">
-          <h3 class="font-semibold text-md mb-3">Cancellation Policy</h3>
+          <h3 class="font-semibold text-sm mb-3">Cancellation Policy</h3>
           
           <!-- Policy Summary -->
           <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
@@ -92,7 +92,7 @@
 
           <!-- Financial Breakdown -->
           <div class="bg-gray-50 rounded-lg p-4 mb-6">
-            <h4 class="font-medium mb-3">Financial Impact</h4>
+            <h4 class="font-medium text-sm mb-3">Financial Impact</h4>
             <div class="space-y-2">
               <div class="flex justify-between">
                 <span class="text-gray-600">Original Amount:</span>
@@ -102,7 +102,7 @@
                 <span>Cancellation Fee:</span>
                 <span>{{ formatCurrency(cancellationCalculation.cancellationFee) }}</span>
               </div>
-              <div class="flex justify-between font-bold text-lg" :class="cancellationCalculation.refundAmount > 0 ? 'text-green-600' : 'text-red-600'">
+              <div class="flex justify-between font-bold text-sm" :class="cancellationCalculation.refundAmount > 0 ? 'text-green-600' : 'text-red-600'">
                 <span>Refund Amount:</span>
                 <span>{{ formatCurrency(cancellationCalculation.refundAmount) }}</span>
               </div>
@@ -128,7 +128,7 @@
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
               </svg>
               <div>
-                <h4 class="text-red-800 font-medium">Cancellation Not Allowed</h4>
+                <h4 class="text-red-800 font-medium text-sm">Cancellation Not Allowed</h4>
                 <p class="text-red-700 text-sm mt-1">
                   {{ cancellationCalculation.reason }}
                 </p>

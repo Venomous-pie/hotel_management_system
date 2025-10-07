@@ -55,39 +55,32 @@ export const useExtraServices = () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  // Default service items - common hotel services
   const defaultServiceItems: ServiceItem[] = [
-    // Minibar items
     { id: 'mb_water', name: 'Bottled Water', category: 'minibar', price: 50, isActive: true, taxable: true },
     { id: 'mb_soda', name: 'Soft Drinks', category: 'minibar', price: 80, isActive: true, taxable: true },
     { id: 'mb_beer', name: 'Local Beer', category: 'minibar', price: 150, isActive: true, taxable: true },
     { id: 'mb_wine', name: 'House Wine', category: 'minibar', price: 300, isActive: true, taxable: true },
     { id: 'mb_snacks', name: 'Snacks/Chips', category: 'minibar', price: 120, isActive: true, taxable: true },
     
-    // Room service
     { id: 'rs_breakfast', name: 'Continental Breakfast', category: 'room_service', price: 450, isActive: true, taxable: true },
     { id: 'rs_lunch', name: 'Lunch Set', category: 'room_service', price: 650, isActive: true, taxable: true },
     { id: 'rs_dinner', name: 'Dinner Set', category: 'room_service', price: 850, isActive: true, taxable: true },
     { id: 'rs_coffee', name: 'Coffee/Tea Service', category: 'room_service', price: 200, isActive: true, taxable: true },
     
-    // Laundry
     { id: 'ld_wash', name: 'Laundry - Wash & Fold', category: 'laundry', price: 80, description: 'Per piece', isActive: true, taxable: true },
     { id: 'ld_press', name: 'Pressing/Ironing', category: 'laundry', price: 60, description: 'Per piece', isActive: true, taxable: true },
     { id: 'ld_dry', name: 'Dry Cleaning', category: 'laundry', price: 150, description: 'Per piece', isActive: true, taxable: true },
     
-    // Other services
     { id: 'sv_phone', name: 'Long Distance Call', category: 'phone', price: 25, description: 'Per minute', isActive: true, taxable: true },
     { id: 'sv_internet', name: 'Premium Internet', category: 'internet', price: 200, description: 'Per day', isActive: true, taxable: true },
     { id: 'sv_parking', name: 'Valet Parking', category: 'parking', price: 300, description: 'Per day', isActive: true, taxable: false },
     { id: 'sv_late_checkout', name: 'Late Checkout Fee', category: 'other', price: 500, description: 'After 2 PM', isActive: true, taxable: false },
   ]
 
-  // Initialize with default items
   if (serviceItems.value.length === 0) {
     serviceItems.value = [...defaultServiceItems]
   }
 
-  // Add service charge to reservation - when guest uses services
   const addServiceCharge = (
     reservationId: string,
     serviceItemId: string,
@@ -126,7 +119,6 @@ export const useExtraServices = () => {
     return charge
   }
 
-  // Create service order - for room service orders
   const createServiceOrder = (
     reservationId: string,
     roomNumber: string,
@@ -139,7 +131,6 @@ export const useExtraServices = () => {
       return null
     }
 
-    // Calculate totals and validate items
     const orderItems: ServiceOrderItem[] = []
     let totalAmount = 0
 
@@ -189,7 +180,6 @@ export const useExtraServices = () => {
     if (status === 'delivered') {
       order.deliveredAt = new Date().toISOString()
       
-      // Automatically create charges for delivered items
       for (const item of order.items) {
         addServiceCharge(
           order.reservationId,
@@ -203,17 +193,14 @@ export const useExtraServices = () => {
     return true
   }
 
-  // Get charges for a reservation
   const getChargesByReservation = (reservationId: string): ServiceCharge[] => {
     return serviceCharges.value.filter(charge => charge.reservationId === reservationId)
   }
 
-  // Get orders for a reservation
   const getOrdersByReservation = (reservationId: string): ServiceOrder[] => {
     return serviceOrders.value.filter(order => order.reservationId === reservationId)
   }
 
-  // Calculate total charges for reservation
   const calculateTotalCharges = (reservationId: string): number => {
     const charges = getChargesByReservation(reservationId)
     return charges
@@ -221,12 +208,10 @@ export const useExtraServices = () => {
       .reduce((total, charge) => total + charge.totalAmount, 0)
   }
 
-  // Get charges by category
   const getChargesByCategory = (reservationId: string, category: string): ServiceCharge[] => {
     return getChargesByReservation(reservationId).filter(charge => charge.category === category)
   }
 
-  // Dispute a charge
   const disputeCharge = (chargeId: string, reason: string): boolean => {
     const charge = serviceCharges.value.find(c => c.id === chargeId)
     
@@ -240,7 +225,6 @@ export const useExtraServices = () => {
     return true
   }
 
-  // Refund a charge
   const refundCharge = (chargeId: string, reason: string): boolean => {
     const charge = serviceCharges.value.find(c => c.id === chargeId)
     
@@ -254,12 +238,10 @@ export const useExtraServices = () => {
     return true
   }
 
-  // Get service items by category
   const getServicesByCategory = (category: string): ServiceItem[] => {
     return serviceItems.value.filter(item => item.category === category && item.isActive)
   }
 
-  // Computed properties for analytics
   const chargeStats = computed(() => {
     const total = serviceCharges.value.length
     const totalAmount = serviceCharges.value

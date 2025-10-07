@@ -15,6 +15,10 @@ import Admin from '../admin/Admin.vue'
 import AdminDashboard from '../admin/AdminDashboard.vue'
 import UserManagement from '../admin/UserManagement.vue'
 import StaffLogin from '../auth/StaffLogin.vue'
+import RoomsManagement from '../admin/RoomsManagement.vue'
+import AdminReports from '../admin/Reports.vue'
+import AdminSettings from '../admin/AdminSettings.vue'
+import SystemLogs from '../admin/SystemLogs.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -61,6 +65,26 @@ const router = createRouter({
     {
       path: '/admin/users',
       component: UserManagement,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/admin/rooms',
+      component: RoomsManagement,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/admin/reports',
+      component: AdminReports,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/admin/settings',
+      component: AdminSettings,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/admin/logs',
+      component: SystemLogs,
       meta: { requiresAuth: true }
     },
     {

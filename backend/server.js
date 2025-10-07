@@ -1046,7 +1046,7 @@ app.delete("/api/reservations/:id", authenticateToken, requireAnyPermission(['RE
 });
 
 // Checkout endpoint - process guest checkout
-app.post("/api/reservations/:id/checkout", authenticateToken, requireAnyPermission(['RESERVATIONS_UPDATE']), async (req, res) => {
+app.post("/api/reservations/:id/checkout", authenticateToken, requireAnyPermission(['RESERVATIONS_EDIT']), async (req, res) => {
   const t = await sequelize.transaction();
   try {
     const { id } = req.params;
@@ -1085,18 +1085,26 @@ app.post("/api/reservations/:id/checkout", authenticateToken, requireAnyPermissi
     });
 
     if (!invoice) {
+      // Generate invoice number and due date
+      const invoiceNumber = `INV-${id}-${Date.now()}`;
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 7); // 7 days from now
       invoice = await Invoice.create({
         reservationId: id,
         guestId: reservation.GuestId,
         subtotal: totalAmount,
         taxAmount: taxAmount,
         totalAmount: finalTotal,
-        status: 'sent'
+        status: 'sent',
+        invoiceNumber,
+        dueDate
       }, { transaction: t });
     }
 
     // Process payment if amount provided
     if (paymentAmount && paymentAmount > 0) {
+      // Generate payment number
+      const paymentNumber = `PAY-${id}-${Date.now()}`;
       await Payment.create({
         invoiceId: invoice.id,
         reservationId: id,
@@ -1104,7 +1112,8 @@ app.post("/api/reservations/:id/checkout", authenticateToken, requireAnyPermissi
         amount: paymentAmount,
         paymentMethod: paymentMethod || 'cash',
         status: 'completed',
-        notes: notes
+        notes: notes,
+        paymentNumber
       }, { transaction: t });
 
       // Update invoice paid amount

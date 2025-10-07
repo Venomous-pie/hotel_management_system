@@ -62,6 +62,7 @@ import GanttTable from './GanttTable.vue'
 import ReservationDetailsModal from './ReservationDetailsModal.vue'
 import RoomInfoModal from './RoomInfoModal.vue'
 import CheckoutModal from './CheckoutModal.vue'
+import { useCheckoutStore } from '@/stores/checkout'
 import CancellationModal from './CancellationModal.vue'
 
 const props = defineProps<{
@@ -176,11 +177,21 @@ const handleReservationEdit = async (reservation: any) => {
   } catch (e) {}
 }
 
-// Checkout handler - opens checkout modal
-const handleReservationCheckout = (reservation: any) => {
-  // Checkout modal is already handled by useCheckout composable in ReservationDetailsModal
-  closeModal()
-  console.log('Processing checkout for reservation:', reservation.id)
+// Checkout handler - opens checkout modal using Pinia store
+const checkoutStore = useCheckoutStore()
+const handleReservationCheckout = async (reservation: any) => {
+  if (!reservation || !reservation.id) {
+    console.error('Invalid reservation for checkout')
+    return
+  }
+  // Open checkout modal via store
+  const success = await checkoutStore.openCheckoutModal(reservation)
+  if (success) {
+    console.log('Processing checkout for reservation:', reservation.id)
+    closeModal()
+  } else {
+    console.error('Failed to open checkout modal')
+  }
 }
 
 // Cancellation handler - opens cancellation modal

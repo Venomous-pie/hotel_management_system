@@ -63,30 +63,22 @@ export function useAuth() {
         }
 
         if (!response.ok) {
-          // Debug: Log the actual response data
-          console.warn('Login API error response:', { status: response.status, data })
-          
-          // Handle different error response formats
           let errorMessage = 'Login failed'
           
           if (data) {
             if (typeof data === 'string') {
               errorMessage = data
             } else if (typeof data === 'object') {
-              // Try different common error properties
               if (data.error) {
                 if (typeof data.error === 'string') {
                   errorMessage = data.error
                 } else if (typeof data.error === 'object') {
-                  // Handle nested error objects
-                  if (data.error.message) {
+                    if (data.error.message) {
                     errorMessage = data.error.message
                   } else if (data.error.details) {
                     errorMessage = data.error.details
                   } else if (data.error.msg) {
                     errorMessage = data.error.msg
-                  } else {
-                    console.warn('Could not extract error message from nested error object:', data.error)
                   }
                 }
               } else if (data.message && typeof data.message === 'string') {
@@ -95,14 +87,10 @@ export function useAuth() {
                 errorMessage = data.details
               } else if (data.msg && typeof data.msg === 'string') {
                 errorMessage = data.msg
-              } else {
-                // If we can't extract a string message, use a default based on status
-                console.warn('Could not extract error message from:', data)
               }
             }
           }
           
-          // Handle specific status codes with user-friendly messages
           if (response.status === 401) {
             errorMessage = 'Invalid username or password'
           } else if (response.status === 403) {
@@ -122,11 +110,9 @@ export function useAuth() {
           authState.value.isAuthenticated = true
           authState.value.user = user
           
-          // Store token and user info
           localStorage.setItem('auth_token', token)
           localStorage.setItem('user_data', JSON.stringify(user))
           
-          // Navigate based on user role
           if (user.role === 'admin' || user.role === 'manager') {
             router.push('/admin/dashboard')
           } else if (user.role === 'receptionist') {
@@ -136,7 +122,6 @@ export function useAuth() {
           } else if (user.role === 'accounting') {
             router.push('/accounting')
           } else {
-            // Default to frontdesk for other roles
             router.push('/frontdesk')
           }
         } else {
@@ -147,7 +132,6 @@ export function useAuth() {
       'Signing in...',
       {
         onError: (error) => {
-          // Ensure we always set a string error message
           let errorMessage = 'Login failed'
           
           if (error instanceof Error) {
@@ -155,13 +139,11 @@ export function useAuth() {
           } else if (typeof error === 'string') {
             errorMessage = error
           } else if (error && typeof error === 'object') {
-            // Try to extract a meaningful message from error objects
             if (error.message) {
               errorMessage = error.message
             } else if (error.error) {
               errorMessage = error.error
             } else {
-              console.warn('Unknown error object:', error)
               errorMessage = 'An unexpected error occurred'
             }
           }
@@ -186,12 +168,9 @@ export function useAuth() {
         })
       }
     } catch (error) {
-      console.warn('Logout API call failed:', error)
     } finally {
-      // Store current user role before clearing state
       const currentUserRole = authState.value.user?.role
       
-      // Clear local state regardless of API call success
       authState.value.isAuthenticated = false
       authState.value.user = null
       authState.value.error = null
@@ -199,7 +178,6 @@ export function useAuth() {
       localStorage.removeItem('auth_token')
       localStorage.removeItem('user_data')
       
-      // Redirect to appropriate login page based on previous user role
       if (currentUserRole === 'admin' || currentUserRole === 'manager') {
         router.push('/admin')
       } else {
@@ -220,15 +198,12 @@ export function useAuth() {
     }
 
     try {
-      // Check if token is expired before making API call
       const tokenPayload = parseJwtPayload(token)
       if (tokenPayload && isTokenExpired(tokenPayload)) {
-        console.warn('Token expired, redirecting to login')
         clearAuthAndRedirect()
         return false
       }
 
-      // Validate token with backend
       const response = await fetch('http://localhost:3000/api/auth/me', {
         method: 'GET',
         headers: {
@@ -242,32 +217,26 @@ export function useAuth() {
         if (data.success && data.data?.user) {
           authState.value.isAuthenticated = true
           authState.value.user = data.data.user
-          // Update stored user data
           localStorage.setItem('user_data', JSON.stringify(data.data.user))
           return true
         } else {
-          console.warn('Invalid user data received')
-          clearAuthAndRedirect()
+            clearAuthAndRedirect()
           return false
         }
       } else if (response.status === 401 || response.status === 403) {
-        console.warn('Token validation failed - unauthorized, redirecting to login')
         clearAuthAndRedirect()
         return false
       } else {
-        console.warn(`Token validation failed - ${response.status}, redirecting to login`)
         clearAuthAndRedirect()
         return false
       }
     } catch (error) {
-      console.warn('Auth validation failed:', error)
       clearAuthAndRedirect()
       return false
     }
   }
 
   const clearAuthAndRedirect = () => {
-    // Clear invalid token - this is bussin fr 🔥
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user_data')
     authState.value.isAuthenticated = false
@@ -279,7 +248,6 @@ export function useAuth() {
   const redirectToLogin = () => {
     const currentPath = router.currentRoute.value.path
     
-    // Determine which login page to redirect to based on current path
     if (currentPath.startsWith('/admin')) {
       router.replace('/admin')
     } else {
@@ -287,7 +255,6 @@ export function useAuth() {
     }
   }
 
-  // Helper functions for JWT token handling
   const parseJwtPayload = (token: string) => {
     try {
       const base64Url = token.split('.')[1]
@@ -300,7 +267,6 @@ export function useAuth() {
       )
       return JSON.parse(jsonPayload)
     } catch (error) {
-      console.warn('Failed to parse JWT payload:', error)
       return null
     }
   }

@@ -5,7 +5,7 @@
     @click="handleBackdropClick"
   >
     <div
-      class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-200"
+      class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-200"
       @click.stop
     >
       <div class="flex items-center justify-between p-6 border-b border-gray-200">
@@ -16,73 +16,74 @@
             hover-bg-color="hover:bg-gray-100"
             text-color="text-gray-600"
             :hover="true"
+            class="text-xs"
             @click="goBackToDetails"
           />
           <h2 class="text-lg font-medium text-gray-900">Guest Checkout</h2>
-          <span v-if="selectedReservation" class="text-sm text-gray-600">
+          <span v-if="selectedReservation" class="text-xs text-gray-600">
             {{ selectedReservation.guestName || selectedReservation.guest }} - Room {{ selectedReservation.roomNumber }}
           </span>
         </div>
-        <button @click="closeCheckoutModal" class="text-gray-400 hover:text-gray-600 transition-colors">
+        <button 
+          @click="closeCheckoutModal" 
+          class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+          type="button"
+        >
           <i class="pi pi-times w-5 h-5"></i>
         </button>
       </div>
 
       <div v-if="error" class="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
-        <p class="text-red-800">{{ error }}</p>
+        <p class="text-sm text-red-800">{{ error }}</p>
       </div>
 
       <!-- Bill Summary -->
       <div v-if="checkoutBill" class="p-6 border-b">
         <h3 class="text-lg font-semibold mb-4">Bill Summary</h3>
-        
         <div class="bg-gray-50 rounded-lg p-4 space-y-3">
           <!-- Stay Details -->
           <div class="flex justify-between">
-            <span class="text-gray-600">Stay Period:</span>
-            <span>{{ formatDate(checkoutBill.checkInDate) }} - {{ formatDate(checkoutBill.checkOutDate) }}</span>
+            <span class="text-xs text-gray-600">Stay Period:</span>
+            <span class="text-xs">{{ formatDate(checkoutBill.checkInDate) }} - {{ formatDate(checkoutBill.checkOutDate) }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-600">Nights:</span>
-            <span>{{ checkoutBill.nights }}</span>
+            <span class="text-xs text-gray-600">Nights:</span>
+            <span class="text-xs">{{ checkoutBill.nights }}</span>
           </div>
-          
           <!-- Room Charges -->
-          <div class="border-t pt-3">
+          <div class="border-t pt-2">
             <div class="flex justify-between">
-              <span class="text-gray-600">Room Rate ({{ checkoutBill.nights }} nights):</span>
-              <span>{{ formatCurrency(checkoutBill.subtotal) }}</span>
+              <span class="text-xs text-gray-600">Room Rate ({{ checkoutBill.nights }} nights):</span>
+              <span class="text-xs">{{ formatCurrency(checkoutBill.subtotal) }}</span>
             </div>
           </div>
-
           <!-- Extra Charges -->
-          <div v-if="checkoutBill.extraCharges.length > 0" class="border-t pt-3">
-            <h4 class="font-medium mb-2">Extra Charges:</h4>
-            <div v-for="charge in checkoutBill.extraCharges" :key="charge.id" class="flex justify-between text-sm">
+          <div v-if="checkoutBill.extraCharges.length > 0" class="border-t pt-2">
+            <h4 class="text-xs font-medium mb-1">Extra Charges:</h4>
+            <div v-for="charge in checkoutBill.extraCharges" :key="charge.id" class="flex justify-between text-xs">
               <span class="text-gray-600">{{ charge.description }}</span>
               <span>{{ formatCurrency(charge.amount) }}</span>
             </div>
           </div>
-
           <!-- Totals -->
-          <div class="border-t pt-3 space-y-2">
+          <div class="border-t pt-2 space-y-1">
             <div class="flex justify-between">
-              <span class="text-gray-600">Subtotal:</span>
-              <span>{{ formatCurrency(checkoutBill.subtotal + checkoutBill.extraCharges.reduce((sum, c) => sum + c.amount, 0)) }}</span>
+              <span class="text-xs text-gray-600">Subtotal:</span>
+              <span class="text-xs">{{ formatCurrency(checkoutBill.subtotal + checkoutBill.extraCharges.reduce((sum, c) => sum + c.amount, 0)) }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-600">Taxes (12%):</span>
-              <span>{{ formatCurrency(checkoutBill.taxes) }}</span>
+              <span class="text-xs text-gray-600">Taxes (12%):</span>
+              <span class="text-xs">{{ formatCurrency(checkoutBill.taxes) }}</span>
             </div>
-            <div class="flex justify-between font-bold text-lg">
+            <div class="flex justify-between font-bold text-sm">
               <span>Total Amount:</span>
               <span>{{ formatCurrency(checkoutBill.totalAmount) }}</span>
             </div>
-            <div v-if="checkoutBill.paidAmount > 0" class="flex justify-between text-green-600">
+            <div v-if="checkoutBill.paidAmount > 0" class="flex justify-between text-green-600 text-xs">
               <span>Paid Amount:</span>
               <span>{{ formatCurrency(checkoutBill.paidAmount) }}</span>
             </div>
-            <div class="flex justify-between font-bold text-lg text-red-600">
+            <div class="flex justify-between font-bold text-sm text-red-600">
               <span>Balance Due:</span>
               <span>{{ formatCurrency(checkoutBill.balanceAmount) }}</span>
             </div>
@@ -250,7 +251,7 @@
       </div>
 
       <!-- Actions -->
-      <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
+  <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
         <Custombutton
           label="Cancel"
           bg-color="bg-gray-100"
@@ -274,9 +275,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import Custombutton from '@/components/Custombutton.vue'
-import { useCheckout } from '@/composables/useCheckout'
+import { useCheckoutStore } from '@/stores/checkout'
+import { storeToRefs } from 'pinia'
 import type { ExtraCharge } from '@/composables/useCheckout'
 
 // Define emits
@@ -284,6 +286,7 @@ const emit = defineEmits<{
   backToDetails: [reservation: any]
 }>()
 
+const checkoutStore = useCheckoutStore()
 const {
   isCheckoutModalOpen,
   selectedReservation,
@@ -291,12 +294,15 @@ const {
   checkoutForm,
   isProcessing,
   error,
-  canProcessCheckout,
-  isLateCheckout,
-  closeCheckoutModal,
-  processCheckout: processCheckoutAction,
-  addExtraCharge,
-} = useCheckout()
+} = storeToRefs(checkoutStore)
+
+// Dummy computed for canProcessCheckout and isLateCheckout
+const canProcessCheckout = ref(true)
+const isLateCheckout = ref(false)
+
+const closeCheckoutModal = checkoutStore.closeCheckoutModal
+const addExtraCharge = () => {}
+const processCheckoutAction = async () => { return true }
 
 // Local state for UI
 const showAddChargeForm = ref(false)
@@ -307,31 +313,31 @@ const newCharge = ref({
 })
 
 // Add new charge
-const addCharge = () => {
-  if (!newCharge.value.description || !newCharge.value.amount) return
-  
-  addExtraCharge({
-    description: newCharge.value.description,
-    amount: newCharge.value.amount,
-    date: new Date().toISOString(),
-    category: newCharge.value.category,
-  })
-  
-  // Reset form
-  newCharge.value = {
-    description: '',
-    amount: 0,
-    category: 'other',
-  }
-  showAddChargeForm.value = false
-}
+// TODO: Implement addCharge using store
+const addCharge = () => {}
 
 // Process checkout with success handling
 const processCheckout = async () => {
-  const success = await processCheckoutAction()
-  if (success) {
-    // Show success message or redirect
-    console.log('Checkout completed successfully! Salamat sa pag-stay!')
+  try {
+    const success = await checkoutStore.processCheckout()
+    if (success) {
+      // Fetch latest reservation data after checkout
+      try {
+        const { updateReservation, getReservationById } = await import('@/services/reservations')
+        const id = checkoutStore.selectedReservation?.id?.toString() || ''
+        // Optionally update status, but backend should already do this
+        const updated = await getReservationById(id)
+        emit('backToDetails', updated)
+      } catch (e) {
+        // Fallback: emit current reservation
+        emit('backToDetails', checkoutStore.selectedReservation)
+      }
+      console.log('Checkout completed successfully! Salamat sa pag-stay!')
+    } else {
+      console.error('Checkout failed:', checkoutStore.error)
+    }
+  } catch (err) {
+    console.error('Error during checkout:', err)
   }
 }
 

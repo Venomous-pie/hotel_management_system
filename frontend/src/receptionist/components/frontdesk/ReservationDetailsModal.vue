@@ -249,7 +249,7 @@ import type { Reservation, Room } from '@/types/hotel'
 import Custombutton from '@/components/Custombutton.vue'
 import { getReservationStatusColor } from '@/utils/colors'
 import { formatReservationDateRange } from '@/utils/reservations'
-import { useCheckout } from '@/composables/useCheckout'
+import { useCheckoutStore } from '@/stores/checkout'
 import { useCancellationPolicy } from '@/composables/useCancellationPolicy'
 
 interface Props {
@@ -267,8 +267,9 @@ const emit = defineEmits<{
   cancel: [reservation: Reservation]
 }>()
 
-// Composables for checkout and cancellation
-const { openCheckoutModal } = useCheckout()
+// Pinia store for checkout modal
+const checkoutStore = useCheckoutStore()
+const openCheckoutModal = checkoutStore.openCheckoutModal
 const { calculateCancellation } = useCancellationPolicy()
 
 // Computed properties for display
@@ -357,14 +358,6 @@ const closeModal = () => {
   // Force close with multiple approaches
   try {
     emit('close')
-    
-    // Fallback: directly manipulate DOM if emit fails
-    setTimeout(() => {
-      const modal = document.querySelector('[data-modal="reservation-details"]')
-      if (modal) {
-        modal.style.display = 'none'
-      }
-    }, 100)
   } catch (error) {
     console.error('❌ Error closing modal:', error)
   }
@@ -377,10 +370,25 @@ const handleUpdateReservation = () => {
   }
 }
 
-const handleCheckout = () => {
-  if (props.reservation) {
-    openCheckoutModal(props.reservation)
-    emit('checkout', props.reservation)
+const handleCheckout = async () => {
+  if (!props.reservation || !props.reservation.id) {
+    console.error('Invalid reservation for checkout')
+    return
+  }
+
+  try {
+    // Open checkout modal first and wait for it to be ready
+    const success = await openCheckoutModal(props.reservation)
+    
+    // Only emit checkout if modal was opened successfully
+    if (success) {
+      console.log('✅ Checkout modal opened, emitting checkout event')
+      emit('checkout', props.reservation)
+    } else {
+      console.error('❌ Failed to open checkout modal')
+    }
+  } catch (err) {
+    console.error('❌ Error during checkout:', err)
   }
 }
 
